@@ -1,6 +1,6 @@
 <template>
   <div class="analysis-view">
-    <MatchAnalysis :match-id="route.params.matchId" />
+    <MatchAnalysis :match-id="route.params.id" />
   </div>
 </template>
 
