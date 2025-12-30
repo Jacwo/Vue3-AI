@@ -15,7 +15,7 @@ import { RouterLink, RouterView } from 'vue-router'
     <div class="wrapper">
       <nav>
         <RouterLink to="/">比赛列表</RouterLink>
-        <RouterLink to="/">历史记录</RouterLink>
+        <RouterLink to="/history">历史记录</RouterLink>
       </nav>
     </div>
   </header>
