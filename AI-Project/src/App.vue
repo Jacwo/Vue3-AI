@@ -16,6 +16,8 @@ import { RouterLink, RouterView } from 'vue-router'
       <nav>
         <RouterLink to="/">比赛列表</RouterLink>
         <RouterLink to="/history">历史记录</RouterLink>
+        <RouterLink to="/ai">ai对话</RouterLink>
+        <RouterLink to="/tool">小工具</RouterLink>
       </nav>
     </div>
   </header>
