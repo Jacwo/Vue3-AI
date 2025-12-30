@@ -10,6 +10,16 @@ const router = createRouter({
       component: HomeView
     },
     {
+      path: '/history',
+      name: 'history',
+      component: () => import('../views/HistoryView.vue')
+    },
+    {
+      path: '/history/:id',
+      name: 'history-detail',
+      component: () => import('../views/HistoryDetailView.vue')
+    },
+    {
       path: '/analysis/:id',
       name: 'analysis',
       component: () => import('../views/AnalysisView.vue')
