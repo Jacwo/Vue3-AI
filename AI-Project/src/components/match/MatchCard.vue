@@ -126,8 +126,12 @@ interface Props {
 
 const props = defineProps<Props>()
 
+// const emit = defineEmits<{
+//   analyze: [matchId: number]
+// }>()
+
 const emit = defineEmits<{
-  analyze: [matchId: number]
+  analyze: [match: Match]
 }>()
 
 const analyzing = ref(false)
@@ -178,7 +182,7 @@ const formatGoalLine = (goalLine: number | null): string => {
 const onAnalyze = async () => {
   analyzing.value = true
   try {
-    emit('analyze', props.match.id)
+    emit('analyze', props.match)
   } finally {
     analyzing.value = false
   }

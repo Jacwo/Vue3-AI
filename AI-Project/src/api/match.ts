@@ -86,7 +86,10 @@ export interface AnalysisRequest {
 }
 
 // 分析结果
-export type AnalysisResult = string
+export interface AnalysisResult {
+  timestamp: number
+  aiAnalysis: string
+}
 
 // 转换原始数据到前端数据
 const transformMatch = (raw: RawMatch): Match => {

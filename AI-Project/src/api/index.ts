@@ -64,7 +64,10 @@ apiClient.interceptors.response.use(
     // hideLoading()
     
     const customConfig = response.config as CustomRequestConfig
-    
+       // 如果是流式响应，直接返回整个 response 对象
+    if (response.headers['content-type']?.includes('text/event-stream')) {
+      return response
+    }
     // 如果配置了返回原始响应，直接返回
     if (customConfig.rawResponse) {
       return response.data

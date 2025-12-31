@@ -100,6 +100,19 @@
         </div>
       </div>
     </div>
+    
+    <!-- 分析抽屉 -->
+    <Drawer
+      v-model:visible="showAnalysisDrawer"
+      :title="drawerTitle"
+      width="60%"
+      @close="handleDrawerClose"
+    >
+      <MatchAnalysisDrawer
+        v-if="showAnalysisDrawer && selectedMatch"
+        :match="selectedMatch"
+      />
+    </Drawer>
   </div>
 </template>
 
@@ -108,11 +121,17 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { matchApi } from '@/api/match'
 import type { Match } from '@/types/match'
 import MatchCard from './MatchCard.vue'
+import Drawer from '@/components/common/Drawer.vue' // 引入抽屉组件
+import MatchAnalysisDrawer from '../analysis/MatchAnalysisDrawer.vue' // 引入分析组件
 
 const matches = ref<Match[]>([])
 const loading = ref(false)
 const error = ref<string>('')
 const selectedLeague = ref('')
+
+// 抽屉相关状态
+const showAnalysisDrawer = ref(false)
+const selectedMatch = ref<Match | null>(null)
 
 // 折叠状态管理
 const collapsedGroups = ref<Record<string, boolean>>({})
@@ -138,6 +157,12 @@ const filteredMatches = computed(() => {
 // 总比赛数
 const totalMatches = computed(() => {
   return filteredMatches.value.length
+})
+
+// 抽屉标题
+const drawerTitle = computed(() => {
+  if (!selectedMatch.value) return '比赛分析'
+  return `${selectedMatch.value.homeTeam} vs ${selectedMatch.value.awayTeam}`
 })
 
 // 按周几分组比赛
@@ -256,14 +281,16 @@ const filterMatches = () => {
   // 筛选逻辑已通过计算属性实现
 }
 
-const handleAnalyze = (matchId: number) => {
-  console.log('分析比赛:', matchId)
-  emit('analyze-match', matchId)
+// 处理分析按钮点击
+const handleAnalyze = (match: Match) => {
+  selectedMatch.value = match
+  showAnalysisDrawer.value = true
 }
 
-const emit = defineEmits<{
-  'analyze-match': [matchId: number]
-}>()
+// 处理抽屉关闭
+const handleDrawerClose = () => {
+  selectedMatch.value = null
+}
 
 onMounted(() => {
   fetchMatches()
@@ -276,6 +303,7 @@ onMounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .header {
