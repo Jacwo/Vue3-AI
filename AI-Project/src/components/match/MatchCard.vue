@@ -1,189 +1,150 @@
 <template>
-  <div class="match-card" :class="getStatusClass(matchData.status)">
+  <div class="match-card" :class="getStatusClass(match.status)">
     <div class="match-header">
-      <span class="match-num">{{ matchData.matchNumStr || '未知编号' }}</span>
-      <span class="league">{{ matchData.league }}</span>
-      <span class="status">{{ getStatusText(matchData.status) }}</span>
+      <div class="match-info">
+        <span class="match-num">{{ match.matchNumStr }}</span>
+        <span class="single-tag" v-if="isSingleMatch">单</span>
+        <span class="league">{{ match.league }}</span>
+      </div>
+      <div class="match-time">
+        {{ formatMatchTime(match.fullMatchTime) }}
+      </div>
     </div>
     
-    <div class="match-time">
-      {{ formatMatchTime(matchData.fullMatchTime) }}
-    </div>
-    
-    <div class="match-content">
+    <div class="team-matchup">
       <div class="team home-team">
-        <div class="team-name">{{ matchData.homeTeam }}</div>
-        <div class="team-id" v-if="matchData.homeTeamId">ID: {{ matchData.homeTeamId }}</div>
+        <div class="team-name">{{ match.homeTeam }}</div>
+        <div class="team-rank" v-if="match.homeTeamRank">[{{ match.homeTeamRank }}] {{ match.league }}</div>
       </div>
       
       <div class="vs">VS</div>
       
       <div class="team away-team">
-        <div class="team-name">{{ matchData.awayTeam }}</div>
-        <div class="team-id" v-if="matchData.awayTeamId">ID: {{ matchData.awayTeamId }}</div>
+        <div class="team-name">{{ match.awayTeam }}</div>
+        <div class="team-rank" v-if="match.awayTeamRank">[{{ match.awayTeamRank }}] {{ match.league }}</div>
       </div>
     </div>
     
-    <div class="odds-info" v-if="hasOdds">
-      <div class="odds">
+    <div class="odds-section">
+      <!-- 单关赔率 -->
+      <div class="odds-row" v-if="isSingleMatch && hasOdds">
+        <div class="odds-label">
+          <button 
+            class="analyze-btn" 
+            @click="onAnalyze" 
+            :disabled="analyzing"
+          >
+            {{ analyzing ? '分析中...' : '分析' }}
+          </button>
+        </div>
         <div class="odds-item">
-          <span class="odds-label">主胜</span>
-          <span class="odds-value" :style="{ color: getOddsColor(matchData.odds.home) }">
-            {{ formatOdds(matchData.odds.home) }}
+          <span>胜</span>
+          <span class="odds-value">{{ formatOdds(match.odds.home) }}</span>
+        </div>
+        <div class="odds-item">
+          <span>平</span>
+          <span class="odds-value">{{ formatOdds(match.odds.draw) }}</span>
+        </div>
+        <div class="odds-item">
+          <span>负</span>
+          <span class="odds-value">{{ formatOdds(match.odds.away) }}</span>
+        </div>
+      </div>
+      
+      <!-- 普通赔率（非单关时显示） -->
+      <div class="odds-row" v-if="!isSingleMatch && hasOdds">
+        <div class="odds-label">
+          <button 
+            class="analyze-btn" 
+            @click="onAnalyze" 
+            :disabled="analyzing"
+          >
+            {{ analyzing ? '分析中...' : '分析' }}
+          </button>
+        </div>
+        <div class="odds-item">
+          <span>胜</span>
+          <span class="odds-value" :style="{ color: getOddsColor(match.odds.home) }">
+            {{ formatOdds(match.odds.home) }}
           </span>
         </div>
         <div class="odds-item">
-          <span class="odds-label">平</span>
-          <span class="odds-value" :style="{ color: getOddsColor(matchData.odds.draw) }">
-            {{ formatOdds(matchData.odds.draw) }}
+          <span>平</span>
+          <span class="odds-value" :style="{ color: getOddsColor(match.odds.draw) }">
+            {{ formatOdds(match.odds.draw) }}
           </span>
         </div>
         <div class="odds-item">
-          <span class="odds-label">客胜</span>
-          <span class="odds-value" :style="{ color: getOddsColor(matchData.odds.away) }">
-            {{ formatOdds(matchData.odds.away) }}
+          <span>负</span>
+          <span class="odds-value" :style="{ color: getOddsColor(match.odds.away) }">
+            {{ formatOdds(match.odds.away) }}
           </span>
         </div>
       </div>
-    </div>
-    
-    <div class="no-odds" v-else>
-      赔率暂未公布
-    </div>
-    
-    <div class="match-actions">
-      <button 
-        class="analyze-btn" 
-        @click="onAnalyze" 
-        :disabled="!canAnalyze"
-        :title="!canAnalyze ? '赔率未公布或比赛未开售' : '分析比赛'"
-      >
-        {{ analyzing ? '分析中...' : '分析比赛' }}
-      </button>
+      
+      <!-- 让球赔率 -->
+      <div class="odds-row" v-if="hasHandicapOdds">
+        <div class="odds-label">
+          <span v-if="match.odds.goalLine !== null">让{{ formatGoalLine(match.odds.goalLine) }}</span>
+        </div>
+        <div class="odds-item">
+          <span>胜</span>
+          <span class="odds-value" :style="{ color: getOddsColor(match.odds.hhome) }">
+            {{ formatOdds(match.odds.hhome) }}
+          </span>
+        </div>
+        <div class="odds-item">
+          <span>平</span>
+          <span class="odds-value" :style="{ color: getOddsColor(match.odds.hdraw) }">
+            {{ formatOdds(match.odds.hdraw) }}
+          </span>
+        </div>
+        <div class="odds-item">
+          <span>负</span>
+          <span class="odds-value" :style="{ color: getOddsColor(match.odds.haway) }">
+            {{ formatOdds(match.odds.haway) }}
+          </span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed } from 'vue'
 import type { Match } from '@/api/match'
 import { formatDisplayTime } from '@/utils/dateUtils'
 import { 
   getMatchStatusText, 
-  isMatchAnalyzable, 
   formatOdds, 
   getOddsColor 
 } from '@/utils/matchUtils'
 
 interface Props {
-  match?: Match
+  match: Match
 }
 
 const props = defineProps<Props>()
 
+const emit = defineEmits<{
+  analyze: [matchId: number]
+}>()
+
 const analyzing = ref(false)
-
-// 调试：打印传入的props
-onMounted(() => {
-  console.log('MatchCard mounted, props.match:', props.match)
-  console.log('props.match.odds:', props.match?.odds)
-  console.log('props.match.odds?.home:', props.match?.odds?.home)
-})
-
-// 监听props变化
-watch(() => props.match, (newMatch) => {
-  console.log('MatchCard: match props changed:', newMatch)
-  console.log('New match odds:', newMatch?.odds)
-  console.log('New match odds.home:', newMatch?.odds?.home)
-}, { deep: true })
-
-// 创建一个安全的match数据对象
-const matchData = computed(() => {
-  const defaultMatch: Match = {
-    id: 0,
-    league: '未知联赛',
-    homeTeam: '未知主队',
-    awayTeam: '未知客队',
-    odds: {
-      home: null,
-      draw: null,
-      away: null,
-    },
-    matchTime: '',
-    fullMatchTime: '',
-    status: '1',
-    matchStatus: '1',
-    matchStatusName: '未知状态',
-    matchNumStr: '',
-    homeTeamId: '',
-    awayTeamId: '',
-    leagueId: '',
-    backColor: '',
-  }
-  
-  console.log('MatchCard: Creating matchData, props.match:', props.match)
-  
-  if (!props.match) {
-    console.warn('MatchCard: 传入的match为undefined或null')
-    return defaultMatch
-  }
-  
-  // 确保odds对象存在且结构正确
-  const safeOdds = props.match.odds || defaultMatch.odds
-  
-  // 确保odds的每个属性都存在
-  const completeOdds = {
-    home: safeOdds.home !== undefined ? safeOdds.home : null,
-    draw: safeOdds.draw !== undefined ? safeOdds.draw : null,
-    away: safeOdds.away !== undefined ? safeOdds.away : null,
-  }
-  
-  console.log('MatchCard: Created completeOdds:', completeOdds)
-  
-  const safeMatch = {
-    ...defaultMatch,
-    ...props.match,
-    odds: completeOdds,
-  }
-  
-  console.log('MatchCard: Final matchData:', {
-    id: safeMatch.id,
-    league: safeMatch.league,
-    odds: safeMatch.odds,
-    hasOdds: checkOddsComplete(safeMatch.odds)
-  })
-  
-  return safeMatch
-})
-
-// 辅助函数：检查赔率是否完整
-const checkOddsComplete = (odds: any): boolean => {
-  if (!odds || typeof odds !== 'object') {
-    console.log('checkOddsComplete: odds is not an object', odds)
-    return false
-  }
-  
-  const result = odds.home !== null && 
-    odds.home !== undefined && 
-    odds.draw !== null && 
-    odds.draw !== undefined && 
-    odds.away !== null && 
-    odds.away !== undefined
-  
-  console.log('checkOddsComplete result:', result, 'for odds:', odds)
-  return result
-}
 
 // 计算属性
 const hasOdds = computed(() => {
-  console.log('hasOdds computed called, odds:', matchData.value.odds)
-  return checkOddsComplete(matchData.value.odds)
+  const odds = props.match.odds
+  return odds.home !== null && odds.draw !== null && odds.away !== null
 })
 
-const canAnalyze = computed(() => {
-  const result = isMatchAnalyzable(matchData.value)
-  console.log('canAnalyze computed:', result, 'for match:', matchData.value.id)
-  return result
+const hasHandicapOdds = computed(() => {
+  const odds = props.match.odds
+  return odds.hhome !== null && odds.hdraw !== null && odds.haway !== null
+})
+
+const isSingleMatch = computed(() => {
+  return props.match.isSingleMatch || false
 })
 
 // 方法
@@ -203,38 +164,21 @@ const getStatusText = (status: string) => {
   return getMatchStatusText(status)
 }
 
-const formatMatchTime = (fullTime: string | undefined) => {
-  if (!fullTime) return '时间未知'
-  
-  try {
-    // 确保字符串格式正确
-    if (fullTime.includes(' ')) {
-      const [dateString, timeString] = fullTime.split(' ')
-      return formatDisplayTime(dateString, timeString)
-    } else {
-      // 如果没有空格，尝试其他格式
-      return fullTime
-    }
-  } catch (error) {
-    console.error('格式化时间失败:', error)
-    return fullTime || '时间未知'
-  }
+const formatMatchTime = (fullTime: string) => {
+  const [dateString, timeString] = fullTime.split(' ')
+  return formatDisplayTime(dateString, timeString)
 }
 
-const emit = defineEmits<{
-  analyze: [matchId: number]
-}>()
+const formatGoalLine = (goalLine: number | null): string => {
+  if (goalLine === null) return ''
+  if (goalLine > 0) return `${goalLine}`
+  return goalLine.toString()
+}
 
 const onAnalyze = async () => {
-  if (!canAnalyze.value) {
-    console.log('无法分析比赛:', matchData.value.id, 'canAnalyze:', canAnalyze.value)
-    return
-  }
-  
   analyzing.value = true
   try {
-    console.log('开始分析比赛:', matchData.value.id)
-    emit('analyze', matchData.value.id)
+    emit('analyze', props.match.id)
   } finally {
     analyzing.value = false
   }
@@ -244,169 +188,208 @@ const onAnalyze = async () => {
 <style scoped>
 .match-card {
   border: 1px solid #e8e8e8;
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: 6px;
+  padding: 10px 12px;
   background: white;
-  transition: all 0.3s ease;
+  margin-bottom: 8px;
 }
 
-.match-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
+.match-card:last-child {
+  margin-bottom: 0;
 }
 
 /* 状态样式 */
 .match-card.status-pending {
-  border-left: 4px solid #faad14;
+  border-left: 3px solid #faad14;
 }
 
 .match-card.status-open {
-  border-left: 4px solid #52c41a;
+  border-left: 3px solid #52c41a;
 }
 
 .match-card.status-closed {
-  border-left: 4px solid #d9d9d9;
+  border-left: 3px solid #d9d9d9;
 }
 
 .match-card.status-live {
-  border-left: 4px solid #f5222d;
+  border-left: 3px solid #f5222d;
 }
 
 .match-card.status-finished {
-  border-left: 4px solid #1890ff;
+  border-left: 3px solid #1890ff;
 }
 
 .match-card.status-cancelled {
-  border-left: 4px solid #d9d9d9;
-  opacity: 0.6;
+  border-left: 3px solid #d9d9d9;
+  opacity: 0.7;
 }
 
+/* 顶部信息 */
 .match-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed #f0f0f0;
+  position: relative;
+}
+
+.match-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .match-num {
-  font-size: 12px;
-  color: #666;
+  font-size: 13px;
   font-weight: bold;
+  color: #1890ff;
+  background: #f0f8ff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  position: relative;
+}
+
+.single-tag {
+  position: absolute;
+  top: -6px;
+  left: 0;
+  font-size: 10px;
+  color: #fff;
+  background: #ff4d4f;
+  padding: 1px 3px;
+  border-radius: 2px;
+  font-weight: bold;
+  transform: translateX(-50%);
 }
 
 .league {
-  font-weight: bold;
-  color: #333;
-}
-
-.status {
-  font-size: 12px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: #f5f5f5;
+  font-size: 13px;
   color: #666;
+  font-weight: 500;
 }
 
 .match-time {
   font-size: 12px;
-  color: #999;
-  margin-bottom: 12px;
+  color: #666;
+  font-weight: 500;
 }
 
-.match-content {
+/* 球队对阵 */
+.team-matchup {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding: 12px 0;
-  border-top: 1px solid #f0f0f0;
-  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 10px;
 }
 
 .team {
   flex: 1;
-  text-align: center;
+  padding: 4px 0;
+}
+
+.home-team {
+  text-align: left;
+}
+
+.away-team {
+  text-align: right;
 }
 
 .team-name {
-  font-size: 16px;
-  font-weight: 500;
-  margin-bottom: 4px;
+  font-size: 15px;
+  font-weight: 600;
   color: #333;
+  margin-bottom: 4px;
 }
 
-.team-id {
+.team-rank {
   font-size: 11px;
-  color: #999;
+  color: #666;
 }
 
 .vs {
   color: #999;
-  font-size: 14px;
-  margin: 0 16px;
+  font-size: 12px;
+  margin: 0 12px;
+  font-weight: 500;
 }
 
-.odds-info {
-  margin-bottom: 16px;
+/* 赔率区域 */
+.odds-section {
+  margin-bottom: 8px;
 }
 
-.odds {
+.odds-row {
   display: flex;
-  justify-content: space-around;
-  background: #fafafa;
-  border-radius: 6px;
-  padding: 8px;
-}
-
-.odds-item {
-  display: flex;
-  flex-direction: column;
   align-items: center;
+  margin-bottom: 4px;
+  background: #fafafa;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 .odds-label {
+  width: 48px;
+  text-align: center;
   font-size: 12px;
   color: #666;
-  margin-bottom: 4px;
-}
-
-.odds-value {
-  font-size: 16px;
-  font-weight: bold;
-}
-
-.no-odds {
-  text-align: center;
-  padding: 12px;
+  padding: 6px 4px;
   background: #f5f5f5;
-  border-radius: 6px;
-  color: #999;
-  margin-bottom: 16px;
+  border-right: 1px solid #e8e8e8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.match-actions {
-  text-align: center;
-}
-
+/* 分析按钮样式 */
 .analyze-btn {
-  padding: 8px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  width: 100%;
+  background: #1890ff;
   color: white;
   border: none;
-  border-radius: 20px;
+  border-radius: 3px;
+  padding: 4px 0;
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .analyze-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  background: #40a9ff;
+  transform: translateY(-1px);
 }
 
 .analyze-btn:disabled {
-  background: #d9d9d9;
+  background: #8c8c8c;
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+.odds-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 4px;
+  border-right: 1px solid #f0f0f0;
+}
+
+.odds-item:last-child {
+  border-right: none;
+}
+
+.odds-item span:first-child {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 2px;
+}
+
+.odds-value {
+  font-size: 15px;
+  font-weight: bold;
+  color: #333;
 }
 </style>
