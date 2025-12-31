@@ -25,6 +25,12 @@ export interface RawMatch {
   awayWin: string | null
   draw: string | null
   homeWin: string | null
+  hawayWin: string | null
+  hdraw: string | null
+  hhomeWin: string | null
+  goalLine: string | null
+  isSingleMatch:boolean | false
+
 }
 
 // 前端使用的比赛数据结构
@@ -37,6 +43,10 @@ export interface Match {
     home: number | null
     draw: number | null
     away: number | null
+    hhome: number | null
+    hdraw: number | null
+    haway: number | null
+    goalLine:string | null
   }
   matchTime: string
   fullMatchTime: string // 完整日期时间
@@ -48,6 +58,7 @@ export interface Match {
   awayTeamId: string
   leagueId: string
   backColor: string
+  isSingleMatch:boolean
 }
 
 // 列表参数
@@ -88,6 +99,10 @@ const transformMatch = (raw: RawMatch): Match => {
       home: raw.homeWin ? parseFloat(raw.homeWin) : null,
       draw: raw.draw ? parseFloat(raw.draw) : null,
       away: raw.awayWin ? parseFloat(raw.awayWin) : null,
+      hhome: raw.hhomeWin ? parseFloat(raw.hhomeWin) : null,
+      hdraw: raw.hdraw ? parseFloat(raw.hdraw) : null,
+      haway: raw.hawayWin ? parseFloat(raw.hawayWin) : null,
+      goalLine: raw.goalLine ? raw.goalLine : null,
     },
     matchTime: raw.matchTime,
     fullMatchTime: `${raw.matchDate} ${raw.matchTime}`,
@@ -99,6 +114,7 @@ const transformMatch = (raw: RawMatch): Match => {
     awayTeamId: raw.awayTeamId,
     leagueId: raw.leagueId,
     backColor: raw.backColor,
+    isSingleMatch: raw.isSingleMatch
   }
 }
 
