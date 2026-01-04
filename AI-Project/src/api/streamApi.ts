@@ -81,7 +81,7 @@ export const streamChat = async (
           if (buffer.trim()) {
             const lines = buffer.split('\n')
             for (const line of lines) {
-              if (line.startsWith('data: ') && line.trim() !== 'data: ') {
+              if (line.startsWith('data:') && line.trim() !== 'data: ') {
                 const dataStr = line.slice(6).trim()
                 if (dataStr && dataStr !== '[DONE]') {
                   accumulatedText += dataStr
@@ -336,8 +336,8 @@ export const streamChatSSE = async (
             if (buffer.trim()) {
               const lines = buffer.split('\n')
               for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                  const text = line.slice(6).trim()
+                if (line.startsWith('data:')) {
+                  const text = line.slice(5).trim()
                   if (text && text !== '[DONE]') {
                     onData(text)
                   }
@@ -363,8 +363,8 @@ export const streamChatSSE = async (
           for (const line of lines) {
             if (line.trim() === '') continue
             
-            if (line.startsWith('data: ')) {
-              const text = line.slice(6).trim()
+            if (line.startsWith('data:')) {
+              const text = line.slice(5).trim()
               
               if (text === '[DONE]') {
                 onComplete?.()

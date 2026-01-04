@@ -10,6 +10,8 @@ export interface HistoryRecord {
   awayWin: string | null
   aiAnalysis: string  // Markdown 格式
   matchResult: string // 例如 "2-1" 表示主队2:1客队
+  aiScore: string
+  aiResult: string
   afterMatchAnalysis: string  // Markdown 格式
   createTime: string | Date
 }

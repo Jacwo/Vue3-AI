@@ -137,7 +137,7 @@ export const checkAnalysisAccuracy = (record: HistoryRecord): {
   resultComparison: string
 } => {
   const matchResult = parseMatchResult(record.matchResult)
-  const { prediction: aiPrediction, confidence } = extractPredictionFromAI(record.aiAnalysis)
+  const { prediction: aiPrediction, confidence } = extractPredictionFromAI(record.aiResult)
   
   const isCorrect = aiPrediction === matchResult.winner
   let resultComparison = ''

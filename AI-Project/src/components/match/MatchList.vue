@@ -195,7 +195,7 @@ const groupedMatches = computed(() => {
 
 // 按周一到周日顺序排序的分组
 const sortedGroups = computed(() => {
-  const dayOrder = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+  const dayOrder = ['周日','周一', '周二', '周三', '周四', '周五', '周六']
   const sorted: Record<string, Match[]> = {}
   
   dayOrder.forEach(day => {
