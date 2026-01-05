@@ -46,14 +46,11 @@
     
     <div class="card-footer">
       <span class="create-time">记录时间: {{ formatCreateTime(record.createTime) }}</span>
-      <div class="actions">
+      <!-- <div class="actions">
         <button class="action-btn view-btn" @click="emit('view-detail', record.matchId)">
           查看
         </button>
-        <button class="action-btn delete-btn" @click="emit('delete', record.matchId)">
-          删除
-        </button>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -295,7 +292,7 @@ const formatCreateTime = (createTime: string | Date): string => {
 .view-detail-btn {
   position: absolute;
   right: 16px;
-  bottom: 16px;
+  bottom: 1px;
   background: none;
   border: none;
   color: #1890ff;
@@ -370,7 +367,7 @@ const formatCreateTime = (createTime: string | Date): string => {
   .odds-row {
     flex-wrap: wrap;
     justify-content: flex-start;
-    gap: 12px;
+    gap: 6px;
   }
   
   .card-footer {

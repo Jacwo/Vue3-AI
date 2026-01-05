@@ -24,9 +24,6 @@
             <option value="away">客胜</option>
             <option value="draw">平局</option>
           </select>
-          <button @click="exportHistory" class="export-btn" :disabled="loading">
-            导出
-          </button>
           <button @click="refreshHistory" :disabled="loading" class="refresh-btn">
             {{ loading ? '加载中...' : '刷新' }}
           </button>
@@ -112,18 +109,10 @@
           :key="record.id"
           :record="record"
           @view-detail="onViewDetail"
-          @delete="onDeleteRecord"
         />
       </div>
 
-      <div class="records-footer">
-        <div class="batch-actions" v-if="selectedRecords.length > 0">
-          <span>已选择 {{ selectedRecords.length }} 条记录</span>
-          <button @click="deleteSelected" class="batch-delete-btn">
-            批量删除
-          </button>
-        </div>
-      </div>
+     
     </div>
   </div>
 </template>
@@ -247,60 +236,6 @@ const onViewDetail = (id: string) => {
   emit('view-detail', id)
 }
 
-const onDeleteRecord = async (id: string) => {
-  if (confirm('确定要删除这条记录吗？')) {
-    try {
-      await historyApi.deleteHistory(id)
-      // 从列表中移除
-      historyRecords.value = historyRecords.value.filter(record => record.id !== id)
-      // 从选中列表中移除
-      selectedRecords.value = selectedRecords.value.filter(selectedId => selectedId !== id)
-    } catch (err) {
-      console.error('删除记录失败:', err)
-      alert('删除失败')
-    }
-  }
-}
-
-const deleteSelected = async () => {
-  if (selectedRecords.value.length === 0) return
-  
-  if (confirm(`确定要删除选中的 ${selectedRecords.value.length} 条记录吗？`)) {
-    try {
-      await historyApi.deleteBatchHistory(selectedRecords.value)
-      // 从列表中移除
-      historyRecords.value = historyRecords.value.filter(
-        record => !selectedRecords.value.includes(record.id)
-      )
-      selectedRecords.value = []
-    } catch (err) {
-      console.error('批量删除失败:', err)
-      alert('批量删除失败')
-    }
-  }
-}
-
-const exportHistory = async () => {
-  try {
-    const blob = await historyApi.exportHistory({
-      searchKeyword: searchKeyword.value,
-      matchResult: filters.value.resultType === 'all' ? undefined : filters.value.resultType
-    })
-    
-    // 创建下载链接
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `历史分析记录_${new Date().toISOString().split('T')[0]}.xlsx`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    window.URL.revokeObjectURL(url)
-  } catch (err) {
-    console.error('导出失败:', err)
-    alert('导出失败')
-  }
-}
 
 onMounted(() => {
   fetchHistory()
