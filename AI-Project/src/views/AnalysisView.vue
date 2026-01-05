@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import MatchAnalysis from '@/components/analysis/MatchAnalysis.vue'
+//import MatchAnalysis from '@/components/analysis/MatchAnalysis.vue'
 
 const route = useRoute()
 </script>

@@ -132,7 +132,7 @@ export const matchApi = {
     return apiClient.get<RawMatch[]>('/api/match/list', {
       params,
       ...config,
-    }).then((rawMatches: RawMatch[]) => {
+    }).then((rawMatches) => {
       // 转换数据格式
       return transformMatches(rawMatches)
     })
@@ -153,9 +153,9 @@ export const matchApi = {
   
   // 获取比赛详情
   getMatchDetail(matchId: number, config?: CustomRequestConfig) {
-    return apiClient.get<RawMatch>(`/api/match/${matchId}`, config).then((rawMatch: RawMatch) => {
+    return apiClient.get<RawMatch>(`/api/match/${matchId}`, config).then((rawMatch) => {
       // 转换数据格式
-      return transformMatch(rawMatch)
+      return transformMatches(rawMatches)
     })
   },
   
@@ -176,7 +176,7 @@ export const matchApi = {
     return apiClient.get<RawMatch[]>('/match/list', {
       params: { status },
       ...config,
-    }).then((rawMatches: RawMatch[]) => {
+    }).then((rawMatches) => {
       return transformMatches(rawMatches)
     })
   },
@@ -186,7 +186,7 @@ export const matchApi = {
     return apiClient.get<RawMatch[]>('/match/list', {
       params: { leagueId },
       ...config,
-    }).then((rawMatches: RawMatch[]) => {
+    }).then((rawMatches) => {
       return transformMatches(rawMatches)
     })
   },
@@ -197,7 +197,7 @@ export const matchApi = {
     return apiClient.get<RawMatch[]>('/match/list', {
       params: { date: today },
       ...config,
-    }).then((rawMatches: RawMatch[]) => {
+    }).then((rawMatches) => {
       return transformMatches(rawMatches)
     })
   },

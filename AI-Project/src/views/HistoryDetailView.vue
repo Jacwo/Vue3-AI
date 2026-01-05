@@ -65,9 +65,9 @@
             <span class="accuracy-label">AI预测:</span>
             <span class="accuracy-value">
               {{ getPredictionText(accuracyInfo.aiPrediction) || '未给出明确预测' }}
-              <span v-if="accuracyInfo.confidence > 0" class="confidence">
+              <!-- <span v-if="accuracyInfo.confidence > 0" class="confidence">
                 (置信度: {{ (accuracyInfo.confidence * 100).toFixed(1) }}%)
-              </span>
+              </span> -->
             </span>
           </div>
           <div class="accuracy-item">
@@ -134,9 +134,9 @@
         <button class="action-btn copy-btn" @click="copyDetail">
           复制内容
         </button>
-        <button class="action-btn delete-btn" @click="deleteRecord">
+        <!-- <button class="action-btn delete-btn" @click="deleteRecord">
           删除记录
-        </button>
+        </button> -->
       </div>
     </div>
 
@@ -205,11 +205,7 @@ const fetchDetail = async () => {
     const response = await historyApi.getHistoryDetail(recordId.value)
     console.log('API返回数据:', response)
     
-    // 根据实际API响应结构调整
-    if (response && response.data) {
-      // 如果API返回 { code: 0, data: {...}, message: 'success' }
-      record.value = response.data
-    } else if (response && typeof response === 'object') {
+     if (response && typeof response === 'object') {
       // 如果直接返回记录对象
       record.value = response as HistoryRecord
     } else {

@@ -13,29 +13,40 @@
           {{ loading ? '加载中...' : '刷新' }}
         </button>
         
-        <!-- 添加全部折叠/展开按钮 -->
-        <div class="collapse-controls" v-if="Object.keys(sortedGroups).length > 0">
-          <button @click="toggleAllGroups(false)" class="collapse-btn">
-            全部展开
+        <!-- 移动端简化折叠控制 -->
+        <!-- <div class="collapse-controls" v-if="Object.keys(sortedGroups).length > 0">
+          <button @click="toggleAllGroups(false)" class="collapse-btn" title="全部展开">
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"/>
+            </svg>
           </button>
-          <button @click="toggleAllGroups(true)" class="collapse-btn">
-            全部折叠
+          <button @click="toggleAllGroups(true)" class="collapse-btn" title="全部折叠">
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"/>
+            </svg>
           </button>
-        </div>
+        </div> -->
       </div>
     </div>
 
     <div class="matches-container">
       <div v-if="loading" class="loading">
+        <div class="loading-spinner"></div>
         <p>加载比赛数据中...</p>
       </div>
 
       <div v-else-if="error" class="error">
+        <svg viewBox="0 0 24 24" width="24" height="24" style="fill: #ff4d4f; margin-bottom: 8px;">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+        </svg>
         <p>加载失败: {{ error }}</p>
         <button @click="fetchMatches">重试</button>
       </div>
 
       <div v-else-if="!matches || matches.length === 0" class="no-matches">
+        <svg viewBox="0 0 24 24" width="48" height="48" style="fill: #d9d9d9; margin-bottom: 16px;">
+          <path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+        </svg>
         <p>暂无比赛数据</p>
       </div>
 
@@ -44,27 +55,31 @@
         <template v-if="groupedMatches && Object.keys(groupedMatches).length > 0">
           <div v-for="(group, day) in sortedGroups" :key="day" class="match-day-group">
             <div class="group-header" @click="toggleGroup(day)">
-              <div class="group-header-left">
+              <div class="group-header-main">
                 <span class="collapse-icon" :class="{ 'collapsed': collapsedGroups[day] }">
                   <svg viewBox="0 0 24 24" width="16" height="16">
                     <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
                   </svg>
                 </span>
-                <h3>{{ day }}</h3>
-                <span class="match-count">{{ group.length }} 场比赛</span>
-                <!-- 单关比赛数量统计 -->
-                <span class="single-count" v-if="countSingleMatchesInGroup(group) > 0">
-                  <span class="single-tag-mini">单</span>
-                  {{ countSingleMatchesInGroup(group) }}
-                </span>
+                <div class="group-title">
+                  <h3>{{ day }}</h3>
+                  <div class="group-meta">
+                    <span class="match-count">{{ group.length }} 场</span>
+                    <!-- 单关比赛数量统计 -->
+                    <span class="single-count" v-if="countSingleMatchesInGroup(group) > 0">
+                      <span class="single-tag-mini">单</span>
+                      {{ countSingleMatchesInGroup(group) }}
+                    </span>
+                  </div>
+                </div>
               </div>
               
               <div class="group-stats">
                 <span class="stat-item status-open" v-if="countStatusMatches(group, '2') > 0">
-                  可投 {{ countStatusMatches(group, '2') }}
+                  {{ countStatusMatches(group, '2') }}可投
                 </span>
                 <span class="stat-item status-live" v-if="countStatusMatches(group, '4') > 0">
-                  进行中 {{ countStatusMatches(group, '4') }}
+                  {{ countStatusMatches(group, '4') }}进行中
                 </span>
               </div>
             </div>
@@ -101,11 +116,13 @@
       </div>
     </div>
     
-    <!-- 分析抽屉 -->
+    <!-- 分析抽屉 - 移动端全屏 -->
     <Drawer
       v-model:visible="showAnalysisDrawer"
       :title="drawerTitle"
-      width="60%"
+      :width="isMobile ? '100%' : '60%'"
+      :placement="isMobile ? 'bottom' : 'right'"
+      :height="isMobile ? '90%' : undefined"
       @close="handleDrawerClose"
     >
       <MatchAnalysisDrawer
@@ -117,12 +134,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { matchApi } from '@/api/match'
 import type { Match } from '@/types/match'
 import MatchCard from './MatchCard.vue'
-import Drawer from '@/components/common/Drawer.vue' // 引入抽屉组件
-import MatchAnalysisDrawer from '../analysis/MatchAnalysisDrawer.vue' // 引入分析组件
+import Drawer from '@/components/common/Drawer.vue'
+import MatchAnalysisDrawer from '../analysis/MatchAnalysisDrawer.vue'
 
 const matches = ref<Match[]>([])
 const loading = ref(false)
@@ -135,6 +152,13 @@ const selectedMatch = ref<Match | null>(null)
 
 // 折叠状态管理
 const collapsedGroups = ref<Record<string, boolean>>({})
+
+// 移动端检测
+const isMobile = ref(false)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 768
+}
 
 // 获取所有联赛
 const leagues = computed(() => {
@@ -149,7 +173,6 @@ const filteredMatches = computed(() => {
   if (!selectedLeague.value) return matches.value
   
   return matches.value.filter(match => {
-    // 确保 match.league 存在
     return match?.league === selectedLeague.value
   })
 })
@@ -170,7 +193,6 @@ const groupedMatches = computed(() => {
   const groups: Record<string, Match[]> = {}
   
   filteredMatches.value.forEach(match => {
-    // 提取周几信息（前2个字符），如"周三"
     const day = match.matchNumStr.substring(0, 2)
     
     if (!groups[day]) {
@@ -180,10 +202,8 @@ const groupedMatches = computed(() => {
     groups[day].push(match)
   })
   
-  // 对每个分组内的比赛按编号排序
   Object.keys(groups).forEach(day => {
     groups[day].sort((a, b) => {
-      // 提取数字部分进行比较
       const aNum = parseInt(a.matchNumStr.substring(2)) || 0
       const bNum = parseInt(b.matchNumStr.substring(2)) || 0
       return aNum - bNum
@@ -204,7 +224,6 @@ const sortedGroups = computed(() => {
     }
   })
   
-  // 如果还有其他不在顺序中的周几，添加到后面
   Object.keys(groupedMatches.value).forEach(day => {
     if (!dayOrder.includes(day) && !sorted[day]) {
       sorted[day] = groupedMatches.value[day]
@@ -231,7 +250,6 @@ const countStatusMatches = (group: Match[], status: string) => {
 
 // 切换单个分组折叠状态
 const toggleGroup = (day: string) => {
-  // 如果不存在，初始化为true（折叠）
   if (collapsedGroups.value[day] === undefined) {
     collapsedGroups.value[day] = true
   } else {
@@ -246,11 +264,10 @@ const toggleAllGroups = (collapse: boolean) => {
   })
 }
 
-// 当分组变化时，初始化折叠状态（默认全部展开）
+// 当分组变化时，初始化折叠状态
 watch(sortedGroups, (newGroups) => {
   Object.keys(newGroups).forEach(day => {
     if (collapsedGroups.value[day] === undefined) {
-      // 默认展开所有分组
       collapsedGroups.value[day] = false
     }
   })
@@ -262,12 +279,11 @@ const fetchMatches = async () => {
   
   try {
     const data = await matchApi.getMatchList()
-    // 确保 data 是数组
     matches.value = Array.isArray(data) ? data : []
   } catch (err) {
     error.value = err instanceof Error ? err.message : '加载失败'
     console.error('获取比赛列表失败:', err)
-    matches.value = [] // 出错时清空数组
+    matches.value = []
   } finally {
     loading.value = false
   }
@@ -293,169 +309,251 @@ const handleDrawerClose = () => {
 }
 
 onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
   fetchMatches()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
 })
 </script>
 
 <style scoped>
 .match-list {
-  padding: 20px;
+  padding: 0;
   height: 100%;
   display: flex;
   flex-direction: column;
   position: relative;
+  background: #f5f5f5;
 }
 
+/* 头部样式优化 */
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  flex-shrink: 0; /* 防止header被压缩 */
+  padding: 12px 16px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header h2 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
 }
 
 .filters {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .filters select {
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  min-width: 120px;
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  background: white;
+  font-size: 14px;
+  color: #333;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23666'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 36px;
 }
 
 .filters button {
-  padding: 8px 16px;
-  background-color: #007bff;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(24, 144, 255, 0.2);
 }
 
 .filters button:disabled {
-  background-color: #ccc;
+  background: #ccc;
+  box-shadow: none;
   cursor: not-allowed;
 }
 
-/* 折叠控制按钮 */
+/* 折叠控制按钮 - 移动端优化 */
 .collapse-controls {
   display: flex;
-  gap: 8px;
-  margin-left: 10px;
+  gap: 4px;
+  margin-left: auto;
 }
 
 .collapse-btn {
-  padding: 6px 12px;
-  background-color: #f0f0f0;
+  padding: 8px;
+  background: white;
   color: #666;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
   font-size: 12px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+}
+
+.collapse-btn svg {
+  fill: #666;
 }
 
 .collapse-btn:hover {
-  background-color: #e0e0e0;
+  background: #f5f5f5;
 }
 
-/* 比赛容器 - 添加滚动 */
+/* 比赛容器 - 移动端滚动优化 */
 .matches-container {
   flex: 1;
   overflow-y: auto;
-  min-height: 0; /* 重要：允许内容在flex容器中滚动 */
+  overflow-x: hidden;
+  min-height: 0;
   position: relative;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 8px 8px;
 }
 
-.loading, .error, .no-matches, .no-filtered-matches {
+/* 加载状态 */
+.loading {
   text-align: center;
-  padding: 40px;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #1890ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 错误状态 */
+.error, .no-matches, .no-filtered-matches {
+  text-align: center;
+  padding: 60px 20px;
   color: #666;
 }
 
 .error button {
-  margin-top: 10px;
-  padding: 8px 16px;
-  background-color: #dc3545;
+  margin-top: 16px;
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 /* 比赛内容区域 */
 .matches-content {
-  padding-bottom: 20px;
+  padding-bottom: 8px;
 }
 
-/* 按天分组样式 */
+/* 按天分组样式 - 移动端优化 */
 .match-day-group {
-  margin-bottom: 16px;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
+  margin-bottom: 12px;
+  border-radius: 12px;
   overflow: hidden;
-  background: #fff;
+  background: white;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
 }
 
-.match-day-group:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.match-day-group:active {
+  transform: scale(0.99);
 }
 
 .group-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  background: #fafafa;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 14px 16px;
+  background: white;
   cursor: pointer;
-  transition: background-color 0.2s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 56px;
 }
 
-.group-header:hover {
-  background-color: #f5f5f5;
-}
-
-.group-header-left {
+.group-header-main {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
 }
 
 .collapse-icon {
-  transition: transform 0.3s ease;
+  flex-shrink: 0;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
 }
 
 .collapse-icon svg {
-  fill: #666;
+  fill: #1890ff;
 }
 
 .collapse-icon.collapsed {
   transform: rotate(-90deg);
 }
 
+.group-title {
+  flex: 1;
+  min-width: 0;
+}
+
 .group-header h3 {
-  margin: 0;
+  margin: 0 0 4px 0;
   font-size: 16px;
   font-weight: 600;
   color: #333;
-  user-select: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .match-count {
   font-size: 12px;
   color: #666;
-  background: #f0f0f0;
+  background: #f5f5f5;
   padding: 2px 8px;
   border-radius: 10px;
-  user-select: none;
 }
 
 /* 单关比赛统计 */
@@ -465,67 +563,70 @@ onMounted(() => {
   gap: 4px;
   font-size: 12px;
   color: #ff4d4f;
-  user-select: none;
 }
 
 .single-tag-mini {
   display: inline-block;
   width: 14px;
   height: 14px;
-  background: #ff4d4f;
+  background: linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%);
   color: white;
   font-size: 10px;
   border-radius: 2px;
   text-align: center;
   line-height: 14px;
   font-weight: bold;
+  box-shadow: 0 1px 2px rgba(255, 77, 79, 0.2);
 }
 
 /* 分组状态统计 */
 .group-stats {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: 8px;
 }
 
 .stat-item {
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 10px;
-  user-select: none;
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .stat-item.status-open {
-  background-color: rgba(82, 196, 26, 0.1);
+  background: rgba(82, 196, 26, 0.1);
   color: #52c41a;
-  border: 1px solid rgba(82, 196, 26, 0.3);
+  border: 1px solid rgba(82, 196, 26, 0.2);
 }
 
 .stat-item.status-live {
-  background-color: rgba(245, 34, 45, 0.1);
+  background: rgba(245, 34, 45, 0.1);
   color: #f5222d;
-  border: 1px solid rgba(245, 34, 45, 0.3);
+  border: 1px solid rgba(245, 34, 45, 0.2);
 }
 
 /* 分组内容 */
 .group-content {
-  max-height: 5000px; /* 设置一个足够大的值，支持动画效果 */
+  max-height: 5000px;
   overflow: hidden;
-  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
   opacity: 1;
 }
 
 .group-content.collapsed {
   max-height: 0;
   opacity: 0;
-  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
 }
 
 .group-matches {
-  padding: 12px;
+  padding: 0;
 }
 
 .group-matches .match-card {
-  margin-bottom: 8px;
+  margin-bottom: 1px;
 }
 
 .group-matches .match-card:last-child {
@@ -538,57 +639,109 @@ onMounted(() => {
   padding: 16px;
   color: #999;
   font-size: 14px;
-  border-top: 1px solid #f0f0f0;
-  margin-top: 20px;
-  background: #fafafa;
-  border-radius: 4px;
+  margin-top: 16px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .list-footer p {
   margin: 0;
 }
 
-/* 自定义滚动条样式 */
-.matches-container::-webkit-scrollbar {
-  width: 6px;
+/* 触摸优化 */
+@media (hover: none) and (pointer: coarse) {
+  .group-header:active {
+    background-color: #f5f5f5;
+  }
+  
+  .filters select:active,
+  .filters button:active,
+  .collapse-btn:active {
+    transform: scale(0.98);
+  }
 }
 
-.matches-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.matches-container::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-.matches-container::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-/* 响应式设计 */
+/* 响应式设计 - 移动端优化 */
 @media (max-width: 768px) {
+  .match-list {
+    padding: 0;
+  }
+  
   .header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+  
+  .header h2 {
+    font-size: 20px;
+    margin-bottom: 12px;
   }
   
   .filters {
+    gap: 8px;
+  }
+  
+  .filters select {
+    order: 1;
     width: 100%;
+  }
+  
+  .filters button {
+    order: 2;
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .collapse-controls {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    margin: 8px 0 0 0;
+  }
+  
+  .group-header {
+    padding: 12px;
+  }
+  
+  .group-header h3 {
+    font-size: 15px;
+  }
+  
+  .group-meta {
     flex-wrap: wrap;
   }
   
+  .group-stats {
+    margin-top: 4px;
+    justify-content: flex-start;
+  }
+  
+  .matches-container {
+    padding: 0 8px 8px;
+  }
+  
+  /* 移动端优化滚动 */
+  .matches-container::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .matches-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .matches-container::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+  }
+}
+
+/* 超小屏幕优化 */
+@media (max-width: 320px) {
   .group-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
-  }
-  
-  .group-header-left {
-    width: 100%;
-    justify-content: space-between;
   }
   
   .group-stats {
@@ -596,15 +749,72 @@ onMounted(() => {
     justify-content: flex-start;
   }
   
-  .collapse-controls {
-    margin-left: 0;
-    margin-top: 8px;
-    width: 100%;
-    justify-content: flex-start;
+  .filters button {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+}
+
+/* 平板优化 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .match-list {
+    padding: 16px;
   }
   
+  .header {
+    padding: 16px 20px;
+  }
+  
+  .filters {
+    gap: 12px;
+  }
+  
+  .filters select {
+    min-width: 150px;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
   .match-list {
-    padding: 12px;
+    background: #141414;
+  }
+  
+  .header,
+  .match-day-group,
+  .list-footer {
+    background: #1f1f1f;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .header h2,
+  .group-header h3 {
+    color: #e6e6e6;
+  }
+  
+  .filters select {
+    background: #262626;
+    border-color: #434343;
+    color: #e6e6e6;
+  }
+  
+  .collapse-btn {
+    background: #262626;
+    border-color: #434343;
+    color: #e6e6e6;
+  }
+  
+  .collapse-btn svg {
+    fill: #e6e6e6;
+  }
+  
+  .match-count {
+    background: #262626;
+    color: #a6a6a6;
+  }
+  
+  .list-footer {
+    color: #8c8c8c;
   }
 }
 </style>

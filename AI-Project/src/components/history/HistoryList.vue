@@ -146,7 +146,7 @@ const loading = ref(false)
 const error = ref<string>('')
 const searchKeyword = ref('')
 const currentPage = ref(1)
-const pageSize = ref(10)
+const pageSize = ref(100)
 const selectedRecords = ref<string[]>([])
 const filters = ref({
   resultType: 'all' as 'all' | 'home' | 'away' | 'draw',

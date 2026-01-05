@@ -4,7 +4,6 @@ import type {
   HistoryRecord, 
   HistoryListParams, 
   HistoryListResponse,
-  HistoryDetailResponse,
   MatchResultStats,
   AnalysisAccuracy 
 } from '@/types/history'
@@ -17,7 +16,7 @@ export const historyApi = {
   
   // 获取历史记录详情
   getHistoryDetail(matchId: string, config?: CustomRequestConfig) {
-    return apiClient.get<HistoryDetailResponse>(`/api/analysis/history/${matchId}`, config)
+    return apiClient.get<HistoryRecord>(`/api/analysis/history/${matchId}`, config)
   },
   
   // 删除历史记录

@@ -122,10 +122,7 @@ export const streamChat = async (
         // 继续读取下一个 chunk
         processChunk()
       } catch (error) {
-        if (error.name === 'AbortError') {
-          console.log('Stream aborted')
-          return
-        }
+    
         onError?.(error as Error)
       }
     }
@@ -258,9 +255,7 @@ export const streamChatSimple = async (
         }
       } catch (error) {
         console.error('Stream read error:', error)
-        if (error.name !== 'AbortError') {
-          onError?.(error as Error)
-        }
+      
       } finally {
         reader.releaseLock()
       }
@@ -379,10 +374,7 @@ export const streamChatSSE = async (
           }
         }
       } catch (error) {
-        if (error.name !== 'AbortError') {
-          console.error('SSE stream error:', error)
-          onError?.(error as Error)
-        }
+      
       } finally {
         reader.releaseLock()
       }
@@ -481,10 +473,7 @@ export const streamChatText = async (
           }
         }
       } catch (error) {
-        if (error.name !== 'AbortError') {
-          console.error('Text stream error:', error)
-          onError?.(error as Error)
-        }
+       
       } finally {
         reader.releaseLock()
       }
