@@ -76,7 +76,7 @@
               
               <div class="group-stats">
                 <span class="stat-item status-open" v-if="countStatusMatches(group, '2') > 0">
-                  {{ countStatusMatches(group, '2') }}可投
+                  {{ countStatusMatches(group, '2') }}可选
                 </span>
                 <span class="stat-item status-live" v-if="countStatusMatches(group, '4') > 0">
                   {{ countStatusMatches(group, '4') }}进行中
