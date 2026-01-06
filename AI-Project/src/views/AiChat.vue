@@ -117,8 +117,10 @@
               <span class="message-time">正在输入...</span>
             </div>
             <div class="message-text">
-              {{ currentResponse }}
-              <span v-if="isStreaming" class="typing-cursor"></span>
+              <div v-if="streamingMessage" class="typing-container">
+                <div class="typing-content" v-html="formatMessage(streamingMessage)"></div>
+                <span v-if="isStreaming" class="typing-cursor"></span>
+              </div>
             </div>
           </div>
         </div>
@@ -133,53 +135,64 @@
       </div>
     </div>
 
-    <!-- 猜你想问区域 - 固定在输入框上方 -->
-    <div v-if="!isStreaming && quickQuestions.length > 0" class="quick-questions-fixed">
-      <div class="quick-questions-header">
+    <!-- 猜你想问区域 - 支持折叠 -->
+    <div 
+      v-if="  !isStreaming && quickQuestions.length > 0" 
+      class="quick-questions-fixed"
+      :class="{ 'collapsed': isQuickQuestionsCollapsed }"
+    >
+      <div 
+        class="quick-questions-header"
+        @click="toggleQuickQuestions"
+      >
         <div class="quick-questions-title">
           <svg class="question-icon" viewBox="0 0 24 24">
-            <path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/>
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
           </svg>
-          <h4>快速提问</h4>
+          <h4>猜你想问</h4>
+          <div class="collapse-indicator">
+            <svg class="collapse-icon" viewBox="0 0 24 24">
+              <path v-if="isQuickQuestionsCollapsed" d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"/>
+              <path v-else d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"/>
+            </svg>
+          </div>
         </div>
         <button 
-          @click="refreshQuickQuestions" 
+          v-if="!isQuickQuestionsCollapsed"
+          @click.stop="refreshQuickQuestions" 
           class="refresh-btn"
           :disabled="quickQuestionsLoading"
-          title="换一批"
         >
-          <svg class="refresh-icon" viewBox="0 0 24 24" :class="{ 'loading': quickQuestionsLoading }">
+          <svg class="refresh-icon" viewBox="0 0 24 24">
             <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
           </svg>
+          <span class="refresh-text">换一批</span>
         </button>
       </div>
       
-      <div v-if="quickQuestionsLoading" class="questions-loading">
-        <div class="loading-dots">
-          <span></span>
-          <span></span>
-          <span></span>
+      <div 
+        v-if="!isQuickQuestionsCollapsed"
+        class="quick-questions-content"
+      >
+        <div v-if="quickQuestionsLoading" class="questions-loading">
+          <div class="loading-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
         </div>
-      </div>
-      <div v-else class="questions-grid">
-        <button 
-          v-for="(question, index) in quickQuestions" 
-          :key="index"
-          @click="selectQuickQuestion(question)"
-          class="question-card"
-        >
-          <div class="question-content">
-            <svg class="question-mark-icon" viewBox="0 0 24 24">
-              <path d="M15.07 11.25l-.9.92C13.45 12.89 13 13.5 13 15h-2v-.5c0-1.11.45-2.11 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25zM13 19h-2v-2h2v2zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
-            </svg>
-            <span class="question-text">{{ question }}</span>
+        <div v-else class="questions-scroll-container">
+          <div class="question-chips">
+            <button 
+              v-for="(question, index) in quickQuestions" 
+              :key="index"
+              @click="selectQuickQuestion(question)"
+              class="question-chip"
+            >
+              {{ question }}
+            </button>
           </div>
-          <div class="question-arrow">
-            <svg viewBox="0 0 24 24">
-              <path d="M10 17l5-5-5-5v10z"/>
-            </svg>
-          </div>
-        </button>
+        </div>
       </div>
     </div>
 
@@ -265,7 +278,7 @@ interface Message extends ChatMessage {
 const messages = ref<Message[]>([])
 const userInput = ref('')
 const isStreaming = ref(false)
-const currentResponse = ref('')
+const streamingMessage = ref('')
 const useDeepThinking = ref(false)
 const inputTokens = ref(0)
 const messagesContainer = ref<HTMLElement>()
@@ -274,12 +287,14 @@ const inputArea = ref<HTMLTextAreaElement>()
 // 猜你想问相关
 const quickQuestions = ref<string[]>([])
 const quickQuestionsLoading = ref(false)
+const isQuickQuestionsCollapsed = ref(false)
 let abortController: (() => void) | null = null
 
 // 打字机效果相关
-let typingInterval: number | null = null
-let fullResponse = ''
-let currentPosition = 0
+let accumulatedChunks: string[] = []
+let typingTimeout: number | null = null
+let lastTypingTime = 0
+const TYPING_SPEED = 10 // 字符/ms，数值越小越快
 
 // 计算属性
 const canSend = computed(() => {
@@ -298,13 +313,116 @@ const scrollToBottom = () => {
 const formatMessage = (content: string) => {
   if (!content) return ''
   
-  // 处理 Markdown 和格式化
-  return content
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
-    .replace(/\n/g, '<br>')
+  // 处理 Markdown 语法
+  let formatted = content
+  
+  // 标题
+  formatted = formatted.replace(/^### (.*$)/gm, '<h3>$1</h3>')
+  formatted = formatted.replace(/^## (.*$)/gm, '<h2>$1</h2>')
+  formatted = formatted.replace(/^# (.*$)/gm, '<h1>$1</h1>')
+  
+  // 加粗
+  formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+  formatted = formatted.replace(/__(.*?)__/g, '<strong>$1</strong>')
+  
+  // 斜体
+  formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>')
+  formatted = formatted.replace(/_(.*?)_/g, '<em>$1</em>')
+  
+  // 删除线
+  formatted = formatted.replace(/~~(.*?)~~/g, '<del>$1</del>')
+  
+  // 行内代码
+  formatted = formatted.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
+  
+  // 代码块
+  formatted = formatted.replace(/```([\s\S]*?)```/g, (match, code) => {
+    // 尝试检测语言
+    const lines = code.split('\n')
+    const firstLine = lines[0].trim()
+    const languageMap: Record<string, string> = {
+      'js': 'javascript',
+      'ts': 'typescript',
+      'py': 'python',
+      'rb': 'ruby',
+      'java': 'java',
+      'cpp': 'cpp',
+      'c++': 'cpp',
+      'c': 'c',
+      'go': 'go',
+      'rust': 'rust',
+      'php': 'php',
+      'html': 'html',
+      'css': 'css',
+      'sql': 'sql',
+      'json': 'json',
+      'yaml': 'yaml',
+      'xml': 'xml'
+    }
+    
+    let language = ''
+    if (languageMap[firstLine]) {
+      language = languageMap[firstLine]
+      code = lines.slice(1).join('\n')
+    } else if (firstLine.match(/^(javascript|typescript|python|ruby|java|cpp|go|rust|php|html|css|sql|json|yaml|xml)$/)) {
+      language = firstLine
+      code = lines.slice(1).join('\n')
+    }
+    
+    return `<pre><code class="language-${language}">${escapeHtml(code)}</code></pre>`
+  })
+  
+  // 无序列表
+  formatted = formatted.replace(/^[\*\+-] (.*$)/gm, '<li>$1</li>')
+  formatted = formatted.replace(/(<li>.*<\/li>[\s]*)+/g, '<ul>$&</ul>')
+  
+  // 有序列表
+  formatted = formatted.replace(/^\d+\. (.*$)/gm, '<li>$1</li>')
+  formatted = formatted.replace(/(<li>.*<\/li>[\s]*)+(?=\d+\.|\s*$)/g, '<ol>$&</ol>')
+  
+  // 引用
+  formatted = formatted.replace(/^> (.*$)/gm, '<blockquote>$1</blockquote>')
+  
+  // 链接
+  formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+  
+  // 图片
+  formatted = formatted.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="markdown-image">')
+  
+  // 分割线
+  formatted = formatted.replace(/^\s*---\s*$/gm, '<hr>')
+  formatted = formatted.replace(/^\s*\*\*\*\s*$/gm, '<hr>')
+  formatted = formatted.replace(/^\s*___\s*$/gm, '<hr>')
+  
+  // 表格（简化版）
+  formatted = formatted.replace(/\|(.+)\|\n\|([-|:]+)\|\n((?:\|.+\|\n?)+)/g, (match, headers, align, rows) => {
+    const headerCells = headers.split('|').filter(cell => cell.trim()).map(cell => `<th>${cell.trim()}</th>`).join('')
+    const rowLines = rows.trim().split('\n')
+    const rowHtml = rowLines.map(row => {
+      const cells = row.split('|').filter(cell => cell.trim()).map(cell => `<td>${cell.trim()}</td>`).join('')
+      return `<tr>${cells}</tr>`
+    }).join('')
+    return `<table class="markdown-table"><thead><tr>${headerCells}</tr></thead><tbody>${rowHtml}</tbody></table>`
+  })
+  
+  // 换行处理：两个空格或反斜杠 + 换行
+  formatted = formatted.replace(/  \n|\n\n/g, '<br>')
+  
+  // 段落
+  formatted = formatted.replace(/(<br>\s*){2,}/g, '</p><p>')
+  formatted = formatted.replace(/^([^<].*[^>])$/gm, '<p>$1</p>')
+  
+  // 清理多余的标签
+  formatted = formatted.replace(/<\/p>\s*<p>/g, '<br>')
+  formatted = formatted.replace(/<p>\s*<\/p>/g, '')
+  
+  return formatted
+}
+
+const escapeHtml = (text: string) => {
+  const div = document.createElement('div')
+  div.textContent = text
+  return div.innerHTML
 }
 
 const formatTime = (timestamp?: number) => {
@@ -319,6 +437,74 @@ const autoResize = () => {
     textarea.style.height = 'auto'
     textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px'
   }
+}
+
+// 优化打字机效果
+const processTypingChunk = () => {
+  if (accumulatedChunks.length === 0) {
+    typingTimeout = null
+    return
+  }
+  
+  const now = Date.now()
+  const timeDiff = now - lastTypingTime
+  
+  // 根据时间差调整显示速度
+  const speed = Math.max(5, Math.min(20, 50 - timeDiff / 10))
+  
+  const chunk = accumulatedChunks.shift() || ''
+  streamingMessage.value += chunk
+  
+  // 更新最后打字时间
+  lastTypingTime = now
+  
+  // 立即滚动到底部
+  scrollToBottom()
+  
+  // 如果有更多内容，继续处理
+  if (accumulatedChunks.length > 0) {
+    typingTimeout = window.setTimeout(processTypingChunk, speed)
+  } else {
+    typingTimeout = null
+  }
+}
+
+const addTypingChunk = (chunk: string) => {
+  // 将大块分割成小字符组，提供更流畅的体验
+  const chunks = []
+  let currentChunk = ''
+  
+  for (let i = 0; i < chunk.length; i++) {
+    currentChunk += chunk[i]
+    
+    // 根据字符类型调整块大小
+    if (chunk[i].match(/[\n。！？；]/) || currentChunk.length >= 3) {
+      chunks.push(currentChunk)
+      currentChunk = ''
+    }
+  }
+  
+  if (currentChunk) {
+    chunks.push(currentChunk)
+  }
+  
+  // 添加到累积块中
+  accumulatedChunks.push(...chunks)
+  
+  // 如果没有正在进行的打字效果，启动一个
+  if (!typingTimeout && accumulatedChunks.length > 0) {
+    lastTypingTime = Date.now()
+    processTypingChunk()
+  }
+}
+
+const stopTypingEffect = () => {
+  if (typingTimeout) {
+    clearTimeout(typingTimeout)
+    typingTimeout = null
+  }
+  accumulatedChunks = []
+  streamingMessage.value = ''
 }
 
 const handleSend = async () => {
@@ -353,7 +539,9 @@ const handleSend = async () => {
   }
 
   isStreaming.value = true
-  currentResponse.value = ''
+  streamingMessage.value = ''
+  stopTypingEffect()
+  accumulatedChunks = []
 
   try {
     // 使用新的流式 API
@@ -361,16 +549,15 @@ const handleSend = async () => {
       requestData,
       // 实时显示每个字符
       (chunk: string) => {
-        console.log('Received chunk:', chunk)
-        currentResponse.value += chunk
-        scrollToBottom()
+        addTypingChunk(chunk)
       },
       (error) => {
         console.error('Stream error:', error)
-        if (currentResponse.value) {
+        stopTypingEffect()
+        if (streamingMessage.value) {
           messages.value.push({
             role: 'assistant',
-            content: currentResponse.value,
+            content: streamingMessage.value,
             timestamp: Date.now()
           })
         } else {
@@ -380,54 +567,68 @@ const handleSend = async () => {
             timestamp: Date.now()
           })
         }
-        currentResponse.value = ''
+        streamingMessage.value = ''
         isStreaming.value = false
         abortController = null
       },
       () => {
         console.log('Stream completed')
-        if (currentResponse.value) {
+        // 确保所有累积块都被处理完
+        if (accumulatedChunks.length > 0) {
+          setTimeout(() => {
+            if (streamingMessage.value) {
+              messages.value.push({
+                role: 'assistant',
+                content: streamingMessage.value,
+                timestamp: Date.now()
+              })
+            }
+            streamingMessage.value = ''
+            isStreaming.value = false
+            abortController = null
+            scrollToBottom()
+          }, 100)
+        } else if (streamingMessage.value) {
           messages.value.push({
             role: 'assistant',
-            content: currentResponse.value,
+            content: streamingMessage.value,
             timestamp: Date.now()
           })
+          streamingMessage.value = ''
+          isStreaming.value = false
+          abortController = null
+          scrollToBottom()
         }
-        currentResponse.value = ''
-        isStreaming.value = false
-        abortController = null
-        scrollToBottom()
       }
     )
   } catch (error) {
     console.error('Chat error:', error)
     isStreaming.value = false
     abortController = null
-    currentResponse.value = ''
+    streamingMessage.value = ''
+    stopTypingEffect()
   }
 }
 
 const stopStreaming = () => {
+  stopTypingEffect()
+  
   if (abortController) {
     abortController()
     abortController = null
   }
   
   // 如果有部分响应，保存为消息
-  if (currentResponse.value) {
+  if (streamingMessage.value) {
     messages.value.push({
       role: 'assistant',
-      content: currentResponse.value + ' (已中断)',
+      content: streamingMessage.value + ' (已中断)',
       timestamp: Date.now()
     })
   }
   
   isStreaming.value = false
-  fullResponse = ''
-  currentResponse.value = ''
-  
-  // 重新加载猜你想问
-  loadQuickQuestions()
+  streamingMessage.value = ''
 }
 
 const clearChat = () => {
@@ -437,11 +638,7 @@ const clearChat = () => {
   }
   
   messages.value = []
-  currentResponse.value = ''
-  fullResponse = ''
-  
-  // 清空后重新加载猜你想问
-  loadQuickQuestions()
+  streamingMessage.value = ''
 }
 
 const copyMessage = async (content: string) => {
@@ -512,6 +709,10 @@ const selectQuickQuestion = (question: string) => {
   })
 }
 
+const toggleQuickQuestions = () => {
+  isQuickQuestionsCollapsed.value = !isQuickQuestionsCollapsed.value
+}
+
 const refreshQuickQuestions = async () => {
   await loadQuickQuestions()
 }
@@ -527,14 +728,22 @@ const loadQuickQuestions = async () => {
     if (quickQuestions.value.length === 0) {
       // 如果接口失败或返回空，使用默认问题
       quickQuestions.value = [
-        '曼联 vs 利物浦 近期状态分析'
+        '曼联 vs 利物浦 近期状态分析',
+        '如何提高团队开发效率？',
+        'Vue3 和 React 有什么区别？',
+        '什么是微服务架构？',
+        '如何学习深度学习？'
       ]
     }
   } catch (error) {
     console.error('Failed to load quick questions:', error)
     // 如果接口失败，使用默认问题
     quickQuestions.value = [
-      '曼联 vs 利物浦 近期状态分析'
+      '曼联 vs 利物浦 近期状态分析',
+      '如何提高团队开发效率？',
+      'Vue3 和 React 有什么区别？',
+      '什么是微服务架构？',
+      '如何学习深度学习？'
     ]
   } finally {
     quickQuestionsLoading.value = false
@@ -565,6 +774,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   stopStreaming()
+  stopTypingEffect()
 })
 </script>
 
@@ -712,78 +922,105 @@ onUnmounted(() => {
   line-height: 1.6;
 }
 
-/* 猜你想问 - 固定在输入框上方 */
+/* 猜你想问 - 支持折叠 */
 .quick-questions-fixed {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
-  backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(95, 171, 140, 0.1);
-  border-bottom: 1px solid rgba(95, 171, 140, 0.1);
-  padding: 20px;
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid #e0e0e0;
   z-index: 9;
   margin-top: auto;
-  box-shadow: 0 -8px 32px rgba(95, 171, 140, 0.08);
-  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@keyframes slideUp {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+.quick-questions-fixed.collapsed {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(224, 224, 224, 0.5);
 }
 
 .quick-questions-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+.quick-questions-header:hover {
+  background-color: rgba(245, 247, 250, 0.5);
 }
 
 .quick-questions-title {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .question-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   fill: #5fab8c;
+  transition: transform 0.3s ease;
+}
+
+.quick-questions-fixed.collapsed .question-icon {
+  transform: rotate(90deg);
 }
 
 .quick-questions-title h4 {
   margin: 0;
   color: #1a1a1a;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  background: linear-gradient(135deg, #5fab8c 0%, #4285f4 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+}
+
+.collapse-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: 4px;
+  opacity: 0.6;
+  transition: opacity 0.2s ease, transform 0.3s ease;
+}
+
+.quick-questions-header:hover .collapse-indicator {
+  opacity: 1;
+}
+
+.collapse-icon {
+  width: 16px;
+  height: 16px;
+  fill: #666;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .refresh-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, #f0f9f5 0%, #e8f0fe 100%);
+  gap: 4px;
+  padding: 6px 12px;
+  background: #f5f7fa;
   color: #5fab8c;
-  border: none;
-  border-radius: 50%;
+  border: 1px solid #d0e6dd;
+  border-radius: 16px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .refresh-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #e0f0ea 0%, #d0e0f8 100%);
-  transform: rotate(90deg);
-  box-shadow: 0 4px 12px rgba(95, 171, 140, 0.15);
+  background: #e8f4f0;
+  transform: translateY(-1px);
 }
 
 .refresh-btn:disabled {
@@ -792,19 +1029,20 @@ onUnmounted(() => {
 }
 
 .refresh-icon {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   fill: currentColor;
-  transition: transform 0.3s ease;
 }
 
-.refresh-icon.loading {
-  animation: spin 1s linear infinite;
+.quick-questions-content {
+  max-height: 300px;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.quick-questions-fixed.collapsed .quick-questions-content {
+  max-height: 0;
+  opacity: 0;
 }
 
 .questions-loading {
@@ -845,78 +1083,58 @@ onUnmounted(() => {
   }
 }
 
-/* 网格布局替代滚动布局 */
-.questions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
+/* 问题横向滚动容器 */
+.questions-scroll-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* 移动端滚动优化 */
+  padding: 0 16px 16px;
+  margin-right: -16px; /* 抵消容器的padding */
+  padding-right: 16px;
 }
 
-.question-card {
+.questions-scroll-container::-webkit-scrollbar {
+  height: 4px;
+}
+
+.questions-scroll-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 2px;
+}
+
+.questions-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(95, 171, 140, 0.3);
+  border-radius: 2px;
+}
+
+.question-chips {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px;
+  gap: 8px;
+  width: max-content; /* 确保内容不会换行 */
+  padding-bottom: 8px;
+}
+
+.question-chip {
+  padding: 10px 16px;
   background: white;
-  border: 1px solid rgba(95, 171, 140, 0.15);
-  border-radius: 12px;
-  color: #1a1a1a;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  color: #5fab8c;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  text-align: left;
-  width: 100%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  white-space: nowrap; /* 防止文本换行 */
+  flex-shrink: 0; /* 防止芯片被压缩 */
+  min-height: 40px;
+  display: flex;
+  align-items: center;
 }
 
-.question-card:hover {
+.question-chip:hover {
+  background: #f0f9f5;
+  border-color: #5fab8c;
   transform: translateY(-2px);
-  border-color: rgba(95, 171, 140, 0.3);
-  box-shadow: 0 8px 24px rgba(95, 171, 140, 0.12);
-  background: linear-gradient(135deg, rgba(95, 171, 140, 0.02) 0%, rgba(66, 133, 244, 0.02) 100%);
-}
-
-.question-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-}
-
-.question-mark-icon {
-  width: 20px;
-  height: 20px;
-  fill: #5fab8c;
-  flex-shrink: 0;
-}
-
-.question-text {
-  line-height: 1.5;
-  font-weight: 500;
-  color: #333;
-}
-
-.question-arrow {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(95, 171, 140, 0.1);
-  border-radius: 6px;
-  transition: all 0.3s ease;
-}
-
-.question-card:hover .question-arrow {
-  background: rgba(95, 171, 140, 0.2);
-  transform: translateX(4px);
-}
-
-.question-arrow svg {
-  width: 16px;
-  height: 16px;
-  fill: #5fab8c;
+  box-shadow: 0 2px 8px rgba(95, 171, 140, 0.1);
 }
 
 .messages-list {
@@ -1033,10 +1251,184 @@ onUnmounted(() => {
 
 .message-text {
   line-height: 1.6;
-  white-space: pre-wrap;
   word-wrap: break-word;
   font-size: 15px;
   min-height: 20px;
+}
+
+.typing-container {
+  position: relative;
+  min-height: 24px;
+}
+
+.typing-content {
+  opacity: 1;
+}
+
+/* Markdown 样式增强 */
+.message-text :deep(h1),
+.message-text :deep(h2),
+.message-text :deep(h3) {
+  margin: 1em 0 0.5em 0;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.message-text :deep(h1) {
+  font-size: 1.5em;
+  border-bottom: 2px solid #5fab8c;
+  padding-bottom: 0.3em;
+}
+
+.message-text :deep(h2) {
+  font-size: 1.3em;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 0.3em;
+}
+
+.message-text :deep(h3) {
+  font-size: 1.1em;
+}
+
+.message-text :deep(strong) {
+  font-weight: 600;
+  color: #333;
+}
+
+.message-text :deep(em) {
+  font-style: italic;
+}
+
+.message-text :deep(del) {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.message-text :deep(.inline-code) {
+  background: #f5f5f5;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.9em;
+  color: #e74c3c;
+}
+
+.user-message .message-text :deep(.inline-code) {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.message-text :deep(pre) {
+  background: #282c34;
+  color: #abb2bf;
+  padding: 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 12px 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.9em;
+  line-height: 1.5;
+  position: relative;
+}
+
+.message-text :deep(pre)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #e74c3c, #3498db, #2ecc71);
+  border-radius: 8px 8px 0 0;
+}
+
+.message-text :deep(pre code) {
+  background: none;
+  padding: 0;
+  color: inherit;
+  font-family: inherit;
+}
+
+/* 语法高亮颜色 */
+.message-text :deep(.language-javascript) .keyword { color: #e06c75; }
+.message-text :deep(.language-javascript) .function { color: #61afef; }
+.message-text :deep(.language-javascript) .string { color: #98c379; }
+.message-text :deep(.language-javascript) .number { color: #d19a66; }
+.message-text :deep(.language-javascript) .comment { color: #5c6370; }
+
+.message-text :deep(ul),
+.message-text :deep(ol) {
+  margin: 8px 0 8px 20px;
+  padding-left: 20px;
+}
+
+.message-text :deep(li) {
+  margin: 4px 0;
+  line-height: 1.5;
+}
+
+.message-text :deep(blockquote) {
+  border-left: 4px solid #5fab8c;
+  margin: 12px 0;
+  padding: 8px 16px;
+  background: #f8f9fa;
+  color: #666;
+  font-style: italic;
+}
+
+.message-text :deep(a) {
+  color: #5fab8c;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(95, 171, 140, 0.3);
+  transition: all 0.2s ease;
+}
+
+.message-text :deep(a:hover) {
+  color: #4285f4;
+  border-bottom-color: #4285f4;
+}
+
+.message-text :deep(.markdown-image) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 12px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.message-text :deep(hr) {
+  border: none;
+  border-top: 1px solid #e0e0e0;
+  margin: 24px 0;
+}
+
+.message-text :deep(.markdown-table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 0.9em;
+}
+
+.message-text :deep(.markdown-table th),
+.message-text :deep(.markdown-table td) {
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  text-align: left;
+}
+
+.message-text :deep(.markdown-table th) {
+  background: #f5f7fa;
+  font-weight: 600;
+  color: #333;
+}
+
+.message-text :deep(.markdown-table tr:nth-child(even)) {
+  background: #fafafa;
+}
+
+.message-text :deep(p) {
+  margin: 8px 0;
+  line-height: 1.6;
 }
 
 .user-message .message-text {
@@ -1054,27 +1446,6 @@ onUnmounted(() => {
 .user-message .message-text :deep(code) {
   background: rgba(255, 255, 255, 0.2);
   color: white;
-}
-
-.message-text :deep(strong) {
-  font-weight: 600;
-}
-
-.message-text :deep(em) {
-  font-style: italic;
-}
-
-.message-text :deep(pre) {
-  background: #f5f5f5;
-  padding: 12px;
-  border-radius: 8px;
-  overflow-x: auto;
-  margin: 8px 0;
-}
-
-.message-text :deep(pre code) {
-  background: none;
-  padding: 0;
 }
 
 .thinking-content {
@@ -1145,7 +1516,7 @@ onUnmounted(() => {
   color: #4285f4;
 }
 
-/* 打字机光标效果 */
+/* 打字机光标效果 - 优化版 */
 .typing-cursor {
   display: inline-block;
   width: 2px;
@@ -1153,12 +1524,13 @@ onUnmounted(() => {
   background: #5fab8c;
   margin-left: 2px;
   vertical-align: middle;
-  animation: blink 1s infinite;
+  animation: typingBlink 1s ease-in-out infinite;
+  animation-delay: 0.5s;
 }
 
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+@keyframes typingBlink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
 }
 
 /* 输入区域样式 */
@@ -1277,20 +1649,7 @@ onUnmounted(() => {
 }
 
 .stop-btn {
-  animation: pulse 2s infinite;
-  background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(255, 107, 107, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(255, 107, 107, 0);
-  }
+  background: #ff6b6b;
 }
 
 .stop-btn:hover:not(:disabled) {
@@ -1455,24 +1814,30 @@ onUnmounted(() => {
   }
   
   .quick-questions-fixed {
-    padding: 16px;
+    position: sticky;
+    bottom: 0;
+    background: white;
+    border-top: 1px solid #e0e0e0;
+    border-bottom: none;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
   }
   
-  .questions-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
+  .refresh-text {
+    display: none;
   }
   
-  .question-card {
-    padding: 14px;
+  .refresh-btn {
+    padding: 8px;
   }
   
-  .question-content {
-    gap: 10px;
+  .question-chips {
+    gap: 6px;
   }
   
-  .quick-questions-title h4 {
-    font-size: 14px;
+  .question-chip {
+    padding: 8px 14px;
+    font-size: 13px;
+    min-height: 36px;
   }
   
   .input-container {
@@ -1543,12 +1908,9 @@ onUnmounted(() => {
 }
 
 @media (max-width: 480px) {
-  .question-card {
-    padding: 12px;
-  }
-  
-  .question-text {
-    font-size: 13px;
+  .question-chip {
+    padding: 6px 12px;
+    font-size: 12px;
   }
   
   .message-text {
@@ -1595,11 +1957,11 @@ onUnmounted(() => {
   }
   
   .quick-questions-fixed {
-    padding: 16px 20px;
+    padding: 12px 20px;
   }
   
-  .questions-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .refresh-text {
+    display: inline; /* 平板端显示文字 */
   }
 }
 
@@ -1618,13 +1980,17 @@ onUnmounted(() => {
     font-size: 13px;
   }
   
-  .quick-questions-fixed {
-    padding: 12px;
+  .quick-questions-fixed.collapsed {
+    padding: 8px 12px;
   }
   
-  .question-card {
-    padding: 10px;
-    min-height: auto;
+  .quick-questions-fixed:not(.collapsed) {
+    max-height: 200px;
+  }
+  
+  .question-chip {
+    padding: 6px 10px;
+    min-height: 32px;
   }
 }
 </style>
