@@ -9,8 +9,6 @@
 
 **在线访问** 🌐：[https://www.xingxing2019.cn](https://www.xingxing2019.cn)
 
-![项目预览图](https://via.placeholder.com/800x450/4a6fa5/ffffff?text=Football+Analysis+Assistant+Screenshot)
-*(建议在实际README中添加真实项目截图)*
 
 ## ✨ 主要特性
 
@@ -39,7 +37,7 @@
 ### 前置要求
 
 确保你的开发环境已安装：
-- [Node.js](https://nodejs.org/) (版本 18 或更高，推荐 20+)
+- [Node.js](https://nodejs.org/) (版本 22 或更高，推荐 22+)
 - [npm](https://www.npmjs.com/) 或 [yarn](https://yarnpkg.com/) 或 [pnpm](https://pnpm.io/)
 
 ### 安装与运行
@@ -138,6 +136,6 @@ AI-Project/
 
 ## 📞 联系与支持
 
-- **项目 Issues**：[GitHub Issues](https://github.com/YourUsername/YourRepoName/issues)
-- **邮箱**：your-email@example.com
+- **项目 Issues**：[GitHub Issues](https://github.com/Jacwo/Vue3-AI/pulls)
+- **邮箱**：759519274@qq.com
 - **网站**：[https://www.xingxing2019.cn](https://www.xingxing2019.cn)
