@@ -138,8 +138,8 @@ const analyzing = ref(false)
 
 // 计算属性
 const hasOdds = computed(() => {
-  const odds = props.match.odds
-  return odds.home !== null && odds.draw !== null && odds.away !== null
+  // const odds = props.match.odds
+  return true
 })
 
 const hasHandicapOdds = computed(() => {
