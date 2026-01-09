@@ -470,7 +470,7 @@ onMounted(() => {
 .records-container {
   background: white;
   border-radius: 12px;
-  padding: 24px;
+  padding: 2px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 

@@ -367,7 +367,7 @@ const formatCreateTime = (createTime: string | Date): string => {
   .odds-row {
     flex-wrap: wrap;
     justify-content: flex-start;
-    gap: 6px;
+    gap: 1px;
   }
   
   .card-footer {
