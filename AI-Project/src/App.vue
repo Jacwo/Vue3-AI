@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useUserStore } from '@/stores/user'
 
 const isMobileMenuOpen = ref(false)
 const isMobile = ref(false)
@@ -11,8 +12,11 @@ const checkScreenSize = () => {
     isMobileMenuOpen.value = false
   }
 }
+const userStore = useUserStore()
 
 onMounted(() => {
+  userStore.initFromStorage()
+
   checkScreenSize()
   window.addEventListener('resize', checkScreenSize)
 })
@@ -23,6 +27,12 @@ onUnmounted(() => {
 
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
+}
+
+// 退出登录
+const handleLogout = async () => {
+  await userStore.logout()
+  closeMobileMenu()
 }
 
 const closeMobileMenu = () => {
@@ -59,6 +69,7 @@ const closeMobileMenu = () => {
 
       <div class="wrapper">
         <nav :class="{ 'mobile-open': isMobileMenuOpen }" v-show="!isMobile || isMobileMenuOpen">
+          
           <RouterLink 
             to="/" 
             @click="closeMobileMenu"
@@ -86,6 +97,13 @@ const closeMobileMenu = () => {
             :class="{ 'mobile-link': isMobile }"
           >
             小工具
+          </RouterLink>
+               <RouterLink 
+            to="/profile" 
+            @click="closeMobileMenu"
+            :class="{ 'mobile-link': isMobile }"
+          >
+            个人中心
           </RouterLink>
         </nav>
       </div>

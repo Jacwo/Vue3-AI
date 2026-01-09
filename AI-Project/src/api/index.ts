@@ -73,9 +73,13 @@ apiClient.interceptors.response.use(
     const { code, data, message } = response.data
     
     // 根据后端数据结构调整，假设 code 0 表示成功
+     console.log(code)
     if (code === 0) {
       return data
-    } else {
+    } else if(code === 50000){
+      console.log(message)
+      return Promise.reject(new Error(message || '操作失败'))
+    }else {
       // 业务错误处理
       if (customConfig.showError !== false) {
         // showErrorMessage(message || '操作失败')
