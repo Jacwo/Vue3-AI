@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import defaultAvatar from '@/assets/logo.png'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -111,8 +112,7 @@ onMounted(() => {
         <!-- 头像区域 -->
         <div class="avatar-section">
           <div class="avatar-wrapper">
-            <img 
-              :src="isEditing ? editForm.avatar : (userInfo?.avatar || '/assets/logo.png')" 
+            <img :src="isEditing ? editForm.avatar : (userInfo?.avatar || defaultAvatar)" 
               alt="头像"
               class="avatar"
             />
