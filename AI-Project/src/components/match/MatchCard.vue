@@ -119,7 +119,10 @@ import {
   formatOdds, 
   getOddsColor 
 } from '@/utils/matchUtils'
+import { useUserStore } from '@/stores/user'
+import { useRouter, useRoute } from 'vue-router'
 
+ const userStore = useUserStore()
 interface Props {
   match: Match
 }
@@ -178,8 +181,14 @@ const formatGoalLine = (goalLine: number | null): string => {
   if (goalLine > 0) return `${goalLine}`
   return goalLine.toString()
 }
-
+const router = useRouter()
+const route = useRoute()
 const onAnalyze = async () => {
+   if(!userStore.isLoggedIn){
+    // 跳转到登录页面
+    router.push('/login')
+    return // 停止执行后续代码
+  }
   analyzing.value = true
   try {
     emit('analyze', props.match)
