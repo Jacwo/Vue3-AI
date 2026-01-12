@@ -112,7 +112,7 @@ onMounted(() => {
         <div class="avatar-section">
           <div class="avatar-wrapper">
             <img 
-              :src="isEditing ? editForm.avatar : (userInfo?.avatar || '/src/assets/logo.png')" 
+              :src="isEditing ? editForm.avatar : (userInfo?.avatar || '@/assets/logo.png')" 
               alt="头像"
               class="avatar"
             />
