@@ -10,7 +10,7 @@ const router = createRouter({
       name: 'home',
       component: HomeView,
       meta: {
-        requiresAuth: true,
+        requiresAuth: false,
         title: '主页'
       }
     },
