@@ -34,7 +34,7 @@
     <!-- 统计卡片 -->
     <div v-if="stats && !loading" class="stats-cards">
       <div class="stat-card total">
-        <div class="stat-value">{{ stats.total }}</div>
+        <div class="stat-value">{{ totalRecords }}</div>
         <div class="stat-label">总记录数</div>
       </div>
       <div class="stat-card home-win">
@@ -65,7 +65,7 @@
       <button @click="refreshHistory">重试</button>
     </div>
 
-    <div v-else-if="!filteredRecords || filteredRecords.length === 0" class="no-records">
+    <div v-else-if="!historyRecords || historyRecords.length === 0" class="no-records">
       <p v-if="searchKeyword">没有找到匹配的记录</p>
       <p v-else>暂无历史记录</p>
       <button @click="refreshHistory" class="refresh-btn">刷新</button>
@@ -74,7 +74,7 @@
     <div v-else class="records-container">
       <div class="records-header">
         <div class="records-count">
-          共 {{ paginatedRecords.length }} 条记录，当前第 {{ currentPage }} 页
+          共 {{ totalRecords }} 条记录，当前第 {{ currentPage }} 页/共 {{ totalPages }} 页
         </div>
         <div class="pagination-controls">
           <select v-model="pageSize" @change="onPageSizeChange" class="page-size-select">
@@ -105,23 +105,41 @@
 
       <div class="records-list">
         <HistoryCard
-          v-for="record in paginatedRecords"
+          v-for="record in historyRecords"
           :key="record.id"
           :record="record"
           @view-detail="onViewDetail"
         />
       </div>
 
-     
+      <div v-if="totalPages > 1" class="pagination-footer">
+        <div class="pagination">
+          <button 
+            @click="prevPage" 
+            :disabled="currentPage === 1"
+            class="page-btn"
+          >
+            上一页
+          </button>
+          <span class="page-info">第 {{ currentPage }} 页 / 共 {{ totalPages }} 页</span>
+          <button 
+            @click="nextPage" 
+            :disabled="currentPage === totalPages"
+            class="page-btn"
+          >
+            下一页
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { historyApi } from '@/api/history'
-import type { HistoryRecord } from '@/types/history'
-import { filterHistoryRecords, calculateHistoryStats } from '@/utils/historyUtils'
+import type { HistoryRecord, HistoryListResponse } from '@/types/history'
+import { calculateHistoryStats } from '@/utils/historyUtils'
 import HistoryCard from './HistoryCard.vue'
 
 // Props 和 Emits
@@ -131,12 +149,14 @@ const emit = defineEmits<{
 
 // 响应式数据
 const historyRecords = ref<HistoryRecord[]>([])
+const totalRecords = ref(0) // 新增：总记录数
 const loading = ref(false)
 const error = ref<string>('')
 const searchKeyword = ref('')
 const currentPage = ref(1)
-const pageSize = ref(100)
-const selectedRecords = ref<string[]>([])
+const pageSize = ref(10) // 默认改为10条每页
+const stats = ref<any>(null) // 统计信息
+
 const filters = ref({
   resultType: 'all' as 'all' | 'home' | 'away' | 'draw',
   startDate: '',
@@ -144,29 +164,9 @@ const filters = ref({
   teamName: ''
 })
 
-// 计算属性
-const stats = computed(() => {
-  return calculateHistoryStats(historyRecords.value)
-})
-
-const filteredRecords = computed(() => {
-  return filterHistoryRecords(historyRecords.value, {
-    teamName: filters.value.teamName,
-    startDate: filters.value.startDate,
-    endDate: filters.value.endDate,
-    resultType: filters.value.resultType,
-    searchKeyword: searchKeyword.value
-  })
-})
-
+// 计算属性 - 总页数使用后端返回的total计算
 const totalPages = computed(() => {
-  return Math.ceil(filteredRecords.value.length / pageSize.value)
-})
-
-const paginatedRecords = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return filteredRecords.value.slice(start, end)
+  return Math.ceil(totalRecords.value / pageSize.value)
 })
 
 // 方法
@@ -175,7 +175,7 @@ const fetchHistory = async () => {
   error.value = ''
   
   try {
-    const response = await historyApi.getHistoryList({
+    const response: HistoryListResponse = await historyApi.getHistoryList({
       pageNo: currentPage.value,
       pageSize: pageSize.value,
       searchKeyword: searchKeyword.value,
@@ -186,7 +186,22 @@ const fetchHistory = async () => {
     })
     
     historyRecords.value = response.list || []
-    console.log('获取到的历史记录:', historyRecords.value)
+    totalRecords.value = response.total || 0 // 从后端获取总记录数
+    
+    console.log('获取到的历史记录:', {
+      list: historyRecords.value.length,
+      total: totalRecords.value,
+      currentPage: currentPage.value,
+      pageSize: pageSize.value,
+      totalPages: totalPages.value
+    })
+    
+    // 计算统计信息（基于当前页数据或全部数据，根据实际需求调整）
+    if (historyRecords.value.length > 0) {
+      stats.value = calculateHistoryStats(historyRecords.value)
+    } else {
+      stats.value = null
+    }
     
     if (historyRecords.value.length === 0 && searchKeyword.value) {
       error.value = '没有找到匹配的记录'
@@ -195,6 +210,8 @@ const fetchHistory = async () => {
     error.value = err instanceof Error ? err.message : '加载失败'
     console.error('获取历史记录失败:', err)
     historyRecords.value = []
+    totalRecords.value = 0
+    stats.value = null
   } finally {
     loading.value = false
   }
@@ -223,12 +240,14 @@ const onPageSizeChange = () => {
 const prevPage = () => {
   if (currentPage.value > 1) {
     currentPage.value--
+    fetchHistory()
   }
 }
 
 const nextPage = () => {
   if (currentPage.value < totalPages.value) {
     currentPage.value++
+    fetchHistory()
   }
 }
 
@@ -236,13 +255,29 @@ const onViewDetail = (id: string) => {
   emit('view-detail', id)
 }
 
-
 onMounted(() => {
   fetchHistory()
 })
 </script>
 
 <style scoped>
+
+
+
+/* 样式部分保持不变，只添加底部分页样式 */
+.pagination-footer {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: center;
+}
+
+.pagination-footer .pagination {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 .history-list {
   padding: 24px;
   background-color: #f8f9fa;
