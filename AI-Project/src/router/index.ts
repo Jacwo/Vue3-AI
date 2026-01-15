@@ -24,6 +24,14 @@ const router = createRouter({
       }
     },
     {
+      path: '/analysis/:matchId',
+      name: 'Analysis',
+      component: () => import('../views/AnalysisPage.vue'),
+      meta: {
+        requiresAuth: true // 如果需要登录才能访问
+      }
+    },
+    {
       path: '/history/:id',
       name: 'history-detail',
       component: () => import('../views/HistoryDetailView.vue'),
