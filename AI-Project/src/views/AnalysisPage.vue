@@ -51,7 +51,6 @@
       </div>
 
       <div class="tab-content" :key="activeTab">
-        <!-- 最近比赛信息 -->
         <div v-if="activeTab === 'recent'" class="tab-pane">
           <div class="pane-header">
             <h3>历史交锋</h3>
@@ -64,59 +63,18 @@
           </div>
           
           <div class="recent-teams">
-            <!-- 主队最近比赛 -->
             <div class="team-section">
-              <h4 class="team-section-title">{{ matchData.homeTeam }} 最近比赛</h4>
               <div class="match-list">
                 <div v-if="loading.recent" class="loading-state">
                   <div class="loading-spinner"></div>
                   <span>加载中...</span>
                 </div>
-                <div v-else-if="filteredHomeRecentMatches.length === 0" class="empty-state">
+                <div v-else-if="recentMatches.length === 0" class="empty-state">
                   <span>暂无数据</span>
                 </div>
                 <div v-else>
                   <div 
-                    v-for="match in filteredHomeRecentMatches" 
-                    :key="match.id" 
-                    class="recent-match-item"
-                    :class="getMatchItemClass(match)"
-                  >
-                    <div class="match-header">
-                      <span class="league">{{ match.league }}</span>
-                      <span class="time">{{ formatDate(match.matchDate) }}</span>
-                    </div>
-                    <div class="match-result">
-                      <span class="team home">{{ truncateText(match.homeTeam, 8) }}</span>
-                      <span :class="getScoreClass(match)">
-                        {{ parseScore(match.score).home }} - {{ parseScore(match.score).away }}
-                      </span>
-                      <span class="team away">{{ truncateText(match.awayTeam, 8) }}</span>
-                    </div>
-                    <div class="match-outcome">
-                      <span :class="getOutcomeClass(match)">
-                        {{ getMatchOutcome(match) }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 客队最近比赛 -->
-            <div class="team-section">
-              <h4 class="team-section-title">{{ matchData.awayTeam }} 最近比赛</h4>
-              <div class="match-list">
-                <div v-if="loading.recent" class="loading-state">
-                  <div class="loading-spinner"></div>
-                  <span>加载中...</span>
-                </div>
-                <div v-else-if="filteredAwayRecentMatches.length === 0" class="empty-state">
-                  <span>暂无数据</span>
-                </div>
-                <div v-else>
-                  <div 
-                    v-for="match in filteredAwayRecentMatches" 
+                    v-for="match in recentMatches" 
                     :key="match.id" 
                     class="recent-match-item"
                     :class="getMatchItemClass(match)"
@@ -449,7 +407,6 @@ const xgData = ref<XgData>({
   all: null
 })
 const similarMatches = ref<SimilarMatch[]>([])
-const intelligenceData = ref('')
 const oddsHistory = ref<OddsRecord[]>([])
 const oddsAnalysis = ref('赔率变化分析...')
 
@@ -473,23 +430,6 @@ const awayXgPercent = computed(() => {
   return total > 0 ? (awayXg / total) * 100 : 50
 })
 
-const filteredHomeRecentMatches = computed(() => {
-  return recentMatches.value
-    .filter(match => 
-      match.homeTeam === matchData.value.homeTeam ||
-      match.awayTeam === matchData.value.homeTeam
-    )
-    .slice(0, 5)
-})
-
-const filteredAwayRecentMatches = computed(() => {
-  return recentMatches.value
-    .filter(match => 
-      match.homeTeam === matchData.value.awayTeam ||
-      match.awayTeam === matchData.value.awayTeam
-    )
-    .slice(0, 5)
-})
 
 const matchData = computed(() => {
   const league = route.query.league as string || '未知联赛'
@@ -557,7 +497,7 @@ const formatOddsDate = (dateString: string) => {
 
 const parseScore = (score: string) => {
   if (!score) return { home: 0, away: 0 }
-  const [home, away] = score.split('-').map(s => parseInt(s.trim()) || 0)
+  const [home, away] = score.split(':').map(s => parseInt(s.trim()) || 0)
   return { home, away }
 }
 
@@ -736,11 +676,6 @@ const fetchOddsHistory = async () => {
     loading.value.odds = false
   }
 }
-
-// 监听标签页变化
-watch(activeTab, (newTab) => {
-  loadTabData(newTab)
-})
 
 // 生命周期
 onMounted(() => {
@@ -927,7 +862,7 @@ const handleResize = () => {
   display: flex;
   background: #f8f9fa;
   border-bottom: 1px solid #e9ecef;
-  position: sticky;
+  /* position: sticky; */
   top: 73px;
   z-index: 10;
   backdrop-filter: blur(10px);
