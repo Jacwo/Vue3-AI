@@ -760,26 +760,27 @@ const handleResize = () => {
 }
 </script>
 
-<style scoped lang="scss">
+<style scoped>
+/* 将所有的 SCSS 语法转换为纯 CSS */
 .analysis-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 0;
   position: relative;
-  
-  &::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 240px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    z-index: 0;
-  }
 }
 
-// 卡片通用样式
+.analysis-page::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 240px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  z-index: 0;
+}
+
+/* 卡片通用样式 */
 .card {
   background: white;
   border-radius: 16px;
@@ -789,7 +790,7 @@ const handleResize = () => {
   overflow: hidden;
 }
 
-// 页面头部
+/* 页面头部 */
 .page-header {
   position: sticky;
   top: 0;
@@ -817,22 +818,22 @@ const handleResize = () => {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  
-  svg {
-    transition: transform 0.3s ease;
-  }
-  
-  &:hover {
-    transform: translateX(-2px);
-    
-    svg {
-      transform: translateX(-2px);
-    }
-  }
-  
-  &:active {
-    transform: translateX(0);
-  }
+}
+
+.back-btn svg {
+  transition: transform 0.3s ease;
+}
+
+.back-btn:hover {
+  transform: translateX(-2px);
+}
+
+.back-btn:hover svg {
+  transform: translateX(-2px);
+}
+
+.back-btn:active {
+  transform: translateX(0);
 }
 
 .page-title {
@@ -844,143 +845,141 @@ const handleResize = () => {
   text-align: center;
 }
 
-// 比赛基本信息
+/* 比赛基本信息 */
 .match-basic-info {
   margin: 0 16px 16px;
   padding: 20px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  
-  .teams {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-  
-  .team {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    
-    &.home-team {
-      text-align: right;
-    }
-    
-    &.away-team {
-      text-align: left;
-    }
-  }
-  
-  .team-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
-  
-  .team-name {
-    font-size: 18px;
-    font-weight: 600;
-    max-width: 120px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  
-  .team-rank {
-    font-size: 12px;
-    opacity: 0.9;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 2px 8px;
-    border-radius: 10px;
-  }
-  
-  .vs {
-    font-size: 14px;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.8);
-    padding: 0 8px;
-  }
-  
-  .match-meta {
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.9);
-    padding-top: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-  }
 }
 
-// 标签页
+.match-basic-info .teams {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.match-basic-info .team {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.match-basic-info .team.home-team {
+  text-align: right;
+}
+
+.match-basic-info .team.away-team {
+  text-align: left;
+}
+
+.match-basic-info .team-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.match-basic-info .team-name {
+  font-size: 18px;
+  font-weight: 600;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.match-basic-info .team-rank {
+  font-size: 12px;
+  opacity: 0.9;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.match-basic-info .vs {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 0 8px;
+}
+
+.match-basic-info .match-meta {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 标签页 */
 .analysis-tabs {
   margin: 0 16px 16px;
   min-height: 400px;
-  
-  .tabs-header {
-    display: flex;
-    background: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
-    position: sticky;
-    top: 73px; // 页面头部高度
-    z-index: 10;
-    backdrop-filter: blur(10px);
-    
-    .tab-item {
-      flex: 1;
-      text-align: center;
-      padding: 14px 8px;
-      font-size: 14px;
-      color: #6c757d;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      position: relative;
-      user-select: none;
-      
-      &:hover {
-        background: rgba(0, 0, 0, 0.02);
-      }
-      
-      &.active {
-        color: #667eea;
-        font-weight: 500;
-        
-        &::after {
-          content: '';
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 2px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          border-radius: 2px 2px 0 0;
-        }
-      }
-      
-      &.loading {
-        .tab-label {
-          opacity: 0.7;
-        }
-        
-        .tab-loading-indicator {
-          position: absolute;
-          right: 8px;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 12px;
-          height: 12px;
-          border: 2px solid #e9ecef;
-          border-top-color: #667eea;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-      }
-    }
-  }
+}
+
+.analysis-tabs .tabs-header {
+  display: flex;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  position: sticky;
+  top: 73px;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+}
+
+.analysis-tabs .tabs-header .tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 14px 8px;
+  font-size: 14px;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  user-select: none;
+}
+
+.analysis-tabs .tabs-header .tab-item:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.analysis-tabs .tabs-header .tab-item.active {
+  color: #667eea;
+  font-weight: 500;
+}
+
+.analysis-tabs .tabs-header .tab-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 2px 2px 0 0;
+}
+
+.analysis-tabs .tabs-header .tab-item.loading .tab-label {
+  opacity: 0.7;
+}
+
+.analysis-tabs .tabs-header .tab-item.loading .tab-loading-indicator {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border: 2px solid #e9ecef;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
 .tab-content {
@@ -990,42 +989,40 @@ const handleResize = () => {
   -webkit-overflow-scrolling: touch;
 }
 
-// 通用面板样式
-.tab-pane {
-  .pane-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    
-    h3 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 600;
-      color: #333;
-    }
-    
-    .refresh-btn {
-      background: #f8f9fa;
-      border: 1px solid #e9ecef;
-      border-radius: 8px;
-      padding: 6px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      
-      &:hover {
-        background: #e9ecef;
-        transform: rotate(180deg);
-      }
-      
-      svg {
-        display: block;
-      }
-    }
-  }
+/* 通用面板样式 */
+.tab-pane .pane-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
-// 加载状态
+.tab-pane .pane-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.tab-pane .pane-header .refresh-btn {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tab-pane .pane-header .refresh-btn:hover {
+  background: #e9ecef;
+  transform: rotate(180deg);
+}
+
+.tab-pane .pane-header .refresh-btn svg {
+  display: block;
+}
+
+/* 加载状态 */
 .loading-state {
   display: flex;
   flex-direction: column;
@@ -1033,23 +1030,23 @@ const handleResize = () => {
   justify-content: center;
   padding: 40px 20px;
   color: #6c757d;
-  
-  .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #667eea;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 12px;
-  }
-  
-  span {
-    font-size: 14px;
-  }
 }
 
-// 空状态
+.loading-state .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+.loading-state span {
+  font-size: 14px;
+}
+
+/* 空状态 */
 .empty-state {
   text-align: center;
   padding: 40px 20px;
@@ -1057,24 +1054,22 @@ const handleResize = () => {
   font-size: 14px;
 }
 
-// 最近比赛样式
-.recent-teams {
-  .team-section {
-    margin-bottom: 24px;
-    
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-  
-  .team-section-title {
-    font-size: 16px;
-    font-weight: 500;
-    color: #495057;
-    margin: 0 0 12px;
-    padding-bottom: 8px;
-    border-bottom: 2px solid #f8f9fa;
-  }
+/* 最近比赛样式 */
+.recent-teams .team-section {
+  margin-bottom: 24px;
+}
+
+.recent-teams .team-section:last-child {
+  margin-bottom: 0;
+}
+
+.recent-teams .team-section-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #495057;
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #f8f9fa;
 }
 
 .match-list {
@@ -1089,240 +1084,230 @@ const handleResize = () => {
   padding: 12px;
   border: 2px solid transparent;
   transition: all 0.3s ease;
-  
-  &.win {
-    border-color: #52c41a;
-    background: linear-gradient(135deg, rgba(82, 196, 26, 0.1) 0%, rgba(82, 196, 26, 0.05) 100%);
-  }
-  
-  &.draw {
-    border-color: #faad14;
-    background: linear-gradient(135deg, rgba(250, 173, 20, 0.1) 0%, rgba(250, 173, 20, 0.05) 100%);
-  }
-  
-  &.lose {
-    border-color: #ff4d4f;
-    background: linear-gradient(135deg, rgba(255, 77, 79, 0.1) 0%, rgba(255, 77, 79, 0.05) 100%);
-  }
-  
-  .match-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
-    font-size: 11px;
-    color: #6c757d;
-  }
-  
-  .match-result {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 6px;
-    
-    .team {
-      flex: 1;
-      font-size: 14px;
-      font-weight: 500;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      
-      &.home {
-        text-align: left;
-        padding-right: 8px;
-      }
-      
-      &.away {
-        text-align: right;
-        padding-left: 8px;
-      }
-    }
-    
-    .score {
-      flex-shrink: 0;
-      font-size: 16px;
-      font-weight: 600;
-      padding: 0 8px;
-      min-width: 60px;
-      text-align: center;
-      
-      &.score-win {
-        color: #52c41a;
-      }
-      
-      &.score-draw {
-        color: #faad14;
-      }
-      
-      &.score-lose {
-        color: #ff4d4f;
-      }
-    }
-  }
-  
-  .match-outcome {
-    text-align: center;
-    
-    .outcome {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 500;
-      
-      &.outcome-win {
-        background: #52c41a;
-        color: white;
-      }
-      
-      &.outcome-draw {
-        background: #faad14;
-        color: white;
-      }
-      
-      &.outcome-lose {
-        background: #ff4d4f;
-        color: white;
-      }
-    }
-  }
 }
 
-// xG数据样式
-.xg-content {
-  .xg-comparison {
-    margin-bottom: 24px;
-    
-    .xg-team {
-      .team-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
-        
-        .team-name {
-          font-size: 14px;
-          font-weight: 500;
-          color: #495057;
-        }
-        
-        .xg-value {
-          font-size: 16px;
-          font-weight: 600;
-          color: #667eea;
-        }
-      }
-      
-      &.home .xg-bar-container {
-        direction: rtl;
-      }
-    }
-    
-    .xg-bar-container {
-      height: 24px;
-      background: #e9ecef;
-      border-radius: 12px;
-      overflow: hidden;
-      position: relative;
-    }
-    
-    .xg-bar {
-      height: 100%;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      transition: width 1s ease;
-      position: relative;
-      
-      .xg-label {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 11px;
-        font-weight: 600;
-        color: white;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-        
-        .xg-team.home & {
-          right: 8px;
-        }
-        
-        .xg-team.away & {
-          left: 8px;
-        }
-      }
-    }
-    
-    .xg-vs {
-      text-align: center;
-      margin: 12px 0;
-      color: #adb5bd;
-      font-weight: 600;
-      font-size: 14px;
-    }
-  }
-  
-  .xg-details {
-    .detail-category {
-      margin-bottom: 20px;
-      
-      &:last-child {
-        margin-bottom: 0;
-      }
-      
-      .category-title {
-        font-size: 15px;
-        font-weight: 500;
-        color: #495057;
-        margin: 0 0 12px;
-        padding-bottom: 8px;
-        border-bottom: 2px solid #f8f9fa;
-      }
-    }
-    
-    .detail-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 12px;
-      
-      @media (max-width: 480px) {
-        grid-template-columns: 1fr;
-      }
-    }
-    
-    .detail-item {
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 12px;
-      
-      .label {
-        display: block;
-        font-size: 12px;
-        color: #6c757d;
-        margin-bottom: 6px;
-      }
-      
-      .values {
-        display: flex;
-        justify-content: space-between;
-        
-        .value {
-          font-size: 13px;
-          font-weight: 500;
-          color: #495057;
-          
-          &.home {
-            color: #667eea;
-          }
-          
-          &.away {
-            color: #764ba2;
-          }
-        }
-      }
-    }
-  }
+.recent-match-item.win {
+  border-color: #52c41a;
+  background: linear-gradient(135deg, rgba(82, 196, 26, 0.1) 0%, rgba(82, 196, 26, 0.05) 100%);
 }
 
-// 相似比赛样式
+.recent-match-item.draw {
+  border-color: #faad14;
+  background: linear-gradient(135deg, rgba(250, 173, 20, 0.1) 0%, rgba(250, 173, 20, 0.05) 100%);
+}
+
+.recent-match-item.lose {
+  border-color: #ff4d4f;
+  background: linear-gradient(135deg, rgba(255, 77, 79, 0.1) 0%, rgba(255, 77, 79, 0.05) 100%);
+}
+
+.recent-match-item .match-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 11px;
+  color: #6c757d;
+}
+
+.recent-match-item .match-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.recent-match-item .match-result .team {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-match-item .match-result .team.home {
+  text-align: left;
+  padding-right: 8px;
+}
+
+.recent-match-item .match-result .team.away {
+  text-align: right;
+  padding-left: 8px;
+}
+
+.recent-match-item .match-result .score {
+  flex-shrink: 0;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 0 8px;
+  min-width: 60px;
+  text-align: center;
+}
+
+.recent-match-item .match-result .score.score-win {
+  color: #52c41a;
+}
+
+.recent-match-item .match-result .score.score-draw {
+  color: #faad14;
+}
+
+.recent-match-item .match-result .score.score-lose {
+  color: #ff4d4f;
+}
+
+.recent-match-item .match-outcome {
+  text-align: center;
+}
+
+.recent-match-item .match-outcome .outcome {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.recent-match-item .match-outcome .outcome.outcome-win {
+  background: #52c41a;
+  color: white;
+}
+
+.recent-match-item .match-outcome .outcome.outcome-draw {
+  background: #faad14;
+  color: white;
+}
+
+.recent-match-item .match-outcome .outcome.outcome-lose {
+  background: #ff4d4f;
+  color: white;
+}
+
+/* xG数据样式 */
+.xg-content .xg-comparison {
+  margin-bottom: 24px;
+}
+
+.xg-content .xg-comparison .xg-team .team-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.xg-content .xg-comparison .xg-team .team-header .team-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #495057;
+}
+
+.xg-content .xg-comparison .xg-team .team-header .xg-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #667eea;
+}
+
+.xg-content .xg-comparison .xg-team.home .xg-bar-container {
+  direction: rtl;
+}
+
+.xg-content .xg-comparison .xg-bar-container {
+  height: 24px;
+  background: #e9ecef;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+.xg-content .xg-comparison .xg-bar {
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transition: width 1s ease;
+  position: relative;
+}
+
+.xg-content .xg-comparison .xg-bar .xg-label {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.xg-content .xg-comparison .xg-team.home .xg-bar .xg-label {
+  right: 8px;
+}
+
+.xg-content .xg-comparison .xg-team.away .xg-bar .xg-label {
+  left: 8px;
+}
+
+.xg-content .xg-comparison .xg-vs {
+  text-align: center;
+  margin: 12px 0;
+  color: #adb5bd;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.xg-content .xg-details .detail-category {
+  margin-bottom: 20px;
+}
+
+.xg-content .xg-details .detail-category:last-child {
+  margin-bottom: 0;
+}
+
+.xg-content .xg-details .detail-category .category-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: #495057;
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #f8f9fa;
+}
+
+.xg-content .xg-details .detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.xg-content .xg-details .detail-item {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.xg-content .xg-details .detail-item .label {
+  display: block;
+  font-size: 12px;
+  color: #6c757d;
+  margin-bottom: 6px;
+}
+
+.xg-content .xg-details .detail-item .values {
+  display: flex;
+  justify-content: space-between;
+}
+
+.xg-content .xg-details .detail-item .values .value {
+  font-size: 13px;
+  font-weight: 500;
+  color: #495057;
+}
+
+.xg-content .xg-details .detail-item .values .value.home {
+  color: #667eea;
+}
+
+.xg-content .xg-details .detail-item .values .value.away {
+  color: #764ba2;
+}
+
+/* 相似比赛样式 */
 .similar-list {
   display: flex;
   flex-direction: column;
@@ -1335,257 +1320,252 @@ const handleResize = () => {
   padding: 16px;
   border: 2px solid transparent;
   transition: all 0.3s ease;
-  
-  &.home-win {
-    border-color: #52c41a;
-    background: linear-gradient(135deg, rgba(82, 196, 26, 0.1) 0%, rgba(82, 196, 26, 0.05) 100%);
-  }
-  
-  &.draw {
-    border-color: #faad14;
-    background: linear-gradient(135deg, rgba(250, 173, 20, 0.1) 0%, rgba(250, 173, 20, 0.05) 100%);
-  }
-  
-  &.away-win {
-    border-color: #ff4d4f;
-    background: linear-gradient(135deg, rgba(255, 77, 79, 0.1) 0%, rgba(255, 77, 79, 0.05) 100%);
-  }
-  
-  .match-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 12px;
-    font-size: 11px;
-    color: #6c757d;
-  }
-  
-  .match-content {
-    .teams {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px;
-      
-      .team {
-        flex: 1;
-        font-size: 14px;
-        font-weight: 500;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        
-        &.home {
-          text-align: left;
-          padding-right: 8px;
-        }
-        
-        &.away {
-          text-align: right;
-          padding-left: 8px;
-        }
-      }
-      
-      .score {
-        flex-shrink: 0;
-        font-size: 18px;
-        font-weight: 600;
-        padding: 0 8px;
-        min-width: 60px;
-        text-align: center;
-      }
-    }
-    
-    .odds-info {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      
-      .odds-values {
-        display: flex;
-        gap: 12px;
-        font-size: 12px;
-        color: #6c757d;
-        
-        .odds-item {
-          background: white;
-          padding: 4px 8px;
-          border-radius: 6px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-      }
-      
-      .match-result {
-        .result {
-          padding: 4px 12px;
-          border-radius: 12px;
-          font-size: 12px;
-          font-weight: 500;
-          
-          &.result-home {
-            background: #52c41a;
-            color: white;
-          }
-          
-          &.result-draw {
-            background: #faad14;
-            color: white;
-          }
-          
-          &.result-away {
-            background: #ff4d4f;
-            color: white;
-          }
-        }
-      }
-    }
-  }
 }
 
-// 赔率样式
+.similar-match-item.home-win {
+  border-color: #52c41a;
+  background: linear-gradient(135deg, rgba(82, 196, 26, 0.1) 0%, rgba(82, 196, 26, 0.05) 100%);
+}
+
+.similar-match-item.draw {
+  border-color: #faad14;
+  background: linear-gradient(135deg, rgba(250, 173, 20, 0.1) 0%, rgba(250, 173, 20, 0.05) 100%);
+}
+
+.similar-match-item.away-win {
+  border-color: #ff4d4f;
+  background: linear-gradient(135deg, rgba(255, 77, 79, 0.1) 0%, rgba(255, 77, 79, 0.05) 100%);
+}
+
+.similar-match-item .match-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 11px;
+  color: #6c757d;
+}
+
+.similar-match-item .match-content .teams {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.similar-match-item .match-content .teams .team {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.similar-match-item .match-content .teams .team.home {
+  text-align: left;
+  padding-right: 8px;
+}
+
+.similar-match-item .match-content .teams .team.away {
+  text-align: right;
+  padding-left: 8px;
+}
+
+.similar-match-item .match-content .teams .score {
+  flex-shrink: 0;
+  font-size: 18px;
+  font-weight: 600;
+  padding: 0 8px;
+  min-width: 60px;
+  text-align: center;
+}
+
+.similar-match-item .match-content .odds-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.similar-match-item .match-content .odds-info .odds-values {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.similar-match-item .match-content .odds-info .odds-values .odds-item {
+  background: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.similar-match-item .match-content .odds-info .match-result .result {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.similar-match-item .match-content .odds-info .match-result .result.result-home {
+  background: #52c41a;
+  color: white;
+}
+
+.similar-match-item .match-content .odds-info .match-result .result.result-draw {
+  background: #faad14;
+  color: white;
+}
+
+.similar-match-item .match-content .odds-info .match-result .result.result-away {
+  background: #ff4d4f;
+  color: white;
+}
+
+/* 赔率样式 */
 .current-odds {
   padding: 16px;
   margin-bottom: 20px;
-  
-  h4 {
-    margin: 0 0 12px;
-    font-size: 15px;
-    font-weight: 500;
-    color: #495057;
-  }
-  
-  .odds-display {
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-    
-    .odds-type {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 12px;
-      border-radius: 8px;
-      background: #f8f9fa;
-      
-      &.home {
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(102, 126, 234, 0.05) 100%);
-      }
-      
-      &.draw {
-        background: linear-gradient(135deg, rgba(250, 173, 20, 0.1) 0%, rgba(250, 173, 20, 0.05) 100%);
-      }
-      
-      &.away {
-        background: linear-gradient(135deg, rgba(118, 75, 162, 0.1) 0%, rgba(118, 75, 162, 0.05) 100%);
-      }
-      
-      .odds-label {
-        font-size: 12px;
-        color: #6c757d;
-        margin-bottom: 4px;
-      }
-      
-      .odds-value {
-        font-size: 18px;
-        font-weight: 600;
-        
-        .home & {
-          color: #667eea;
-        }
-        
-        .draw & {
-          color: #faad14;
-        }
-        
-        .away & {
-          color: #764ba2;
-        }
-      }
-    }
-  }
 }
 
-.odds-history {
-  .scrollable-table {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    margin: 0 -20px;
-    padding: 0 20px;
-  }
-  
-  .odds-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 500px;
-    
-    th, td {
-      padding: 12px 8px;
-      text-align: center;
-      border-bottom: 1px solid #e9ecef;
-    }
-    
-    th {
-      background: #f8f9fa;
-      font-weight: 500;
-      color: #495057;
-      font-size: 13px;
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    }
-    
-    td {
-      font-size: 14px;
-      color: #6c757d;
-      
-      &.changed {
-        background: #fff7e6;
-        color: #fa8c16;
-        font-weight: 500;
-        position: relative;
-        
-        &::before {
-          content: '↕';
-          position: absolute;
-          left: 4px;
-          top: 50%;
-          transform: translateY(-50%);
-          font-size: 10px;
-        }
-      }
-      
-      .time-cell {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        
-        .date {
-          font-size: 13px;
-          font-weight: 500;
-        }
-        
-        .time {
-          font-size: 11px;
-          color: #adb5bd;
-        }
-      }
-    }
-    
-    tr:hover {
-      background: #f8f9fa;
-    }
-  }
+.current-odds h4 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #495057;
 }
 
-// 动画
+.current-odds .odds-display {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.current-odds .odds-display .odds-type {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.current-odds .odds-display .odds-type.home {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(102, 126, 234, 0.05) 100%);
+}
+
+.current-odds .odds-display .odds-type.draw {
+  background: linear-gradient(135deg, rgba(250, 173, 20, 0.1) 0%, rgba(250, 173, 20, 0.05) 100%);
+}
+
+.current-odds .odds-display .odds-type.away {
+  background: linear-gradient(135deg, rgba(118, 75, 162, 0.1) 0%, rgba(118, 75, 162, 0.05) 100%);
+}
+
+.current-odds .odds-display .odds-type .odds-label {
+  font-size: 12px;
+  color: #6c757d;
+  margin-bottom: 4px;
+}
+
+.current-odds .odds-display .odds-type .odds-value {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.current-odds .odds-display .odds-type.home .odds-value {
+  color: #667eea;
+}
+
+.current-odds .odds-display .odds-type.draw .odds-value {
+  color: #faad14;
+}
+
+.current-odds .odds-display .odds-type.away .odds-value {
+  color: #764ba2;
+}
+
+.odds-history .scrollable-table {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -20px;
+  padding: 0 20px;
+}
+
+.odds-history .odds-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 500px;
+}
+
+.odds-history .odds-table th,
+.odds-history .odds-table td {
+  padding: 12px 8px;
+  text-align: center;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.odds-history .odds-table th {
+  background: #f8f9fa;
+  font-weight: 500;
+  color: #495057;
+  font-size: 13px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.odds-history .odds-table td {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.odds-history .odds-table td.changed {
+  background: #fff7e6;
+  color: #fa8c16;
+  font-weight: 500;
+  position: relative;
+}
+
+.odds-history .odds-table td.changed::before {
+  content: '↕';
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+}
+
+.odds-history .odds-table td .time-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.odds-history .odds-table td .time-cell .date {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.odds-history .odds-table td .time-cell .time {
+  font-size: 11px;
+  color: #adb5bd;
+}
+
+.odds-history .odds-table tr:hover {
+  background: #f8f9fa;
+}
+
+/* 动画 */
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-// 响应式调整
+/* 响应式调整 - 768px */
 @media (max-width: 768px) {
   .analysis-page::before {
     height: 200px;
@@ -1598,11 +1578,11 @@ const handleResize = () => {
   .back-btn {
     padding: 6px 12px;
     font-size: 13px;
-    
-    svg {
-      width: 14px;
-      height: 14px;
-    }
+  }
+  
+  .back-btn svg {
+    width: 14px;
+    height: 14px;
   }
   
   .page-title {
@@ -1612,36 +1592,34 @@ const handleResize = () => {
   .match-basic-info {
     margin: 0 12px 12px;
     padding: 16px;
-    
-    .team-name {
-      font-size: 16px;
-      max-width: 100px;
-    }
-    
-    .vs {
-      font-size: 12px;
-    }
-    
-    .match-meta {
-      font-size: 12px;
-    }
+  }
+  
+  .match-basic-info .team-name {
+    font-size: 16px;
+    max-width: 100px;
+  }
+  
+  .match-basic-info .vs {
+    font-size: 12px;
+  }
+  
+  .match-basic-info .match-meta {
+    font-size: 12px;
   }
   
   .analysis-tabs {
     margin: 0 12px 12px;
-    
-    .tabs-header {
-      .tab-item {
-        padding: 12px 4px;
-        font-size: 13px;
-        
-        .tab-label {
-          display: block;
-          max-width: 60px;
-          margin: 0 auto;
-        }
-      }
-    }
+  }
+  
+  .analysis-tabs .tabs-header .tab-item {
+    padding: 12px 4px;
+    font-size: 13px;
+  }
+  
+  .analysis-tabs .tabs-header .tab-item .tab-label {
+    display: block;
+    max-width: 60px;
+    margin: 0 auto;
   }
   
   .tab-content {
@@ -1649,14 +1627,12 @@ const handleResize = () => {
     max-height: calc(100vh - 220px);
   }
   
-  .tab-pane {
-    .pane-header {
-      margin-bottom: 16px;
-      
-      h3 {
-        font-size: 16px;
-      }
-    }
+  .tab-pane .pane-header {
+    margin-bottom: 16px;
+  }
+  
+  .tab-pane .pane-header h3 {
+    font-size: 16px;
   }
   
   .recent-match-item,
@@ -1667,39 +1643,39 @@ const handleResize = () => {
   .current-odds .odds-display {
     flex-direction: column;
     gap: 8px;
-    
-    .odds-type {
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 12px;
-      
-      .odds-label {
-        margin-bottom: 0;
-      }
-    }
+  }
+  
+  .current-odds .odds-display .odds-type {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+  }
+  
+  .current-odds .odds-display .odds-type .odds-label {
+    margin-bottom: 0;
   }
   
   .odds-history .odds-table {
     min-width: 400px;
-    
-    th, td {
-      padding: 10px 6px;
-      font-size: 12px;
-    }
+  }
+  
+  .odds-history .odds-table th,
+  .odds-history .odds-table td {
+    padding: 10px 6px;
+    font-size: 12px;
   }
 }
 
+/* 响应式调整 - 480px */
 @media (max-width: 480px) {
-  .match-basic-info {
-    .team-name {
-      font-size: 14px;
-      max-width: 80px;
-    }
-    
-    .team-rank {
-      font-size: 10px;
-    }
+  .match-basic-info .team-name {
+    font-size: 14px;
+    max-width: 80px;
+  }
+  
+  .match-basic-info .team-rank {
+    font-size: 10px;
   }
   
   .analysis-tabs .tabs-header .tab-item {
@@ -1722,7 +1698,7 @@ const handleResize = () => {
   }
 }
 
-// 触摸设备优化
+/* 触摸设备优化 */
 @media (hover: none) and (pointer: coarse) {
   .back-btn,
   .tab-item,
@@ -1738,14 +1714,14 @@ const handleResize = () => {
   }
 }
 
-// 暗色模式支持
+/* 暗色模式支持 */
 @media (prefers-color-scheme: dark) {
   .analysis-page {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    
-    &::before {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    }
+  }
+  
+  .analysis-page::before {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   }
   
   .card {
@@ -1769,14 +1745,14 @@ const handleResize = () => {
   .analysis-tabs .tabs-header {
     background: #1a202c;
     border-bottom-color: #4a5568;
-    
-    .tab-item {
-      color: #a0aec0;
-      
-      &.active {
-        color: #667eea;
-      }
-    }
+  }
+  
+  .analysis-tabs .tabs-header .tab-item {
+    color: #a0aec0;
+  }
+  
+  .analysis-tabs .tabs-header .tab-item.active {
+    color: #667eea;
   }
   
   .tab-pane .pane-header h3 {
@@ -1790,24 +1766,22 @@ const handleResize = () => {
     background: #1a202c;
   }
   
-  .odds-history .odds-table {
-    th {
-      background: #1a202c;
-      color: #e2e8f0;
-    }
-    
-    td {
-      color: #a0aec0;
-      
-      &.changed {
-        background: #2d3748;
-        color: #fa8c16;
-      }
-    }
-    
-    tr:hover {
-      background: #1a202c;
-    }
+  .odds-history .odds-table th {
+    background: #1a202c;
+    color: #e2e8f0;
+  }
+  
+  .odds-history .odds-table td {
+    color: #a0aec0;
+  }
+  
+  .odds-history .odds-table td.changed {
+    background: #2d3748;
+    color: #fa8c16;
+  }
+  
+  .odds-history .odds-table tr:hover {
+    background: #1a202c;
   }
 }
 </style>
