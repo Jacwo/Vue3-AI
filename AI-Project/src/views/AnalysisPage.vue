@@ -233,6 +233,40 @@
                       <span class="value away">{{ ((xgData.away?.xg || 0) - (xgData.away?.xga || 0)).toFixed(2) }}</span>
                     </div>
                   </div>
+
+                   <div class="detail-item">
+                    <span class="label">ppda 对方半场每防守动作允许的传球次数，值越低表示前场压迫越强</span>
+                    <div class="values">
+                      <span class="value home">{{ ((xgData.home?.ppda || 0) }}</span>
+                      <span class="value away">{{ ((xgData.away?.ppda || 0) }}</span>
+                    </div>
+                  </div>
+                  
+                   <div class="detail-item">
+                    <span class="label">ppdaAllowed 本方半场每防守动作允许的传球次数，反映对手的压迫强度</span>
+                    <div class="values">
+                      <span class="value home">{{ ((xgData.home?.ppdaAllowed || 0) }}</span>
+                      <span class="value away">{{ ((xgData.away?.ppdaAllowed || 0) }}</span>
+                    </div>
+                  </div>
+                  
+
+                   <div class="detail-item">
+                    <span class="label">deep 进入对方禁区30米区域的传球次数</span>
+                    <div class="values">
+                      <span class="value home">{{ ((xgData.home?.deep || 0) }}</span>
+                      <span class="value away">{{ ((xgData.away?.deep || 0) }}</span>
+                    </div>
+                  </div>
+                  
+                   <div class="detail-item">
+                    <span class="label">deepAllowed 被对手传入本方禁区30米区域的次数</span>
+                    <div class="values">
+                      <span class="value home">{{ ((xgData.home?.deepAllowed || 0) }}</span>
+                      <span class="value away">{{ ((xgData.away?.deepAllowed || 0) }}</span>
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </div>
