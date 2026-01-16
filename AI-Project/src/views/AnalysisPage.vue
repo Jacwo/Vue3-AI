@@ -409,7 +409,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted,watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { formatDisplayTime } from '@/utils/dateUtils'
 import { matchApi } from '@/api/analisis'
