@@ -1,21 +1,30 @@
 <template>
   <div class="analysis-page">
     <div class="page-header">
-      <button class="back-btn" @click="goBack">← 返回</button>
-      <h1>比赛分析</h1>
+      <button class="back-btn" @click="goBack" aria-label="返回">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+        <span>返回</span>
+      </button>
+      <h1 class="page-title">比赛分析</h1>
     </div>
 
     <!-- 比赛基本信息 -->
-    <div class="match-basic-info">
+    <div class="match-basic-info card">
       <div class="teams">
         <div class="team home-team">
-          <div class="team-name">{{ matchData.homeTeam }}</div>
-          <div class="team-rank" v-if="matchData.homeTeamRank">[{{ matchData.homeTeamRank }}]</div>
+          <div class="team-info">
+            <div class="team-name" :title="matchData.homeTeam">{{ truncateText(matchData.homeTeam, 10) }}</div>
+            <div v-if="matchData.homeTeamRank" class="team-rank">[{{ matchData.homeTeamRank }}]</div>
+          </div>
         </div>
         <div class="vs">VS</div>
         <div class="team away-team">
-          <div class="team-name">{{ matchData.awayTeam }}</div>
-          <div class="team-rank" v-if="matchData.awayTeamRank">[{{ matchData.awayTeamRank }}]</div>
+          <div class="team-info">
+            <div class="team-name" :title="matchData.awayTeam">{{ truncateText(matchData.awayTeam, 10) }}</div>
+            <div v-if="matchData.awayTeamRank" class="team-rank">[{{ matchData.awayTeamRank }}]</div>
+          </div>
         </div>
       </div>
       <div class="match-meta">
@@ -24,197 +33,247 @@
       </div>
     </div>
 
-    <div class="analysis-tabs">
+    <!-- 标签页区域 -->
+    <div class="analysis-tabs card">
       <div class="tabs-header">
-        <div v-for="tab in tabs" :key="tab.id" :class="['tab-item', { active: activeTab === tab.id }]"
-          @click="switchTab(tab.id)">
-          {{ tab.label }}
+        <div 
+          v-for="tab in tabs" 
+          :key="tab.id" 
+          :class="['tab-item', { active: activeTab === tab.id, loading: loading[tab.id] }]"
+          @click="switchTab(tab.id)"
+          :aria-label="tab.label"
+          role="tab"
+          :aria-selected="activeTab === tab.id"
+        >
+          <span class="tab-label">{{ tab.label }}</span>
+          <span v-if="loading[tab.id]" class="tab-loading-indicator"></span>
         </div>
       </div>
 
-      <div class="tab-content">
+      <div class="tab-content" :key="activeTab">
         <!-- 最近比赛信息 -->
-        <div v-if="activeTab === 'recent'" class="recent-matches">
-          <h3>历史交锋</h3>
+        <div v-if="activeTab === 'recent'" class="tab-pane">
+          <div class="pane-header">
+            <h3>历史交锋</h3>
+            <button v-if="recentMatches.length > 0" class="refresh-btn" @click="fetchRecentMatches" aria-label="刷新">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 4v6h-6M1 20v-6h6"/>
+                <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+              </svg>
+            </button>
+          </div>
+          
           <div class="recent-teams">
-            <div class="recent-team">
+            <!-- 主队最近比赛 -->
+            <div class="team-section">
+              <h4 class="team-section-title">{{ matchData.homeTeam }} 最近比赛</h4>
               <div class="match-list">
-                <div v-if="loading.recent">加载中...</div>
-                <div v-else-if="!recentMatches.length">暂无数据</div>
-                <div v-else v-for="match in filteredHomeRecentMatches" :key="match.id" class="recent-match-item">
-                  <div class="match-info">
-                    <span class="league">{{ match.league }}</span>
-                    <span class="time">{{ formatDate(match.matchDate) }}</span>
-                  </div>
-                  <div class="match-result">
-                    <span class="home">{{ match.homeTeam }}</span>
-                    <span :class="getScoreClass(match.score, match.homeTeam, matchData.homeTeam)">
-                      {{ parseScore(match.score).home }} - {{ parseScore(match.score).away }}
-                    </span>
-                    <span class="away">{{ match.awayTeam }}</span>
+                <div v-if="loading.recent" class="loading-state">
+                  <div class="loading-spinner"></div>
+                  <span>加载中...</span>
+                </div>
+                <div v-else-if="filteredHomeRecentMatches.length === 0" class="empty-state">
+                  <span>暂无数据</span>
+                </div>
+                <div v-else>
+                  <div 
+                    v-for="match in filteredHomeRecentMatches" 
+                    :key="match.id" 
+                    class="recent-match-item"
+                    :class="getMatchItemClass(match)"
+                  >
+                    <div class="match-header">
+                      <span class="league">{{ match.league }}</span>
+                      <span class="time">{{ formatDate(match.matchDate) }}</span>
+                    </div>
+                    <div class="match-result">
+                      <span class="team home">{{ truncateText(match.homeTeam, 8) }}</span>
+                      <span :class="getScoreClass(match)">
+                        {{ parseScore(match.score).home }} - {{ parseScore(match.score).away }}
+                      </span>
+                      <span class="team away">{{ truncateText(match.awayTeam, 8) }}</span>
+                    </div>
+                    <div class="match-outcome">
+                      <span :class="getOutcomeClass(match)">
+                        {{ getMatchOutcome(match) }}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
+            <!-- 客队最近比赛 -->
+            <div class="team-section">
+              <h4 class="team-section-title">{{ matchData.awayTeam }} 最近比赛</h4>
+              <div class="match-list">
+                <div v-if="loading.recent" class="loading-state">
+                  <div class="loading-spinner"></div>
+                  <span>加载中...</span>
+                </div>
+                <div v-else-if="filteredAwayRecentMatches.length === 0" class="empty-state">
+                  <span>暂无数据</span>
+                </div>
+                <div v-else>
+                  <div 
+                    v-for="match in filteredAwayRecentMatches" 
+                    :key="match.id" 
+                    class="recent-match-item"
+                    :class="getMatchItemClass(match)"
+                  >
+                    <div class="match-header">
+                      <span class="league">{{ match.league }}</span>
+                      <span class="time">{{ formatDate(match.matchDate) }}</span>
+                    </div>
+                    <div class="match-result">
+                      <span class="team home">{{ truncateText(match.homeTeam, 8) }}</span>
+                      <span :class="getScoreClass(match)">
+                        {{ parseScore(match.score).home }} - {{ parseScore(match.score).away }}
+                      </span>
+                      <span class="team away">{{ truncateText(match.awayTeam, 8) }}</span>
+                    </div>
+                    <div class="match-outcome">
+                      <span :class="getOutcomeClass(match)">
+                        {{ getMatchOutcome(match) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- 在 xg-data 部分更新模板 -->
-        <div v-if="activeTab === 'xg'" class="xg-data">
-          <h3>预期进球(xG)分析</h3>
-          <div v-if="loading.xg">加载中...</div>
-          <div v-else-if="!xgData.home && !xgData.away">暂无数据</div>
-          <div v-else>
-            <!-- 基本数据对比 -->
-            <div class="xg-stats">
-              <div class="xg-team">
-                <div class="team-name">{{ xgData.home?.teamName || matchData.homeTeam }}</div>
-                <div class="xg-bar-container">
-                  <div class="xg-bar" :style="{ width: homeXgPercent + '%' }"></div>
+        <!-- xG数据 -->
+        <div v-if="activeTab === 'xg'" class="tab-pane">
+          <div class="pane-header">
+            <h3>预期进球(xG)分析</h3>
+          </div>
+          
+          <div v-if="loading.xg" class="loading-state">
+            <div class="loading-spinner"></div>
+            <span>加载中...</span>
+          </div>
+          
+          <div v-else-if="!xgData.home && !xgData.away" class="empty-state">
+            <span>暂无数据</span>
+          </div>
+          
+          <div v-else class="xg-content">
+            <!-- xG对比图 -->
+            <div class="xg-comparison">
+              <div class="xg-team home">
+                <div class="team-header">
+                  <div class="team-name">{{ xgData.home?.teamName || matchData.homeTeam }}</div>
                   <div class="xg-value">{{ (xgData.home?.xg || 0).toFixed(2) }}</div>
                 </div>
-              </div>
-              <div class="xg-vs">VS</div>
-              <div class="xg-team">
-                <div class="team-name">{{ xgData.away?.teamName || matchData.awayTeam }}</div>
                 <div class="xg-bar-container">
-                  <div class="xg-bar" :style="{ width: awayXgPercent + '%' }"></div>
+                  <div 
+                    class="xg-bar" 
+                    :style="{ width: homeXgPercent + '%' }"
+                    :title="`xG: ${(xgData.home?.xg || 0).toFixed(2)}`"
+                  >
+                    <div class="xg-label">{{ homeXgPercent.toFixed(1) }}%</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="xg-vs">VS</div>
+              
+              <div class="xg-team away">
+                <div class="team-header">
+                  <div class="team-name">{{ xgData.away?.teamName || matchData.awayTeam }}</div>
                   <div class="xg-value">{{ (xgData.away?.xg || 0).toFixed(2) }}</div>
+                </div>
+                <div class="xg-bar-container">
+                  <div 
+                    class="xg-bar" 
+                    :style="{ width: awayXgPercent + '%' }"
+                    :title="`xG: ${(xgData.away?.xg || 0).toFixed(2)}`"
+                  >
+                    <div class="xg-label">{{ awayXgPercent.toFixed(1) }}%</div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- 详细数据 -->
+            <!-- 详细数据卡片 -->
             <div class="xg-details">
-              <div class="detail-section">
-                <h4>基本战绩对比</h4>
+              <div class="detail-category">
+                <h4 class="category-title">基本战绩对比</h4>
                 <div class="detail-grid">
                   <div class="detail-item">
-                    <span class="label">比赛场次:</span>
-                    <span class="value">
-                      主: {{ xgData.home?.matches || 0 }}
-                      客: {{ xgData.away?.matches || 0 }}
-                    </span>
+                    <span class="label">比赛场次</span>
+                    <div class="values">
+                      <span class="value home">{{ xgData.home?.matches || 0 }}</span>
+                      <span class="value away">{{ xgData.away?.matches || 0 }}</span>
+                    </div>
                   </div>
                   <div class="detail-item">
-                    <span class="label">胜/平/负:</span>
-                    <span class="value">
-                      主: {{ xgData.home?.wins || 0 }}/{{ xgData.home?.draws || 0 }}/{{
-                        xgData.home?.loses || 0 }}
-                      客: {{ xgData.away?.wins || 0 }}/{{ xgData.away?.draws || 0 }}/{{
-                        xgData.away?.loses || 0 }}
-                    </span>
+                    <span class="label">胜/平/负</span>
+                    <div class="values">
+                      <span class="value home">
+                        {{ xgData.home?.wins || 0 }}/{{ xgData.home?.draws || 0 }}/{{ xgData.home?.loses || 0 }}
+                      </span>
+                      <span class="value away">
+                        {{ xgData.away?.wins || 0 }}/{{ xgData.away?.draws || 0 }}/{{ xgData.away?.loses || 0 }}
+                      </span>
+                    </div>
                   </div>
                   <div class="detail-item">
-                    <span class="label">实际进球/失球:</span>
-                    <span class="value">
-                      主: {{ xgData.home?.goals || 0 }}/{{ xgData.home?.ga || 0 }}
-                      客: {{ xgData.away?.goals || 0 }}/{{ xgData.away?.ga || 0 }}
-                    </span>
+                    <span class="label">实际进球/失球</span>
+                    <div class="values">
+                      <span class="value home">{{ xgData.home?.goals || 0 }}/{{ xgData.home?.ga || 0 }}</span>
+                      <span class="value away">{{ xgData.away?.goals || 0 }}/{{ xgData.away?.ga || 0 }}</span>
+                    </div>
                   </div>
                   <div class="detail-item">
-                    <span class="label">净胜球:</span>
-                    <span class="value">
-                      主: {{ xgData.home?.goalDifference || 0 }}
-                      客: {{ xgData.away?.goalDifference || 0 }}
-                    </span>
+                    <span class="label">净胜球</span>
+                    <div class="values">
+                      <span class="value home">{{ xgData.home?.goalDifference || 0 }}</span>
+                      <span class="value away">{{ xgData.away?.goalDifference || 0 }}</span>
+                    </div>
                   </div>
                   <div class="detail-item">
-                    <span class="label">积分:</span>
-                    <span class="value">
-                      主: {{ xgData.home?.points || 0 }}
-                      客: {{ xgData.away?.points || 0 }}
-                    </span>
+                    <span class="label">积分</span>
+                    <div class="values">
+                      <span class="value home">{{ xgData.home?.points || 0 }}</span>
+                      <span class="value away">{{ xgData.away?.points || 0 }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div class="detail-section">
-                <h4>预期数据对比</h4>
+              <div class="detail-category">
+                <h4 class="category-title">预期数据对比</h4>
                 <div class="detail-grid">
                   <div class="detail-item">
-                    <span class="label">预期进球(xG):</span>
-                    <span class="value">
-                      主: {{ (xgData.home?.xg || 0).toFixed(2) }}
-                      客: {{ (xgData.away?.xg || 0).toFixed(2) }}
-                    </span>
+                    <span class="label">预期进球(xG)</span>
+                    <div class="values">
+                      <span class="value home">{{ (xgData.home?.xg || 0).toFixed(2) }}</span>
+                      <span class="value away">{{ (xgData.away?.xg || 0).toFixed(2) }}</span>
+                    </div>
                   </div>
                   <div class="detail-item">
-                    <span class="label">非点球xG:</span>
-                    <span class="value">
-                      主: {{ (xgData.home?.npxG || 0).toFixed(2) }}
-                      客: {{ (xgData.away?.npxG || 0).toFixed(2) }}
-                    </span>
+                    <span class="label">非点球xG</span>
+                    <div class="values">
+                      <span class="value home">{{ (xgData.home?.npxG || 0).toFixed(2) }}</span>
+                      <span class="value away">{{ (xgData.away?.npxG || 0).toFixed(2) }}</span>
+                    </div>
                   </div>
                   <div class="detail-item">
-                    <span class="label">预期失球(xGA):</span>
-                    <span class="value">
-                      主: {{ (xgData.home?.xga || 0).toFixed(2) }}
-                      客: {{ (xgData.away?.xga || 0).toFixed(2) }}
-                    </span>
+                    <span class="label">预期失球(xGA)</span>
+                    <div class="values">
+                      <span class="value home">{{ (xgData.home?.xga || 0).toFixed(2) }}</span>
+                      <span class="value away">{{ (xgData.away?.xga || 0).toFixed(2) }}</span>
+                    </div>
                   </div>
                   <div class="detail-item">
-                    <span class="label">非点球xGA:</span>
-                    <span class="value">
-                      主: {{ (xgData.home?.npxGA || 0).toFixed(2) }}
-                      客: {{ (xgData.away?.npxGA || 0).toFixed(2) }}
-                    </span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="label">xG净胜球:</span>
-                    <span class="value">
-                      主: {{ ((xgData.home?.xg || 0) - (xgData.home?.xga || 0)).toFixed(2) }}
-                      客: {{ ((xgData.away?.xg || 0) - (xgData.away?.xga || 0)).toFixed(2) }}
-                    </span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="label">非点球xG净胜球:</span>
-                    <span class="value">
-                      主: {{ (xgData.home?.npxGD || 0).toFixed(2) }}
-                      客: {{ (xgData.away?.npxGD || 0).toFixed(2) }}
-                    </span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="label">预期积分:</span>
-                    <span class="value">
-                      主: {{ (xgData.home?.xpts || 0).toFixed(2) }}
-                      客: {{ (xgData.away?.xpts || 0).toFixed(2) }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="detail-section">
-                <h4>战术数据</h4>
-                <div class="detail-grid">
-                  <div class="detail-item">
-                    <span class="label">进攻三区次数:</span>
-                    <span class="value">
-                      主: {{ xgData.home?.deep || 0 }}
-                      客: {{ xgData.away?.deep || 0 }}
-                    </span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="label">被进入进攻三区:</span>
-                    <span class="value">
-                      主: {{ xgData.home?.deepAllowed || 0 }}
-                      客: {{ xgData.away?.deepAllowed || 0 }}
-                    </span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="label">PPDA(传球防守强度):</span>
-                    <span class="value">
-                      主: {{ (xgData.home?.ppda || 0).toFixed(2) }}
-                      客: {{ (xgData.away?.ppda || 0).toFixed(2) }}
-                    </span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="label">被PPDA:</span>
-                    <span class="value">
-                      主: {{ (xgData.home?.ppdaAllowed || 0).toFixed(2) }}
-                      客: {{ (xgData.away?.ppdaAllowed || 0).toFixed(2) }}
-                    </span>
+                    <span class="label">xG净胜球</span>
+                    <div class="values">
+                      <span class="value home">{{ ((xgData.home?.xg || 0) - (xgData.home?.xga || 0)).toFixed(2) }}</span>
+                      <span class="value away">{{ ((xgData.away?.xg || 0) - (xgData.away?.xga || 0)).toFixed(2) }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -222,93 +281,135 @@
           </div>
         </div>
 
-        <!-- 同奖比赛信息 -->
-        <div v-if="activeTab === 'similar'" class="similar-matches">
-          <h3>相似盘口比赛</h3>
-          <div v-if="loading.similar">加载中...</div>
-          <div v-else-if="!similarMatches.length" class="no-data">暂无相似比赛数据</div>
+        <!-- 相似比赛 -->
+        <div v-if="activeTab === 'similar'" class="tab-pane">
+          <div class="pane-header">
+            <h3>相似盘口比赛</h3>
+            <button v-if="similarMatches.length > 0" class="refresh-btn" @click="fetchSimilarMatches" aria-label="刷新">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 4v6h-6M1 20v-6h6"/>
+                <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+              </svg>
+            </button>
+          </div>
+          
+          <div v-if="loading.similar" class="loading-state">
+            <div class="loading-spinner"></div>
+            <span>加载中...</span>
+          </div>
+          
+          <div v-else-if="similarMatches.length === 0" class="empty-state">
+            <span>暂无相似比赛数据</span>
+          </div>
+          
           <div v-else class="similar-list">
-            <div v-for="match in similarMatches" :key="match.id" class="similar-match-item">
+            <div 
+              v-for="match in similarMatches" 
+              :key="match.id" 
+              class="similar-match-item"
+              :class="getSimilarMatchClass(match)"
+            >
               <div class="match-header">
                 <span class="league">{{ match.league }}</span>
                 <span class="time">{{ formatDate(match.matchDate) }}</span>
               </div>
-              <div class="teams">
-                <span class="home">{{ match.homeTeam }}</span>
-                <span class="score">{{ match.score }}</span>
-                <span class="away">{{ match.awayTeam }}</span>
-              </div>
-              <div class="odds-info">
-                <span>主胜: {{ match.h }}</span>
-                <span>平: {{ match.d }}</span>
-                <span>客胜: {{ match.a }}</span>
-                <span>
-                  结果:
-                  <span :class="getMatchResultClass(match.score, match.h, match.a)">
-                    {{ getMatchResult(match.score, match.h, match.a) }}
-                  </span>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 情报信息 -->
-        <div v-if="activeTab === 'intelligence'" class="intelligence-info">
-          <h3>情报分析</h3>
-          <div v-if="loading.intelligence">加载中...</div>
-          <div v-else-if="!intelligenceData" class="no-data">暂无情报数据</div>
-          <div v-else class="intelligence-content">
-            <pre>{{ intelligenceData }}</pre>
-          </div>
-        </div>
-
-        <!-- 赔率变化信息 -->
-        <div v-if="activeTab === 'odds'" class="odds-change">
-          <h3>赔率变化趋势</h3>
-
-          <div class="odds-header">
-            <div class="odds-summary">
-              <div class="summary-item">
-                <span class="label">最新赔率</span>
-                <div class="odds-values">
-                  <span class="home-odds">主胜: {{ latestOdds?.h || '--' }}</span>
-                  <span class="draw-odds">平: {{ latestOdds?.d || '--' }}</span>
-                  <span class="away-odds">客胜: {{ latestOdds?.a || '--' }}</span>
+              <div class="match-content">
+                <div class="teams">
+                  <span class="team home" :title="match.homeTeam">{{ truncateText(match.homeTeam, 10) }}</span>
+                  <span class="score">{{ match.score }}</span>
+                  <span class="team away" :title="match.awayTeam">{{ truncateText(match.awayTeam, 10) }}</span>
+                </div>
+                <div class="odds-info">
+                  <div class="odds-values">
+                    <span class="odds-item">主: {{ match.h }}</span>
+                    <span class="odds-item">平: {{ match.d }}</span>
+                    <span class="odds-item">客: {{ match.a }}</span>
+                  </div>
+                  <div class="match-result">
+                    <span :class="getMatchResultClass(match)">
+                      {{ getMatchResult(match) }}
+                    </span>
+                  </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
 
+        <!-- 赔率变化 -->
+        <div v-if="activeTab === 'odds'" class="tab-pane">
+          <div class="pane-header">
+            <h3>赔率变化趋势</h3>
+            <button v-if="oddsHistory.length > 0" class="refresh-btn" @click="fetchOddsHistory" aria-label="刷新">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 4v6h-6M1 20v-6h6"/>
+                <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- 最新赔率概览 -->
+          <div v-if="latestOdds" class="current-odds card">
+            <h4>最新赔率</h4>
+            <div class="odds-display">
+              <div class="odds-type home">
+                <span class="odds-label">主胜</span>
+                <span class="odds-value">{{ latestOdds.h }}</span>
+              </div>
+              <div class="odds-type draw">
+                <span class="odds-label">平局</span>
+                <span class="odds-value">{{ latestOdds.d }}</span>
+              </div>
+              <div class="odds-type away">
+                <span class="odds-label">客胜</span>
+                <span class="odds-value">{{ latestOdds.a }}</span>
+              </div>
             </div>
           </div>
 
-
-
-          <div class="odds-details">
-            <h4>详细赔率变化记录</h4>
-            <div class="odds-table">
-              <div class="table-header">
-                <div class="cell">更新时间</div>
-                <div class="cell">主胜</div>
-                <div class="cell">平局</div>
-                <div class="cell">客胜</div>
-              </div>
-              <div v-for="record in oddsHistory" :key="record.id" class="table-row">
-                <div class="cell"> {{ record.updateDate }} {{ record.updateTime }}</div>
-                <div class="cell" :class="{ 'changed': isOddsChanged(record.id, 'h') }">{{ record.h }}</div>
-                <div class="cell" :class="{ 'changed': isOddsChanged(record.id, 'd') }">{{ record.d }}</div>
-                <div class="cell" :class="{ 'changed': isOddsChanged(record.id, 'a') }">{{ record.a }}</div>
-              </div>
+          <!-- 赔率变化表格 -->
+          <div class="odds-history">
+            <h4>赔率变化记录</h4>
+            <div class="scrollable-table">
+              <table class="odds-table">
+                <thead>
+                  <tr>
+                    <th>更新时间</th>
+                    <th>主胜</th>
+                    <th>平局</th>
+                    <th>客胜</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(record, index) in oddsHistory" :key="record.id">
+                    <td>
+                      <div class="time-cell">
+                        <div class="date">{{ formatOddsDate(record.updateDate) }}</div>
+                        <div class="time">{{ record.updateTime }}</div>
+                      </div>
+                    </td>
+                    <td :class="{ 'changed': index > 0 && record.h !== oddsHistory[index - 1].h }">
+                      {{ record.h }}
+                    </td>
+                    <td :class="{ 'changed': index > 0 && record.d !== oddsHistory[index - 1].d }">
+                      {{ record.d }}
+                    </td>
+                    <td :class="{ 'changed': index > 0 && record.a !== oddsHistory[index - 1].a }">
+                      {{ record.a }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
-
         </div>
       </div>
     </div>
   </div>
 </template>
-// 修改 script 部分
+
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { formatDisplayTime } from '@/utils/dateUtils'
 import { matchApi } from '@/api/analisis'
@@ -322,36 +423,79 @@ const tabs = [
   { id: 'recent', label: '历史交锋' },
   { id: 'xg', label: 'xG数据' },
   { id: 'similar', label: '相似比赛' },
-  // { id: 'intelligence', label: '情报分析' },
   { id: 'odds', label: '赔率变化' }
 ]
 
 const activeTab = ref('recent')
+const loadedTabs = ref(new Set<string>()) // 记录已加载的标签页
 
 // 从路由获取比赛ID
 const matchId = computed(() => route.params.matchId as string)
-// 添加计算属性获取最新赔率
+
+// 加载状态
+const loading = ref({
+  recent: false,
+  xg: false,
+  similar: false,
+  intelligence: false,
+  odds: false
+})
+
+// 数据状态
+const recentMatches = ref<RecentMatch[]>([])
+const xgData = ref<XgData>({
+  home: null,
+  away: null,
+  all: null
+})
+const similarMatches = ref<SimilarMatch[]>([])
+const intelligenceData = ref('')
+const oddsHistory = ref<OddsRecord[]>([])
+const oddsAnalysis = ref('赔率变化分析...')
+
+// 计算属性
 const latestOdds = computed(() => {
   if (oddsHistory.value.length === 0) return null
   return oddsHistory.value[oddsHistory.value.length - 1]
 })
 
-// 判断赔率是否发生变化的方法
-const isOddsChanged = (recordId: string, oddsType: 'h' | 'd' | 'a') => {
-  const index = oddsHistory.value.findIndex(r => r.id === recordId)
-  if (index === 0) return false
+const homeXgPercent = computed(() => {
+  const homeXg = xgData.value.home?.xg || 0
+  const awayXg = xgData.value.away?.xg || 0
+  const total = homeXg + awayXg
+  return total > 0 ? (homeXg / total) * 100 : 50
+})
 
-  const currentRecord = oddsHistory.value[index]
-  const prevRecord = oddsHistory.value[index - 1]
+const awayXgPercent = computed(() => {
+  const homeXg = xgData.value.home?.xg || 0
+  const awayXg = xgData.value.away?.xg || 0
+  const total = homeXg + awayXg
+  return total > 0 ? (awayXg / total) * 100 : 50
+})
 
-  return currentRecord[oddsType] !== prevRecord[oddsType]
-}
-// 从URL查询参数中获取比赛数据
+const filteredHomeRecentMatches = computed(() => {
+  return recentMatches.value
+    .filter(match => 
+      match.homeTeam === matchData.value.homeTeam ||
+      match.awayTeam === matchData.value.homeTeam
+    )
+    .slice(0, 5)
+})
+
+const filteredAwayRecentMatches = computed(() => {
+  return recentMatches.value
+    .filter(match => 
+      match.homeTeam === matchData.value.awayTeam ||
+      match.awayTeam === matchData.value.awayTeam
+    )
+    .slice(0, 5)
+})
+
 const matchData = computed(() => {
   const league = route.query.league as string || '未知联赛'
   const homeTeam = route.query.homeTeam as string || '未知主队'
   const awayTeam = route.query.awayTeam as string || '未知客队'
-
+  
   let fullMatchTime = route.query.matchTime as string || ''
   if (fullMatchTime) {
     fullMatchTime = fullMatchTime.replace('+', ' ')
@@ -372,64 +516,6 @@ const matchData = computed(() => {
   }
 })
 
-// 加载状态
-const loading = ref({
-  recent: false,
-  xg: false,
-  similar: false,
-  intelligence: false,
-  odds: false
-})
-
-// 最近比赛数据
-const recentMatches = ref<RecentMatch[]>([])
-
-// xG数据
-const xgData = ref<XgData>({
-  home: null,
-  away: null,
-  all: null
-})
-
-// 同奖比赛数据
-const similarMatches = ref<SimilarMatch[]>([])
-
-// 情报数据
-const intelligenceData = ref('')
-
-// 赔率历史
-const oddsHistory = ref<OddsRecord[]>([])
-const oddsAnalysis = ref('赔率变化分析...')
-
-// 计算属性
-const filteredHomeRecentMatches = computed(() => {
-  return recentMatches.value.filter(match =>
-    match.homeTeam === matchData.value.homeTeam ||
-    match.awayTeam === matchData.value.homeTeam
-  ).slice(0, 5)
-})
-
-const filteredAwayRecentMatches = computed(() => {
-  return recentMatches.value.filter(match =>
-    match.homeTeam === matchData.value.awayTeam ||
-    match.awayTeam === matchData.value.awayTeam
-  ).slice(0, 5)
-})
-
-const homeXgPercent = computed(() => {
-  const homeXg = xgData.value.home?.xG || 0
-  const awayXg = xgData.value.away?.xG || 0
-  const total = homeXg + awayXg
-  return total > 0 ? (homeXg / total) * 100 : 50
-})
-
-const awayXgPercent = computed(() => {
-  const homeXg = xgData.value.home?.xG || 0
-  const awayXg = xgData.value.away?.xG || 0
-  const total = homeXg + awayXg
-  return total > 0 ? (awayXg / total) * 100 : 50
-})
-
 // 方法
 const goBack = () => {
   router.back()
@@ -444,7 +530,26 @@ const formatDate = (dateString: string) => {
   if (!dateString) return ''
   try {
     const date = new Date(dateString)
-    return date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' })
+    return date.toLocaleDateString('zh-CN', { 
+      month: '2-digit', 
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).replace(',', '')
+  } catch (e) {
+    return dateString
+  }
+}
+
+const formatOddsDate = (dateString: string) => {
+  if (!dateString) return ''
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('zh-CN', { 
+      month: '2-digit', 
+      day: '2-digit'
+    })
   } catch (e) {
     return dateString
   }
@@ -452,100 +557,141 @@ const formatDate = (dateString: string) => {
 
 const parseScore = (score: string) => {
   if (!score) return { home: 0, away: 0 }
-  const [home, away] = score.split('-').map(s => s.trim())
-  return {
-    home: parseInt(home) || 0,
-    away: parseInt(away) || 0
-  }
+  const [home, away] = score.split('-').map(s => parseInt(s.trim()) || 0)
+  return { home, away }
 }
 
-const getScoreClass = (score: string, teamName: string, targetTeam: string) => {
-  if (!score || !teamName || !targetTeam) return 'score'
-  const { home, away } = parseScore(score)
+const truncateText = (text: string, maxLength: number) => {
+  if (!text) return ''
+  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text
+}
 
-  const isHomeTeam = score.includes(targetTeam) ?
-    (score.split('-')[0].includes(targetTeam) ? true : false) : false
-
-  let result = 'draw'
-  if (home > away) {
-    result = 'home-win'
-  } else if (home < away) {
-    result = 'away-win'
-  }
-
-  if ((isHomeTeam && result === 'home-win') || (!isHomeTeam && result === 'away-win')) {
-    return 'score win'
-  } else if (result === 'draw') {
-    return 'score draw'
+// 比赛相关方法
+const getMatchOutcome = (match: RecentMatch) => {
+  const score = parseScore(match.score)
+  const isHomeTeam = match.homeTeam === matchData.value.homeTeam || 
+                     match.awayTeam === matchData.value.homeTeam
+  
+  if (isHomeTeam) {
+    if (score.home > score.away && match.homeTeam.includes(matchData.value.homeTeam)) return '胜'
+    if (score.home < score.away && match.awayTeam.includes(matchData.value.homeTeam)) return '胜'
+    if (score.home === score.away) return '平'
+    return '负'
   } else {
-    return 'score lose'
+    if (score.home > score.away && match.homeTeam.includes(matchData.value.awayTeam)) return '胜'
+    if (score.home < score.away && match.awayTeam.includes(matchData.value.awayTeam)) return '胜'
+    if (score.home === score.away) return '平'
+    return '负'
   }
 }
 
-const getMatchResult = (score: string, homeOdds: string, awayOdds: string) => {
-  if (!score) return '未知'
-  const { home, away } = parseScore(score)
+const getScoreClass = (match: RecentMatch) => {
+  const outcome = getMatchOutcome(match)
+  return {
+    'score': true,
+    'score-win': outcome === '胜',
+    'score-draw': outcome === '平',
+    'score-lose': outcome === '负'
+  }
+}
 
-  if (home > away) return '主胜'
-  if (home < away) return '客胜'
+const getOutcomeClass = (match: RecentMatch) => {
+  const outcome = getMatchOutcome(match)
+  return {
+    'outcome': true,
+    'outcome-win': outcome === '胜',
+    'outcome-draw': outcome === '平',
+    'outcome-lose': outcome === '负'
+  }
+}
+
+const getMatchItemClass = (match: RecentMatch) => {
+  const outcome = getMatchOutcome(match)
+  return {
+    'win': outcome === '胜',
+    'draw': outcome === '平',
+    'lose': outcome === '负'
+  }
+}
+
+const getMatchResult = (match: SimilarMatch) => {
+  const score = parseScore(match.score)
+  if (score.home > score.away) return '主胜'
+  if (score.home < score.away) return '客胜'
   return '平局'
 }
 
-const getMatchResultClass = (score: string, homeOdds: string, awayOdds: string) => {
-  const result = getMatchResult(score, homeOdds, awayOdds)
-  switch (result) {
-    case '主胜': return 'result-home-win'
-    case '客胜': return 'result-away-win'
-    case '平局': return 'result-draw'
-    default: return ''
+const getMatchResultClass = (match: SimilarMatch) => {
+  const result = getMatchResult(match)
+  return {
+    'result': true,
+    'result-home': result === '主胜',
+    'result-draw': result === '平局',
+    'result-away': result === '客胜'
   }
 }
 
-const switchTab = (tabId: string) => {
+const getSimilarMatchClass = (match: SimilarMatch) => {
+  const result = getMatchResult(match)
+  return {
+    'home-win': result === '主胜',
+    'draw': result === '平局',
+    'away-win': result === '客胜'
+  }
+}
+
+// 标签页切换
+const switchTab = async (tabId: string) => {
+  if (activeTab.value === tabId) return
+  
   activeTab.value = tabId
+  await nextTick()
+  
+  // 滚动到顶部
+  const contentEl = document.querySelector('.tab-content')
+  if (contentEl) {
+    contentEl.scrollTop = 0
+  }
+  
+  // 加载数据
   loadTabData(tabId)
 }
 
+// 数据加载
 const loadTabData = async (tabId: string) => {
+  // 如果已经加载过，不再重复加载
+  if (loadedTabs.value.has(tabId)) return
+  
   switch (tabId) {
     case 'recent':
-      if (recentMatches.value.length === 0) {
-        await fetchRecentMatches()
-      }
+      await fetchRecentMatches()
+      loadedTabs.value.add('recent')
       break
     case 'xg':
-      if (!xgData.value.home && !xgData.value.away) {
-        await fetchXgData()
-      }
+      await fetchXgData()
+      loadedTabs.value.add('xg')
       break
     case 'similar':
-      if (similarMatches.value.length === 0) {
-        await fetchSimilarMatches()
-      }
-      break
-    case 'intelligence':
-      if (!intelligenceData.value) {
-        await fetchIntelligenceData()
-      }
+      await fetchSimilarMatches()
+      loadedTabs.value.add('similar')
       break
     case 'odds':
-      if (oddsHistory.value.length === 0) {
-        await fetchOddsHistory()
-      }
+      await fetchOddsHistory()
+      loadedTabs.value.add('odds')
       break
   }
 }
 
-// 使用 API 客户端重构的方法
+// API 调用方法
 const fetchRecentMatches = async () => {
   try {
     loading.value.recent = true
     const response = await matchApi.getRecentMatches(matchId.value)
-    console.log(response)
     recentMatches.value = response
   } catch (error) {
     console.error('获取近期战绩失败:', error)
     recentMatches.value = []
+    // 可以在这里添加错误提示
   } finally {
     loading.value.recent = false
   }
@@ -577,28 +723,10 @@ const fetchSimilarMatches = async () => {
   }
 }
 
-const fetchIntelligenceData = async () => {
-  try {
-    loading.value.intelligence = true
-    const response = await matchApi.getIntelligenceData(matchId.value)
-    intelligenceData.value = response
-  } catch (error) {
-    console.error('获取情报数据失败:', error)
-    intelligenceData.value = ''
-  } finally {
-    loading.value.intelligence = false
-  }
-}
-
 const fetchOddsHistory = async () => {
   try {
     loading.value.odds = true
-    // 如果接口存在
     const response = await matchApi.getOddsHistory(matchId.value)
-    // oddsHistory.value = response.data.history
-    // oddsAnalysis.value = response.data.analysis
-
-    // 暂时使用模拟数据
     oddsHistory.value = response
   } catch (error) {
     console.error('获取赔率历史失败:', error)
@@ -616,250 +744,337 @@ watch(activeTab, (newTab) => {
 
 // 生命周期
 onMounted(() => {
+  // 初始加载第一个标签页的数据
   loadTabData(activeTab.value)
+  
+  // 监听窗口大小变化，优化移动端体验
+  window.addEventListener('resize', handleResize)
 })
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
+
+const handleResize = () => {
+  // 可以在这里处理响应式布局的调整
+}
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .analysis-page {
-  padding: 12px;
-  background: #f5f5f5;
   min-height: 100vh;
-}
-
-/* 移动端适配 */
-@media (max-width: 768px) {
-  .analysis-page {
-    padding: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 0;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 240px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    z-index: 0;
   }
 }
 
+// 卡片通用样式
+.card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+// 页面头部
 .page-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 16px;
   display: flex;
   align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   margin-bottom: 16px;
-  padding: 0 8px;
 }
 
 .back-btn {
-  background: none;
-  border: none;
-  color: #1890ff;
-  font-size: 14px;
-  cursor: pointer;
-  padding: 8px 12px;
-  margin-right: 16px;
-  flex-shrink: 0;
-}
-
-.page-header h1 {
-  font-size: 18px;
-  color: #333;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-@media (max-width: 768px) {
-  .back-btn {
-    padding: 6px 10px;
-    margin-right: 12px;
-    font-size: 13px;
-  }
-  
-  .page-header h1 {
-    font-size: 16px;
-  }
-}
-
-.match-basic-info {
-  background: white;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-@media (max-width: 768px) {
-  .match-basic-info {
-    padding: 12px;
-    border-radius: 6px;
-  }
-}
-
-.match-basic-info .teams {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-}
-
-.team {
-  flex: 1;
-  text-align: center;
-  min-width: 0; /* 允许文本溢出 */
-}
-
-.team-name {
-  font-size: 16px;
-  font-weight: bold;
-  color: #333;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 0 8px;
-}
-
-.team-rank {
-  font-size: 12px;
-  color: #666;
-  margin-top: 4px;
-  white-space: nowrap;
-}
-
-.vs {
-  color: #999;
+  gap: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  color: white;
   font-size: 14px;
-  margin: 0 12px;
-  font-weight: bold;
-  flex-shrink: 0;
-}
-
-@media (max-width: 768px) {
-  .team-name {
-    font-size: 14px;
-    padding: 0 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  svg {
+    transition: transform 0.3s ease;
   }
   
-  .vs {
-    font-size: 12px;
-    margin: 0 8px;
+  &:hover {
+    transform: translateX(-2px);
+    
+    svg {
+      transform: translateX(-2px);
+    }
+  }
+  
+  &:active {
+    transform: translateX(0);
+  }
+}
+
+.page-title {
+  flex: 1;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+}
+
+// 比赛基本信息
+.match-basic-info {
+  margin: 0 16px 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  
+  .teams {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .team {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+    &.home-team {
+      text-align: right;
+    }
+    
+    &.away-team {
+      text-align: left;
+    }
+  }
+  
+  .team-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .team-name {
+    font-size: 18px;
+    font-weight: 600;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   
   .team-rank {
-    font-size: 11px;
+    font-size: 12px;
+    opacity: 0.9;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 8px;
+    border-radius: 10px;
   }
-}
-
-.match-meta {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  font-size: 13px;
-  color: #666;
-  flex-wrap: wrap;
-}
-
-@media (max-width: 768px) {
+  
+  .vs {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0 8px;
+  }
+  
   .match-meta {
-    font-size: 12px;
-    gap: 12px;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.9);
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
   }
 }
 
+// 标签页
 .analysis-tabs {
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-@media (max-width: 768px) {
-  .analysis-tabs {
-    border-radius: 6px;
-  }
-}
-
-.tabs-header {
-  display: flex;
-  background: #fafafa;
-  border-bottom: 1px solid #e8e8e8;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch; /* iOS滚动平滑 */
-  scrollbar-width: none; /* Firefox隐藏滚动条 */
-}
-
-.tabs-header::-webkit-scrollbar {
-  display: none; /* Chrome隐藏滚动条 */
-}
-
-.tab-item {
-  flex: 1;
-  min-width: 80px;
-  text-align: center;
-  padding: 12px 4px;
-  font-size: 13px;
-  color: #666;
-  cursor: pointer;
-  transition: all 0.3s;
-  white-space: nowrap;
-}
-
-.tab-item:hover {
-  background: #f0f0f0;
-}
-
-.tab-item.active {
-  color: #1890ff;
-  border-bottom: 2px solid #1890ff;
-  background: white;
-}
-
-@media (max-width: 768px) {
-  .tab-item {
-    padding: 10px 4px;
-    font-size: 12px;
-    min-width: 70px;
+  margin: 0 16px 16px;
+  min-height: 400px;
+  
+  .tabs-header {
+    display: flex;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    position: sticky;
+    top: 73px; // 页面头部高度
+    z-index: 10;
+    backdrop-filter: blur(10px);
+    
+    .tab-item {
+      flex: 1;
+      text-align: center;
+      padding: 14px 8px;
+      font-size: 14px;
+      color: #6c757d;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      user-select: none;
+      
+      &:hover {
+        background: rgba(0, 0, 0, 0.02);
+      }
+      
+      &.active {
+        color: #667eea;
+        font-weight: 500;
+        
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 2px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          border-radius: 2px 2px 0 0;
+        }
+      }
+      
+      &.loading {
+        .tab-label {
+          opacity: 0.7;
+        }
+        
+        .tab-loading-indicator {
+          position: absolute;
+          right: 8px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 12px;
+          height: 12px;
+          border: 2px solid #e9ecef;
+          border-top-color: #667eea;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+      }
+    }
   }
 }
 
 .tab-content {
-  padding: 16px;
+  padding: 20px;
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-@media (max-width: 768px) {
-  .tab-content {
-    padding: 12px;
+// 通用面板样式
+.tab-pane {
+  .pane-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .refresh-btn {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        background: #e9ecef;
+        transform: rotate(180deg);
+      }
+      
+      svg {
+        display: block;
+      }
+    }
   }
 }
 
-.recent-matches h3,
-.xg-data h3,
-.similar-matches h3,
-.intelligence-info h3,
-.odds-change h3 {
-  font-size: 15px;
-  color: #333;
-  margin: 0 0 12px 0;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #e8e8e8;
-}
-
-@media (max-width: 768px) {
-  .recent-matches h3,
-  .xg-data h3,
-  .similar-matches h3,
-  .intelligence-info h3,
-  .odds-change h3 {
+// 加载状态
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #6c757d;
+  
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 12px;
+  }
+  
+  span {
     font-size: 14px;
-    margin-bottom: 10px;
   }
 }
 
-/* 最近比赛部分 */
-.recent-teams {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
+// 空状态
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #adb5bd;
+  font-size: 14px;
 }
 
-.recent-team h4 {
-  font-size: 14px;
-  color: #333;
-  margin-bottom: 10px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid #f0f0f0;
+// 最近比赛样式
+.recent-teams {
+  .team-section {
+    margin-bottom: 24px;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  .team-section-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: #495057;
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #f8f9fa;
+  }
 }
 
 .match-list {
@@ -869,521 +1084,730 @@ onMounted(() => {
 }
 
 .recent-match-item {
-  border: 1px solid #e8e8e8;
-  border-radius: 6px;
-  padding: 10px;
-  background: #fafafa;
-}
-
-@media (max-width: 768px) {
-  .recent-match-item {
-    padding: 8px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 12px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  
+  &.win {
+    border-color: #52c41a;
+    background: linear-gradient(135deg, rgba(82, 196, 26, 0.1) 0%, rgba(82, 196, 26, 0.05) 100%);
   }
-}
-
-.match-info {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: #666;
-  margin-bottom: 6px;
-}
-
-.match-result {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 13px;
-}
-
-.match-result .home,
-.match-result .away {
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.match-result .home {
-  text-align: left;
-  padding-right: 8px;
-}
-
-.match-result .away {
-  text-align: right;
-  padding-left: 8px;
-}
-
-.match-result .score {
-  font-weight: bold;
-  padding: 0 8px;
-  flex-shrink: 0;
-  min-width: 60px;
-  text-align: center;
-}
-
-.match-result .score.win {
-  color: #52c41a;
-}
-
-.match-result .score.lose {
-  color: #ff4d4f;
-}
-
-.match-result .score.draw {
-  color: #faad14;
-}
-
-@media (max-width: 768px) {
-  .match-info {
-    font-size: 10px;
+  
+  &.draw {
+    border-color: #faad14;
+    background: linear-gradient(135deg, rgba(250, 173, 20, 0.1) 0%, rgba(250, 173, 20, 0.05) 100%);
+  }
+  
+  &.lose {
+    border-color: #ff4d4f;
+    background: linear-gradient(135deg, rgba(255, 77, 79, 0.1) 0%, rgba(255, 77, 79, 0.05) 100%);
+  }
+  
+  .match-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 11px;
+    color: #6c757d;
   }
   
   .match-result {
-    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    
+    .team {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      
+      &.home {
+        text-align: left;
+        padding-right: 8px;
+      }
+      
+      &.away {
+        text-align: right;
+        padding-left: 8px;
+      }
+    }
+    
+    .score {
+      flex-shrink: 0;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 0 8px;
+      min-width: 60px;
+      text-align: center;
+      
+      &.score-win {
+        color: #52c41a;
+      }
+      
+      &.score-draw {
+        color: #faad14;
+      }
+      
+      &.score-lose {
+        color: #ff4d4f;
+      }
+    }
   }
   
-  .match-result .score {
-    min-width: 50px;
-    padding: 0 4px;
+  .match-outcome {
+    text-align: center;
+    
+    .outcome {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      
+      &.outcome-win {
+        background: #52c41a;
+        color: white;
+      }
+      
+      &.outcome-draw {
+        background: #faad14;
+        color: white;
+      }
+      
+      &.outcome-lose {
+        background: #ff4d4f;
+        color: white;
+      }
+    }
   }
 }
 
-/* xG数据部分 */
-.xg-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.xg-team {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.xg-team .team-name {
-  min-width: 60px;
-  text-align: left;
-  font-size: 14px;
-}
-
-.xg-bar-container {
-  position: relative;
-  flex: 1;
-  height: 32px;
-  background: #f0f0f0;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.xg-bar {
-  height: 100%;
-  background: linear-gradient(90deg, #1890ff, #73d13d);
-  transition: width 0.3s;
-}
-
-.xg-value {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-weight: bold;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  font-size: 13px;
-}
-
-.xg-vs {
-  text-align: center;
-  color: #999;
-  font-weight: bold;
-  font-size: 14px;
-  margin: 4px 0;
-}
-
-@media (max-width: 768px) {
-  .xg-stats {
-    gap: 12px;
-  }
-  
-  .xg-team .team-name {
-    font-size: 13px;
-    min-width: 50px;
-  }
-  
-  .xg-bar-container {
-    height: 28px;
-  }
-  
-  .xg-value {
-    font-size: 12px;
-  }
-}
-
-.xg-details {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.detail-section {
-  margin-bottom: 16px;
-  border: 1px solid #e8e8e8;
-  border-radius: 6px;
-  padding: 12px;
-}
-
-.detail-section h4 {
-  margin: 0 0 12px 0;
-  padding-bottom: 6px;
-  border-bottom: 1px solid #e8e8e8;
-  color: #333;
-  font-size: 14px;
-}
-
-.detail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 10px;
-}
-
-@media (max-width: 768px) {
-  .detail-section {
-    padding: 10px;
-    margin-bottom: 12px;
+// xG数据样式
+.xg-content {
+  .xg-comparison {
+    margin-bottom: 24px;
+    
+    .xg-team {
+      .team-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        
+        .team-name {
+          font-size: 14px;
+          font-weight: 500;
+          color: #495057;
+        }
+        
+        .xg-value {
+          font-size: 16px;
+          font-weight: 600;
+          color: #667eea;
+        }
+      }
+      
+      &.home .xg-bar-container {
+        direction: rtl;
+      }
+    }
+    
+    .xg-bar-container {
+      height: 24px;
+      background: #e9ecef;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .xg-bar {
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      transition: width 1s ease;
+      position: relative;
+      
+      .xg-label {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 11px;
+        font-weight: 600;
+        color: white;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        
+        .xg-team.home & {
+          right: 8px;
+        }
+        
+        .xg-team.away & {
+          left: 8px;
+        }
+      }
+    }
+    
+    .xg-vs {
+      text-align: center;
+      margin: 12px 0;
+      color: #adb5bd;
+      font-weight: 600;
+      font-size: 14px;
+    }
   }
   
-  .detail-section h4 {
-    font-size: 13px;
-    margin-bottom: 10px;
+  .xg-details {
+    .detail-category {
+      margin-bottom: 20px;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+      
+      .category-title {
+        font-size: 15px;
+        font-weight: 500;
+        color: #495057;
+        margin: 0 0 12px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #f8f9fa;
+      }
+    }
+    
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      
+      @media (max-width: 480px) {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .detail-item {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 12px;
+      
+      .label {
+        display: block;
+        font-size: 12px;
+        color: #6c757d;
+        margin-bottom: 6px;
+      }
+      
+      .values {
+        display: flex;
+        justify-content: space-between;
+        
+        .value {
+          font-size: 13px;
+          font-weight: 500;
+          color: #495057;
+          
+          &.home {
+            color: #667eea;
+          }
+          
+          &.away {
+            color: #764ba2;
+          }
+        }
+      }
+    }
   }
-  
-  .detail-grid {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
 }
 
-.detail-item {
-  display: flex;
-  flex-direction: column;
-  padding: 8px;
-  background: #fafafa;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-.detail-item .label {
-  font-weight: 500;
-  color: #666;
-  margin-bottom: 4px;
-}
-
-.detail-item .value {
-  color: #333;
-  line-height: 1.4;
-  word-break: break-word;
-}
-
-@media (max-width: 768px) {
-  .detail-item {
-    padding: 6px;
-    font-size: 11px;
-  }
-}
-
-/* 同奖比赛部分 */
+// 相似比赛样式
 .similar-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-.similar-match-item {
-  border: 1px solid #e8e8e8;
-  border-radius: 6px;
-  padding: 10px;
-  background: #fafafa;
-}
-
-.similar-match-item .match-header {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: #666;
-  margin-bottom: 6px;
-}
-
-.similar-match-item .teams {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-  font-size: 13px;
-}
-
-.similar-match-item .home,
-.similar-match-item .away {
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.similar-match-item .home {
-  text-align: left;
-  padding-right: 8px;
-}
-
-.similar-match-item .away {
-  text-align: right;
-  padding-left: 8px;
-}
-
-.similar-match-item .score {
-  font-weight: bold;
-  padding: 0 8px;
-  flex-shrink: 0;
-  min-width: 60px;
-  text-align: center;
-}
-
-.similar-match-item .odds-info {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: #666;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding-top: 6px;
-  border-top: 1px dashed #e8e8e8;
-}
-
-@media (max-width: 768px) {
-  .similar-match-item {
-    padding: 8px;
-  }
-  
-  .similar-match-item .match-header {
-    font-size: 10px;
-  }
-  
-  .similar-match-item .teams {
-    font-size: 12px;
-  }
-  
-  .similar-match-item .score {
-    min-width: 50px;
-    padding: 0 4px;
-  }
-  
-  .similar-match-item .odds-info {
-    font-size: 10px;
-    gap: 6px;
-  }
-}
-
-/* 情报信息部分 */
-.intelligence-content {
-  background: #fafafa;
-  border-radius: 6px;
-  padding: 12px;
-  border: 1px solid #e8e8e8;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.intelligence-content pre {
-  margin: 0;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  font-family: inherit;
-  line-height: 1.5;
-  color: #333;
-  font-size: 13px;
-}
-
-@media (max-width: 768px) {
-  .intelligence-content {
-    padding: 10px;
-    font-size: 12px;
-  }
-}
-
-/* 赔率变化部分 */
-.odds-header {
-  background: #fafafa;
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 16px;
-  border: 1px solid #e8e8e8;
-}
-
-.odds-summary {
-  display: flex;
-  flex-direction: column;
   gap: 12px;
 }
 
-.summary-item .label {
-  display: block;
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 6px;
-}
-
-.odds-values {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.odds-values span {
-  flex: 1;
-  text-align: center;
-  font-weight: bold;
-  font-size: 14px;
-  padding: 6px;
-  border-radius: 4px;
-  background: #f0f0f0;
-}
-
-@media (max-width: 768px) {
-  .odds-header {
-    padding: 10px;
+.similar-match-item {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  
+  &.home-win {
+    border-color: #52c41a;
+    background: linear-gradient(135deg, rgba(82, 196, 26, 0.1) 0%, rgba(82, 196, 26, 0.05) 100%);
   }
   
-  .odds-values {
-    gap: 6px;
+  &.draw {
+    border-color: #faad14;
+    background: linear-gradient(135deg, rgba(250, 173, 20, 0.1) 0%, rgba(250, 173, 20, 0.05) 100%);
   }
   
-  .odds-values span {
-    font-size: 13px;
-    padding: 5px;
+  &.away-win {
+    border-color: #ff4d4f;
+    background: linear-gradient(135deg, rgba(255, 77, 79, 0.1) 0%, rgba(255, 77, 79, 0.05) 100%);
+  }
+  
+  .match-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 11px;
+    color: #6c757d;
+  }
+  
+  .match-content {
+    .teams {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      
+      .team {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        
+        &.home {
+          text-align: left;
+          padding-right: 8px;
+        }
+        
+        &.away {
+          text-align: right;
+          padding-left: 8px;
+        }
+      }
+      
+      .score {
+        flex-shrink: 0;
+        font-size: 18px;
+        font-weight: 600;
+        padding: 0 8px;
+        min-width: 60px;
+        text-align: center;
+      }
+    }
+    
+    .odds-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      
+      .odds-values {
+        display: flex;
+        gap: 12px;
+        font-size: 12px;
+        color: #6c757d;
+        
+        .odds-item {
+          background: white;
+          padding: 4px 8px;
+          border-radius: 6px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+      }
+      
+      .match-result {
+        .result {
+          padding: 4px 12px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 500;
+          
+          &.result-home {
+            background: #52c41a;
+            color: white;
+          }
+          
+          &.result-draw {
+            background: #faad14;
+            color: white;
+          }
+          
+          &.result-away {
+            background: #ff4d4f;
+            color: white;
+          }
+        }
+      }
+    }
   }
 }
 
-/* 赔率表格 */
-.odds-table-container {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  margin: 0 -16px;
-  padding: 0 16px;
-}
-
-@media (max-width: 768px) {
-  .odds-table-container {
-    margin: 0 -12px;
-    padding: 0 12px;
+// 赔率样式
+.current-odds {
+  padding: 16px;
+  margin-bottom: 20px;
+  
+  h4 {
+    margin: 0 0 12px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #495057;
+  }
+  
+  .odds-display {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    
+    .odds-type {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px;
+      border-radius: 8px;
+      background: #f8f9fa;
+      
+      &.home {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(102, 126, 234, 0.05) 100%);
+      }
+      
+      &.draw {
+        background: linear-gradient(135deg, rgba(250, 173, 20, 0.1) 0%, rgba(250, 173, 20, 0.05) 100%);
+      }
+      
+      &.away {
+        background: linear-gradient(135deg, rgba(118, 75, 162, 0.1) 0%, rgba(118, 75, 162, 0.05) 100%);
+      }
+      
+      .odds-label {
+        font-size: 12px;
+        color: #6c757d;
+        margin-bottom: 4px;
+      }
+      
+      .odds-value {
+        font-size: 18px;
+        font-weight: 600;
+        
+        .home & {
+          color: #667eea;
+        }
+        
+        .draw & {
+          color: #faad14;
+        }
+        
+        .away & {
+          color: #764ba2;
+        }
+      }
+    }
   }
 }
 
-.odds-table {
-  min-width: 600px;
-  border: 1px solid #e8e8e8;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.table-header,
-.table-row {
-  display: grid;
-  grid-template-columns: 120px repeat(3, 1fr);
-  min-width: 100%;
-}
-
-.cell {
-  padding: 10px 6px;
-  border-bottom: 1px solid #e8e8e8;
-  text-align: center;
-  font-size: 13px;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.table-header .cell {
-  background: #fafafa;
-  font-weight: bold;
-  color: #333;
-}
-
-.table-row:last-child .cell {
-  border-bottom: none;
-}
-
-.changed {
-  background: #fff7e6;
-  color: #fa8c16;
-  font-weight: bold;
-}
-
-@media (max-width: 768px) {
-  .cell {
-    padding: 8px 4px;
-    font-size: 12px;
-    min-height: 40px;
+.odds-history {
+  .scrollable-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -20px;
+    padding: 0 20px;
   }
   
   .odds-table {
+    width: 100%;
+    border-collapse: collapse;
     min-width: 500px;
+    
+    th, td {
+      padding: 12px 8px;
+      text-align: center;
+      border-bottom: 1px solid #e9ecef;
+    }
+    
+    th {
+      background: #f8f9fa;
+      font-weight: 500;
+      color: #495057;
+      font-size: 13px;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    
+    td {
+      font-size: 14px;
+      color: #6c757d;
+      
+      &.changed {
+        background: #fff7e6;
+        color: #fa8c16;
+        font-weight: 500;
+        position: relative;
+        
+        &::before {
+          content: '↕';
+          position: absolute;
+          left: 4px;
+          top: 50%;
+          transform: translateY(-50%);
+          font-size: 10px;
+        }
+      }
+      
+      .time-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        
+        .date {
+          font-size: 13px;
+          font-weight: 500;
+        }
+        
+        .time {
+          font-size: 11px;
+          color: #adb5bd;
+        }
+      }
+    }
+    
+    tr:hover {
+      background: #f8f9fa;
+    }
   }
 }
 
-/* 通用样式 */
-.no-data {
-  text-align: center;
-  padding: 40px 20px;
-  color: #999;
-  font-size: 14px;
+// 动画
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-.result-home-win {
-  color: #52c41a;
-  font-weight: bold;
-}
-
-.result-away-win {
-  color: #ff4d4f;
-  font-weight: bold;
-}
-
-.result-draw {
-  color: #faad14;
-  font-weight: bold;
-}
-
-/* 加载状态 */
-.loading {
-  text-align: center;
-  padding: 40px 20px;
-  color: #999;
-  font-size: 14px;
-}
-
+// 响应式调整
 @media (max-width: 768px) {
-  .loading,
-  .no-data {
-    padding: 30px 16px;
-    font-size: 13px;
-  }
-}
-
-/* 触摸设备优化 */
-@media (hover: none) and (pointer: coarse) {
-  .tab-item,
-  .back-btn,
-  .recent-match-item,
-  .similar-match-item {
-    min-height: 44px; /* 触摸设备最小点击区域 */
+  .analysis-page::before {
+    height: 200px;
   }
   
-  .match-result .score,
-  .similar-match-item .score {
-    min-width: 70px;
+  .page-header {
+    padding: 12px 16px;
+  }
+  
+  .back-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+    
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+  
+  .page-title {
+    font-size: 16px;
+  }
+  
+  .match-basic-info {
+    margin: 0 12px 12px;
+    padding: 16px;
+    
+    .team-name {
+      font-size: 16px;
+      max-width: 100px;
+    }
+    
+    .vs {
+      font-size: 12px;
+    }
+    
+    .match-meta {
+      font-size: 12px;
+    }
+  }
+  
+  .analysis-tabs {
+    margin: 0 12px 12px;
+    
+    .tabs-header {
+      .tab-item {
+        padding: 12px 4px;
+        font-size: 13px;
+        
+        .tab-label {
+          display: block;
+          max-width: 60px;
+          margin: 0 auto;
+        }
+      }
+    }
+  }
+  
+  .tab-content {
+    padding: 16px;
+    max-height: calc(100vh - 220px);
+  }
+  
+  .tab-pane {
+    .pane-header {
+      margin-bottom: 16px;
+      
+      h3 {
+        font-size: 16px;
+      }
+    }
+  }
+  
+  .recent-match-item,
+  .similar-match-item {
+    padding: 10px;
+  }
+  
+  .current-odds .odds-display {
+    flex-direction: column;
+    gap: 8px;
+    
+    .odds-type {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      
+      .odds-label {
+        margin-bottom: 0;
+      }
+    }
+  }
+  
+  .odds-history .odds-table {
+    min-width: 400px;
+    
+    th, td {
+      padding: 10px 6px;
+      font-size: 12px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .match-basic-info {
+    .team-name {
+      font-size: 14px;
+      max-width: 80px;
+    }
+    
+    .team-rank {
+      font-size: 10px;
+    }
+  }
+  
+  .analysis-tabs .tabs-header .tab-item {
+    font-size: 12px;
+    padding: 10px 2px;
+  }
+  
+  .recent-match-item .match-result .score {
+    font-size: 14px;
+    min-width: 50px;
+  }
+  
+  .similar-match-item .match-content .teams .score {
+    font-size: 16px;
+    min-width: 50px;
+  }
+  
+  .xg-content .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+// 触摸设备优化
+@media (hover: none) and (pointer: coarse) {
+  .back-btn,
+  .tab-item,
+  .refresh-btn,
+  .recent-match-item,
+  .similar-match-item {
+    min-height: 44px;
+  }
+  
+  .back-btn,
+  .tab-item {
+    touch-action: manipulation;
+  }
+}
+
+// 暗色模式支持
+@media (prefers-color-scheme: dark) {
+  .analysis-page {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    
+    &::before {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    }
+  }
+  
+  .card {
+    background: #2d3748;
+    color: #e2e8f0;
+  }
+  
+  .page-header {
+    background: rgba(45, 55, 72, 0.95);
+    border-bottom-color: #4a5568;
+  }
+  
+  .page-title {
+    color: #e2e8f0;
+  }
+  
+  .match-basic-info {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+  
+  .analysis-tabs .tabs-header {
+    background: #1a202c;
+    border-bottom-color: #4a5568;
+    
+    .tab-item {
+      color: #a0aec0;
+      
+      &.active {
+        color: #667eea;
+      }
+    }
+  }
+  
+  .tab-pane .pane-header h3 {
+    color: #e2e8f0;
+  }
+  
+  .recent-match-item,
+  .similar-match-item,
+  .detail-item,
+  .odds-type {
+    background: #1a202c;
+  }
+  
+  .odds-history .odds-table {
+    th {
+      background: #1a202c;
+      color: #e2e8f0;
+    }
+    
+    td {
+      color: #a0aec0;
+      
+      &.changed {
+        background: #2d3748;
+        color: #fa8c16;
+      }
+    }
+    
+    tr:hover {
+      background: #1a202c;
+    }
   }
 }
 </style>
