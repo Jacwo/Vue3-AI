@@ -30,7 +30,8 @@ export interface RawMatch {
   hhomeWin: string | null
   goalLine: string | null
   isSingleMatch:boolean | false
-
+  homeTeamRank: number
+  awayTeamRank: number
 }
 
 // 前端使用的比赛数据结构
@@ -59,6 +60,8 @@ export interface Match {
   leagueId: string
   backColor: string
   isSingleMatch:boolean
+  homeTeamRank: number
+  awayTeamRank: number
 }
 
 // 列表参数
@@ -117,7 +120,9 @@ const transformMatch = (raw: RawMatch): Match => {
     awayTeamId: raw.awayTeamId,
     leagueId: raw.leagueId,
     backColor: raw.backColor,
-    isSingleMatch: raw.isSingleMatch
+    isSingleMatch: raw.isSingleMatch,
+    homeTeamRank: raw.homeTeamRank,
+   awayTeamRank: raw.awayTeamRank
   }
 }
 
