@@ -486,8 +486,8 @@ const matchData = computed(() => {
     awayTeam,
     league,
     fullMatchTime,
-    homeTeamRank: '',
-    awayTeamRank: ''
+    homeTeamRank,
+    awayTeamRank
   }
 })
 
