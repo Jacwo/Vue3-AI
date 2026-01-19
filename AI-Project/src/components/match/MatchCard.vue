@@ -217,6 +217,8 @@ const onAnalysis = () => {
       league: props.match.league,
       homeTeam: props.match.homeTeam,
       awayTeam: props.match.awayTeam,
+      homeTeamRank: props.match.homeTeamRank,
+      awayTeamRank: props.match.awayTeamRank,
       matchTime: props.match.fullMatchTime
     }
   })

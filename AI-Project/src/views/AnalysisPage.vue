@@ -469,7 +469,8 @@ const matchData = computed(() => {
   const league = route.query.league as string || '未知联赛'
   const homeTeam = route.query.homeTeam as string || '未知主队'
   const awayTeam = route.query.awayTeam as string || '未知客队'
-  
+  const homeTeamRank = route.query.homeTeamRank as string || ''
+  const awayTeamRank = route.query.awayTeamRank as string || ''
   let fullMatchTime = route.query.matchTime as string || ''
   if (fullMatchTime) {
     fullMatchTime = fullMatchTime.replace('+', ' ')
@@ -485,8 +486,8 @@ const matchData = computed(() => {
     awayTeam,
     league,
     fullMatchTime,
-    homeTeamRank: '待获取',
-    awayTeamRank: '待获取'
+    homeTeamRank: '',
+    awayTeamRank: ''
   }
 })
 
