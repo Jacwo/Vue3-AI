@@ -625,7 +625,7 @@ onUnmounted(() => {
 
 /* 分组内容 */
 .group-content {
-  max-height: 5000px;
+  /* max-height: 5000px; */
   overflow: hidden;
   transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
   opacity: 1;
