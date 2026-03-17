@@ -202,12 +202,12 @@ const fetchDetail = async () => {
   error.value = ''
   
   try {
-    const response = await historyApi.getHistoryDetail(recordId.value)
+    const response = await historyApi.getHistoryDetail(recordId.value) as any
     console.log('API返回数据:', response)
 
-     if (response && typeof response.data === 'object') {
-      // 如果直接返回记录对象
-      record.value = response.data
+     if (response && typeof response === 'object') {
+      // 响应拦截器已经返回了 data
+      record.value = response
     } else {
       console.error('API返回的数据结构不符合预期:', response)
       error.value = '数据格式错误'

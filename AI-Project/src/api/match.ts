@@ -127,7 +127,11 @@ const transformMatch = (raw: RawMatch): Match => {
 }
 
 // 转换比赛数组
-const transformMatches = (rawMatches: RawMatch[]): Match[] => {
+const transformMatches = (rawMatches: RawMatch[] | undefined): Match[] => {
+  if (!rawMatches || !Array.isArray(rawMatches)) {
+    console.warn('transformMatches received invalid data:', rawMatches)
+    return []
+  }
   return rawMatches.map(transformMatch)
 }
 
@@ -137,9 +141,9 @@ export const matchApi = {
     return apiClient.get<RawMatch[]>('/api/match/list', {
       params,
       ...config,
-    }).then((response) => {
-      // 转换数据格式
-      return transformMatches(response.data)
+    }).then((data) => {
+      // 响应拦截器已经返回了 data，不需要 .data
+      return transformMatches(data as any)
     })
   },
   
@@ -158,9 +162,9 @@ export const matchApi = {
   
   // 获取比赛详情
   getMatchDetail(matchId: number, config?: CustomRequestConfig) {
-    return apiClient.get<RawMatch>(`/api/match/${matchId}`, config).then((response) => {
+    return apiClient.get<RawMatch>(`/api/match/${matchId}`, config).then((data) => {
       // 转换数据格式（单个比赛需要包装成数组）
-      return transformMatches([response.data])[0]
+      return transformMatches([data as any])[0]
     })
   },
   
@@ -181,18 +185,18 @@ export const matchApi = {
     return apiClient.get<RawMatch[]>('/match/list', {
       params: { status },
       ...config,
-    }).then((response) => {
-      return transformMatches(response.data)
+    }).then((data) => {
+      return transformMatches(data as any)
     })
   },
-  
+
   // 按联赛获取比赛列表
   getMatchesByLeague(leagueId: string, config?: CustomRequestConfig) {
     return apiClient.get<RawMatch[]>('/match/list', {
       params: { leagueId },
       ...config,
-    }).then((response) => {
-      return transformMatches(response.data)
+    }).then((data) => {
+      return transformMatches(data as any)
     })
   },
 
@@ -202,8 +206,8 @@ export const matchApi = {
     return apiClient.get<RawMatch[]>('/match/list', {
       params: { date: today },
       ...config,
-    }).then((response) => {
-      return transformMatches(response.data)
+    }).then((data) => {
+      return transformMatches(data as any)
     })
   },
 }

@@ -663,8 +663,8 @@ const loadTabData = async (tabId: string) => {
 const fetchRecentMatches = async () => {
   try {
     loading.value.recent = true
-    const response = await matchApi.getRecentMatches(matchId.value)
-    recentMatches.value = response.data
+    const response = await matchApi.getRecentMatches(matchId.value) as any
+    recentMatches.value = response
   } catch (error) {
     console.error('获取近期战绩失败:', error)
     recentMatches.value = []
@@ -677,8 +677,8 @@ const fetchRecentMatches = async () => {
 const fetchXgData = async () => {
   try {
     loading.value.xg = true
-    const response = await matchApi.getXgData(matchId.value)
-    xgData.value = response.data.data
+    const response = await matchApi.getXgData(matchId.value) as any
+    xgData.value = response.data
   } catch (error) {
     console.error('获取xG数据失败:', error)
     xgData.value = { home: null, away: null, all: null }
@@ -690,8 +690,8 @@ const fetchXgData = async () => {
 const fetchSimilarMatches = async () => {
   try {
     loading.value.similar = true
-    const response = await matchApi.getSimilarMatches(matchId.value)
-    similarMatches.value = response.data
+    const response = await matchApi.getSimilarMatches(matchId.value) as any
+    similarMatches.value = response
   } catch (error) {
     console.error('获取相似比赛失败:', error)
     similarMatches.value = []
@@ -703,8 +703,8 @@ const fetchSimilarMatches = async () => {
 const fetchOddsHistory = async () => {
   try {
     loading.value.odds = true
-    const response = await matchApi.getOddsHistory(matchId.value)
-    oddsHistory.value = response.data.history
+    const response = await matchApi.getOddsHistory(matchId.value) as any
+    oddsHistory.value = response.history
   } catch (error) {
     console.error('获取赔率历史失败:', error)
     oddsHistory.value = []

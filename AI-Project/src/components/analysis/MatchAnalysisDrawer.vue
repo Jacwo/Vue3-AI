@@ -72,11 +72,11 @@ const fetchAnalysis = async () => {
   error.value = ''
   
   try {
-    const response = await matchApi.getMatchAnalysis(props.match.id)
+    const response = await matchApi.getMatchAnalysis(props.match.id) as any
     console.log(response)
 
-     analysisData.value =  response.data.aiAnalysis
-     analysisTimestamp.value = response.data.timestamp
+     analysisData.value =  response.aiAnalysis
+     analysisTimestamp.value = response.timestamp
   } catch (err) {
     error.value = err instanceof Error ? err.message : '分析失败'
     console.error('获取分析结果失败:', err)

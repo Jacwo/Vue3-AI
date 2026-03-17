@@ -38,10 +38,11 @@ export const useUserStore = defineStore('user', () => {
     // 登录
     const login = async (phone: string, code: string): Promise<boolean> => {
 
-        const response = await userApi.login({ phone, code })
+        const response = await userApi.login({ phone, code }) as any
         console.log(response)
-        token.value = response.data.token
-        userInfo.value = response.data.userInfo
+        // 响应拦截器已经返回了 data
+        token.value = response.token
+        userInfo.value = response.userInfo
 
         // 保存到 localStorage
         localStorage.setItem('token', token.value)

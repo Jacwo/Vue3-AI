@@ -723,9 +723,9 @@ const loadQuickQuestions = async () => {
   quickQuestionsLoading.value = true
   try {
     // 调用后端接口获取猜你想问
-    const question = await guestApi.getGuestAsk()
+    const question = await guestApi.getGuestAsk() as any
     console.log(question)
-    quickQuestions.value = question.data.questionName || []
+    quickQuestions.value = question.questionName || []
     if (quickQuestions.value.length === 0) {
       // 如果接口失败或返回空，使用默认问题
       quickQuestions.value = [

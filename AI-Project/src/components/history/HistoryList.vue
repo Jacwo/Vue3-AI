@@ -281,10 +281,11 @@ const fetchHistory = async () => {
       startDate: filters.value.startDate,
       endDate: filters.value.endDate,
       teamName: filters.value.teamName
-    })
+    }) as any
 
-    historyRecords.value = response.data.list || []
-    totalRecords.value = response.data.total || 0 // 从后端获取总记录数
+    // 响应拦截器已经返回了 data
+    historyRecords.value = response.list || []
+    totalRecords.value = response.total || 0 // 从后端获取总记录数
     
     console.log('获取到的历史记录:', {
       list: historyRecords.value.length,
@@ -322,9 +323,9 @@ const fetchGlobalStats = async () => {
       startDate: filters.value.startDate,
       endDate: filters.value.endDate,
       teamName: filters.value.teamName
-    })
+    }) as any
 
-    const allRecords = response.data.list || []
+    const allRecords = response.list || []
 
     // 使用工具函数计算统计数据
     if (allRecords.length > 0) {
