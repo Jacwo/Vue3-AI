@@ -32,15 +32,26 @@
       </div>
     </div>
 
+    <!-- 错误提示横幅 -->
+    <transition name="slide-down">
+      <div v-if="showError" class="error-banner">
+        <svg class="error-icon" viewBox="0 0 24 24" width="20" height="20">
+          <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+        </svg>
+        <span class="error-text">{{ errorMessage }}</span>
+        <button @click="clearError" class="error-close">×</button>
+      </div>
+    </transition>
+
     <!-- 聊天消息区域 -->
-    <div 
-      ref="messagesContainer" 
+    <div
+      ref="messagesContainer"
       class="messages-container"
       :class="{ 'has-messages': messages.length > 0 }"
     >
       <!-- 消息列表 -->
       <div v-if="messages.length > 0" class="messages-list">
-        <div v-for="(message, index) in messages" :key="index" class="message-wrapper">
+        <div v-for="message in messages" :key="message.id" class="message-wrapper">
           <div 
             :class="[
               'message',
@@ -89,7 +100,7 @@
                   </svg>
                   复制
                 </button>
-                <button @click="regenerateResponse(index)" class="action-btn small" :disabled="isStreaming">
+                <button @click="regenerateResponse(message.id)" class="action-btn small" :disabled="isStreaming">
                   <svg class="icon small" viewBox="0 0 24 24">
                     <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
                   </svg>
@@ -268,8 +279,12 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { streamChatSSE, type ChatMessage, type ChatRequest } from '@/api/streamApi'
 import { guestApi } from '@/api/quickQuestions'
+import MarkdownIt from 'markdown-it'
+import hljs from 'highlight.js'
+import 'highlight.js/styles/github-dark.css'
 
 interface Message extends ChatMessage {
+  id: string // 添加唯一ID
   thinking?: string // 深度思考过程
   timestamp?: number
 }
@@ -290,11 +305,37 @@ const quickQuestionsLoading = ref(false)
 const isQuickQuestionsCollapsed = ref(false)
 let abortController: (() => void) | null = null
 
+// 错误处理相关
+const errorMessage = ref('')
+const showError = ref(false)
+
 // 打字机效果相关
 let accumulatedChunks: string[] = []
 let typingTimeout: number | null = null
 let lastTypingTime = 0
 const TYPING_SPEED = 10 // 字符/ms，数值越小越快
+
+// 生成唯一ID
+const generateId = (): string => {
+  return `msg-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
+}
+
+// 初始化 Markdown 渲染器
+const md: MarkdownIt = new MarkdownIt({
+  html: true,
+  linkify: true,
+  typographer: true,
+  highlight: (str: string, lang: string): string => {
+    if (lang && hljs.getLanguage(lang)) {
+      try {
+        return `<pre class="hljs"><code>${hljs.highlight(str, { language: lang }).value}</code></pre>`
+      } catch (err) {
+        console.error('Highlight error:', err)
+      }
+    }
+    return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`
+  }
+})
 
 // 计算属性
 const canSend = computed(() => {
@@ -310,119 +351,24 @@ const scrollToBottom = () => {
   })
 }
 
-const formatMessage = (content: string) => {
+// 使用 markdown-it 渲染 Markdown（更健壮、性能更好）
+const formatMessage = (content: string): string => {
   if (!content) return ''
-  
-  // 处理 Markdown 语法
-  let formatted = content
-  
-  // 标题
-  formatted = formatted.replace(/^### (.*$)/gm, '<h3>$1</h3>')
-  formatted = formatted.replace(/^## (.*$)/gm, '<h2>$1</h2>')
-  formatted = formatted.replace(/^# (.*$)/gm, '<h1>$1</h1>')
-  
-  // 加粗
-  formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-  formatted = formatted.replace(/__(.*?)__/g, '<strong>$1</strong>')
-  
-  // 斜体
-  formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>')
-  formatted = formatted.replace(/_(.*?)_/g, '<em>$1</em>')
-  
-  // 删除线
-  formatted = formatted.replace(/~~(.*?)~~/g, '<del>$1</del>')
-  
-  // 行内代码
-  formatted = formatted.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
-  
-  // 代码块
-  formatted = formatted.replace(/```([\s\S]*?)```/g, (match, code) => {
-    // 尝试检测语言
-    const lines = code.split('\n')
-    const firstLine = lines[0].trim()
-    const languageMap: Record<string, string> = {
-      'js': 'javascript',
-      'ts': 'typescript',
-      'py': 'python',
-      'rb': 'ruby',
-      'java': 'java',
-      'cpp': 'cpp',
-      'c++': 'cpp',
-      'c': 'c',
-      'go': 'go',
-      'rust': 'rust',
-      'php': 'php',
-      'html': 'html',
-      'css': 'css',
-      'sql': 'sql',
-      'json': 'json',
-      'yaml': 'yaml',
-      'xml': 'xml'
-    }
-    
-    let language = ''
-    if (languageMap[firstLine]) {
-      language = languageMap[firstLine]
-      code = lines.slice(1).join('\n')
-    } else if (firstLine.match(/^(javascript|typescript|python|ruby|java|cpp|go|rust|php|html|css|sql|json|yaml|xml)$/)) {
-      language = firstLine
-      code = lines.slice(1).join('\n')
-    }
-    
-    return `<pre><code class="language-${language}">${escapeHtml(code)}</code></pre>`
-  })
-  
-  // 无序列表
-  formatted = formatted.replace(/^[\*\+-] (.*$)/gm, '<li>$1</li>')
-  formatted = formatted.replace(/(<li>.*<\/li>[\s]*)+/g, '<ul>$&</ul>')
-  
-  // 有序列表
-  formatted = formatted.replace(/^\d+\. (.*$)/gm, '<li>$1</li>')
-  formatted = formatted.replace(/(<li>.*<\/li>[\s]*)+(?=\d+\.|\s*$)/g, '<ol>$&</ol>')
-  
-  // 引用
-  formatted = formatted.replace(/^> (.*$)/gm, '<blockquote>$1</blockquote>')
-  
-  // 链接
-  formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
-  
-  // 图片
-  formatted = formatted.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="markdown-image">')
-  
-  // 分割线
-  formatted = formatted.replace(/^\s*---\s*$/gm, '<hr>')
-  formatted = formatted.replace(/^\s*\*\*\*\s*$/gm, '<hr>')
-  formatted = formatted.replace(/^\s*___\s*$/gm, '<hr>')
-  
-  // 表格（简化版）
-  formatted = formatted.replace(/\|(.+)\|\n\|([-|:]+)\|\n((?:\|.+\|\n?)+)/g, (match, headers, align, rows) => {
-    const headerCells = headers.split('|').filter(cell => cell.trim()).map(cell => `<th>${cell.trim()}</th>`).join('')
-    const rowLines = rows.trim().split('\n')
-    const rowHtml = rowLines.map(row => {
-      const cells = row.split('|').filter(cell => cell.trim()).map(cell => `<td>${cell.trim()}</td>`).join('')
-      return `<tr>${cells}</tr>`
-    }).join('')
-    return `<table class="markdown-table"><thead><tr>${headerCells}</tr></thead><tbody>${rowHtml}</tbody></table>`
-  })
-  
-  // 换行处理：两个空格或反斜杠 + 换行
-  formatted = formatted.replace(/  \n|\n\n/g, '<br>')
-  
-  // 段落
-  formatted = formatted.replace(/(<br>\s*){2,}/g, '</p><p>')
-  formatted = formatted.replace(/^([^<].*[^>])$/gm, '<p>$1</p>')
-  
-  // 清理多余的标签
-  formatted = formatted.replace(/<\/p>\s*<p>/g, '<br>')
-  formatted = formatted.replace(/<p>\s*<\/p>/g, '')
-  
-  return formatted
-}
 
-const escapeHtml = (text: string) => {
-  const div = document.createElement('div')
-  div.textContent = text
-  return div.innerHTML
+  try {
+    // 使用 markdown-it 渲染，自动处理所有 Markdown 语法
+    return md.render(content)
+  } catch (err) {
+    console.error('Markdown render error:', err)
+    // 降级处理：返回转义后的纯文本
+    const escapedContent = content
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;')
+    return `<p>${escapedContent}</p>`
+  }
 }
 
 const formatTime = (timestamp?: number) => {
@@ -515,6 +461,7 @@ const handleSend = async () => {
 
   // 添加用户消息
   const userMsg: Message = {
+    id: generateId(),
     role: 'user',
     content: userMessage,
     timestamp: Date.now()
@@ -553,15 +500,18 @@ const handleSend = async () => {
       },
       (error) => {
         console.error('Stream error:', error)
+        handleError(error) // 使用新的错误处理函数
         stopTypingEffect()
         if (streamingMessage.value) {
           messages.value.push({
+            id: generateId(),
             role: 'assistant',
             content: streamingMessage.value,
             timestamp: Date.now()
           })
         } else {
           messages.value.push({
+            id: generateId(),
             role: 'assistant',
             content: '生成过程中出现错误，请重试。',
             timestamp: Date.now()
@@ -578,6 +528,7 @@ const handleSend = async () => {
           setTimeout(() => {
             if (streamingMessage.value) {
               messages.value.push({
+                id: generateId(),
                 role: 'assistant',
                 content: streamingMessage.value,
                 timestamp: Date.now()
@@ -590,6 +541,7 @@ const handleSend = async () => {
           }, 100)
         } else if (streamingMessage.value) {
           messages.value.push({
+            id: generateId(),
             role: 'assistant',
             content: streamingMessage.value,
             timestamp: Date.now()
@@ -621,6 +573,7 @@ const stopStreaming = () => {
   // 如果有部分响应，保存为消息
   if (streamingMessage.value) {
     messages.value.push({
+      id: generateId(),
       role: 'assistant',
       content: streamingMessage.value + ' (已中断)',
       timestamp: Date.now()
@@ -631,14 +584,55 @@ const stopStreaming = () => {
   streamingMessage.value = ''
 }
 
+// 错误处理函数
+const handleError = (error: Error) => {
+  let message = '发生未知错误，请重试'
+
+  if (error.name === 'AbortError') {
+    message = '请求已取消'
+  } else if (error.message.includes('Network') || error.message.includes('Failed to fetch')) {
+    message = '网络连接失败，请检查您的网络设置'
+  } else if (error.message.includes('timeout')) {
+    message = '请求超时，请稍后重试'
+  } else if (error.message.includes('401')) {
+    message = '身份验证失败，请重新登录'
+  } else if (error.message.includes('429')) {
+    message = '请求过于频繁，请稍后再试'
+  } else if (error.message.includes('500')) {
+    message = '服务器错误，请稍后重试'
+  }
+
+  errorMessage.value = message
+  showError.value = true
+
+  // 3秒后自动隐藏
+  setTimeout(() => {
+    showError.value = false
+  }, 3000)
+}
+
+const clearError = () => {
+  showError.value = false
+  errorMessage.value = ''
+}
+
 const clearChat = () => {
   if (isStreaming.value) {
-    if (!confirm('正在生成内容，确定要清空吗？')) return
+    if (!confirm('AI 正在生成回复，确定要停止并清空对话吗？')) {
+      return
+    }
     stopStreaming()
   }
-  
+
+  if (messages.value.length > 0) {
+    if (!confirm('确定要清空所有对话记录吗？此操作不可恢复。')) {
+      return
+    }
+  }
+
   messages.value = []
   streamingMessage.value = ''
+  localStorage.removeItem(STORAGE_KEY)
 }
 
 const copyMessage = async (content: string) => {
@@ -660,24 +654,29 @@ const copyMessage = async (content: string) => {
   }
 }
 
-const regenerateResponse = async (messageIndex: number) => {
+const regenerateResponse = async (messageId: string) => {
   if (isStreaming.value) {
     stopStreaming()
   }
 
-  // 移除当前助手消息及其之前的用户消息
+  // 找到要重新生成的消息
+  const messageIndex = messages.value.findIndex(m => m.id === messageId)
+  if (messageIndex === -1) return
+
   const messageToRegenerate = messages.value[messageIndex]
-  if (messageToRegenerate.role !== 'assistant') return
+  if (messageToRegenerate?.role !== 'assistant') return
 
   // 找到要重新生成的消息对应的用户消息
   const userMessageIndex = messageIndex - 1
-  if (userMessageIndex < 0 || messages.value[userMessageIndex].role !== 'user') return
+  if (userMessageIndex < 0 || messages.value[userMessageIndex]?.role !== 'user') return
 
   // 移除该助手消息
   messages.value.splice(messageIndex, 1)
-  
+
   // 重新发送对应的用户消息
-  const userMessage = messages.value[userMessageIndex].content
+  const userMessage = messages.value[userMessageIndex]?.content
+  if (!userMessage) return
+
   userInput.value = userMessage
   await nextTick()
   handleSend()
@@ -765,14 +764,55 @@ watch(useDeepThinking, (newVal) => {
   }
 })
 
+// ============= 消息持久化 =============
+const STORAGE_KEY = 'ai-chat-messages'
+
+// 保存消息到 localStorage
+const saveMessages = () => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.value))
+  } catch (err) {
+    console.error('Failed to save messages:', err)
+  }
+}
+
+// 加载历史消息
+const loadMessages = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      const parsed = JSON.parse(saved)
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        messages.value = parsed
+        nextTick(() => {
+          scrollToBottom()
+        })
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load messages:', err)
+  }
+}
+
+// 监听消息变化，自动保存
+watch(messages, () => {
+  saveMessages()
+}, { deep: true })
+
 // 生命周期钩子
 onMounted(() => {
+  loadMessages() // 先加载历史消息
   loadQuickQuestions()
   scrollToBottom()
   autoResize()
+
+  // 监听页面卸载，保存消息
+  window.addEventListener('beforeunload', saveMessages)
 })
 
 onUnmounted(() => {
+  saveMessages()
+  window.removeEventListener('beforeunload', saveMessages)
   stopStreaming()
   stopTypingEffect()
 })
@@ -1114,27 +1154,30 @@ onUnmounted(() => {
 }
 
 .question-chip {
-  padding: 10px 16px;
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 20px;
-  color: #5fab8c;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap; /* 防止文本换行 */
-  flex-shrink: 0; /* 防止芯片被压缩 */
-  min-height: 40px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%);
+  border: 1px solid #e0e0ff;
+  border-radius: 20px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  flex-shrink: 0;
+  min-height: 40px;
+  font-weight: 500;
 }
 
 .question-chip:hover {
-  background: #f0f9f5;
-  border-color: #5fab8c;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: transparent;
   transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(95, 171, 140, 0.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .messages-list {
@@ -1204,20 +1247,39 @@ onUnmounted(() => {
 .message-content {
   flex: 1;
   background: white;
-  padding: 16px;
+  padding: 14px 18px;
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   max-width: calc(100% - 52px);
   position: relative;
+  word-wrap: break-word;
+  transition: all 0.3s ease;
 }
 
+/* 用户消息 - 现代渐变 */
 .user-message .message-content {
-  background: linear-gradient(135deg, #5fab8c 0%, #4285f4 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 18px 18px 4px 18px;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
   color: white;
 }
 
+.user-message .message-content:hover {
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+  transform: translateY(-1px);
+}
+
+/* AI 消息 - 柔和卡片 */
 .assistant-message .message-content {
+  background: white;
+  border-radius: 18px 18px 18px 4px;
   border-left: 3px solid #5fab8c;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.assistant-message .message-content:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
 .message-header {
@@ -1569,10 +1631,10 @@ onUnmounted(() => {
 }
 
 .input-border {
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 12px 16px;
-  background: white;
+  border: 2px solid #e8e8e8;
+  border-radius: 24px;
+  padding: 12px 20px;
+  background: #fafafa;
   transition: all 0.3s ease;
   position: relative;
 }
@@ -1584,15 +1646,16 @@ onUnmounted(() => {
 }
 
 .input-border:focus-within {
-  border-color: #5fab8c;
-  box-shadow: 0 0 0 3px rgba(95, 171, 140, 0.1);
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
 }
 
 .message-input {
   width: 100%;
   border: none;
   outline: none;
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.5;
   resize: none;
   background: transparent;
@@ -1991,6 +2054,211 @@ onUnmounted(() => {
   .question-chip {
     padding: 6px 10px;
     min-height: 32px;
+  }
+}
+
+/* ============= 错误提示横幅 ============= */
+.error-banner {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+  position: relative;
+  z-index: 100;
+}
+
+.error-icon {
+  flex-shrink: 0;
+}
+
+.error-text {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.error-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 24px;
+  line-height: 1;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.error-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* 滑动动画 */
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-down-enter-from {
+  transform: translateY(-20px);
+  opacity: 0;
+}
+
+.slide-down-leave-to {
+  transform: translateY(-20px);
+  opacity: 0;
+}
+
+/* ============= 移动端增强优化 ============= */
+
+/* 安全区域适配 */
+@supports (padding: max(0px)) {
+  .chat-header {
+    padding-top: max(16px, env(safe-area-inset-top));
+  }
+
+  .input-container {
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+}
+
+/* 移动端基础优化 */
+@media (max-width: 768px) {
+  .ai-chat-container {
+    font-size: 15px;
+  }
+
+  .user-message .message-content,
+  .assistant-message .message-content {
+    padding: 12px 16px;
+    font-size: 15px; /* 防止 iOS 自动缩放 */
+    max-width: 85%;
+  }
+
+  .message-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .chat-header {
+    padding: 12px 16px;
+  }
+
+  .model-details h3 {
+    font-size: 16px;
+  }
+
+  .message-input {
+    font-size: 16px; /* 防止 iOS 自动缩放 */
+  }
+
+  .input-border {
+    padding: 10px 16px;
+  }
+
+  .send-btn {
+    min-height: 44px; /* iOS 触摸标准 */
+  }
+
+  .question-chip {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  /* 优化消息操作按钮 */
+  .message-actions {
+    gap: 6px;
+  }
+
+  .action-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}
+
+/* 小屏手机优化 */
+@media (max-width: 480px) {
+  .user-message .message-content,
+  .assistant-message .message-content {
+    font-size: 14px;
+    padding: 10px 14px;
+  }
+
+  .message-time {
+    font-size: 11px;
+  }
+
+  .question-chip {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+
+/* 键盘弹出优化 */
+@media (max-height: 600px) {
+  .welcome-screen {
+    display: none !important;
+  }
+
+  .quick-questions-fixed {
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  .messages-container {
+    max-height: calc(100vh - 200px);
+  }
+
+  .chat-header {
+    padding: 10px 16px;
+  }
+}
+
+/* 横屏优化 */
+@media (orientation: landscape) and (max-height: 500px) {
+  .chat-header {
+    padding: 8px 16px;
+  }
+
+  .model-details h3 {
+    font-size: 14px;
+  }
+
+  .quick-questions-fixed {
+    display: none;
+  }
+
+  .welcome-screen {
+    padding: 16px;
+  }
+
+  .welcome-content h2 {
+    font-size: 20px;
+  }
+}
+
+/* 触摸优化 */
+@media (hover: none) {
+  .user-message .message-content:active,
+  .assistant-message .message-content:active {
+    transform: scale(0.98);
+  }
+
+  .question-chip:active {
+    transform: scale(0.95);
+  }
+
+  .send-btn:active {
+    transform: scale(0.92);
   }
 }
 </style>

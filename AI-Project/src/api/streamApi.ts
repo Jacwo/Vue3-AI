@@ -9,11 +9,9 @@ export interface ChatMessage {
 
 export interface ChatRequest {
   messages: ChatMessage[]
-  stream?: boolean
   deepThinking?: boolean
-  temperature?: number
-  maxTokens?: number
 }
+
 
 // 打字机流式响应类型
 export interface StreamResponse {
