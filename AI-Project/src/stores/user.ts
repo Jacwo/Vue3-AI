@@ -40,8 +40,8 @@ export const useUserStore = defineStore('user', () => {
 
         const response = await userApi.login({ phone, code })
         console.log(response)
-        token.value = response.token
-        userInfo.value = response.userInfo
+        token.value = response.data.token
+        userInfo.value = response.data.userInfo
 
         // 保存到 localStorage
         localStorage.setItem('token', token.value)

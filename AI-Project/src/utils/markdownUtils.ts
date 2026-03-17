@@ -1,8 +1,7 @@
 import MarkdownIt from 'markdown-it'
-import type { MarkdownItOptions } from 'markdown-it'
 
 // 创建 Markdown 渲染器实例
-const createMarkdownRenderer = (options?: MarkdownItOptions) => {
+const createMarkdownRenderer = (options?: any) => {
   const md = new MarkdownIt({
     html: true,        // 允许 HTML 标签
     linkify: true,     // 自动链接 URL
@@ -78,30 +77,31 @@ export const parseAnalysisMarkdown = (markdown: string): ParsedAnalysis => {
     
     // 提取置信度/概率
     const confidenceMatch = markdown.match(/(\d+)%/)
-    if (confidenceMatch) {
+    if (confidenceMatch && confidenceMatch[1]) {
       result.confidence = parseInt(confidenceMatch[1]) / 100
     }
-    
+
     // 提取关键点（从列表或标题中）
     const lines = markdown.split('\n')
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim()
-      
+      const line = lines[i]?.trim()
+      if (!line) continue
+
       // 提取关键因素
       if (line.includes('关键因素') || line.includes('关键点') || line.includes('分析')) {
         for (let j = i + 1; j < Math.min(i + 10, lines.length); j++) {
-          const nextLine = lines[j].trim()
+          const nextLine = lines[j]?.trim()
           if (nextLine && (nextLine.startsWith('-') || nextLine.startsWith('*') || nextLine.match(/^\d+\./))) {
             const cleanLine = nextLine.replace(/^[-*]\s*|\d+\.\s*/, '').trim()
             if (cleanLine) result.keyPoints.push(cleanLine)
           }
         }
       }
-      
+
       // 提取推荐
       if (line.includes('推荐') || line.includes('建议') || line.includes('结论')) {
         for (let j = i + 1; j < Math.min(i + 10, lines.length); j++) {
-          const nextLine = lines[j].trim()
+          const nextLine = lines[j]?.trim()
           if (nextLine && (nextLine.startsWith('-') || nextLine.startsWith('*') || nextLine.match(/^\d+\./))) {
             const cleanLine = nextLine.replace(/^[-*]\s*|\d+\.\s*/, '').trim()
             if (cleanLine) result.recommendations.push(cleanLine)

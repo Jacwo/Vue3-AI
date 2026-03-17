@@ -40,6 +40,8 @@ export interface Match {
   league: string
   homeTeam: string
   awayTeam: string
+  homeTeamRank?: number
+  awayTeamRank?: number
   odds: {
     home: number | null
     draw: number | null
@@ -60,8 +62,6 @@ export interface Match {
   leagueId: string
   backColor: string
   isSingleMatch:boolean
-  homeTeamRank: number
-  awayTeamRank: number
 }
 
 // 列表参数
@@ -137,9 +137,9 @@ export const matchApi = {
     return apiClient.get<RawMatch[]>('/api/match/list', {
       params,
       ...config,
-    }).then((rawMatches) => {
+    }).then((response) => {
       // 转换数据格式
-      return transformMatches(rawMatches)
+      return transformMatches(response.data)
     })
   },
   
@@ -158,9 +158,9 @@ export const matchApi = {
   
   // 获取比赛详情
   getMatchDetail(matchId: number, config?: CustomRequestConfig) {
-    return apiClient.get<RawMatch>(`/api/match/${matchId}`, config).then((rawMatch) => {
-      // 转换数据格式
-      return transformMatches(rawMatches)
+    return apiClient.get<RawMatch>(`/api/match/${matchId}`, config).then((response) => {
+      // 转换数据格式（单个比赛需要包装成数组）
+      return transformMatches([response.data])[0]
     })
   },
   
@@ -181,8 +181,8 @@ export const matchApi = {
     return apiClient.get<RawMatch[]>('/match/list', {
       params: { status },
       ...config,
-    }).then((rawMatches) => {
-      return transformMatches(rawMatches)
+    }).then((response) => {
+      return transformMatches(response.data)
     })
   },
   
@@ -191,19 +191,19 @@ export const matchApi = {
     return apiClient.get<RawMatch[]>('/match/list', {
       params: { leagueId },
       ...config,
-    }).then((rawMatches) => {
-      return transformMatches(rawMatches)
+    }).then((response) => {
+      return transformMatches(response.data)
     })
   },
-  
+
   // 获取今天的比赛
   getTodayMatches(config?: CustomRequestConfig) {
     const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
     return apiClient.get<RawMatch[]>('/match/list', {
       params: { date: today },
       ...config,
-    }).then((rawMatches) => {
-      return transformMatches(rawMatches)
+    }).then((response) => {
+      return transformMatches(response.data)
     })
   },
 }

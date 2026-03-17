@@ -204,10 +204,10 @@ const fetchDetail = async () => {
   try {
     const response = await historyApi.getHistoryDetail(recordId.value)
     console.log('API返回数据:', response)
-    
-     if (response && typeof response === 'object') {
+
+     if (response && typeof response.data === 'object') {
       // 如果直接返回记录对象
-      record.value = response as HistoryRecord
+      record.value = response.data
     } else {
       console.error('API返回的数据结构不符合预期:', response)
       error.value = '数据格式错误'
@@ -302,11 +302,12 @@ ${record.value.afterMatchAnalysis}
 
 const deleteRecord = async () => {
   if (!record.value || !confirm('确定要删除这条记录吗？')) return
-  
+
   try {
-    await historyApi.deleteHistory(record.value.id)
-    alert('删除成功')
-    router.back()
+    // TODO: 后端需要实现删除接口
+    // await historyApi.deleteHistory(record.value.id)
+    alert('删除功能待后端实现')
+    // router.back()
   } catch (err) {
     console.error('删除记录失败:', err)
     alert('删除失败')

@@ -182,13 +182,15 @@ const getStatusText = (status: string) => {
 
 const formatMatchTime = (fullTime: string) => {
   const [dateString, timeString] = fullTime.split(' ')
-  return formatDisplayTime(dateString, timeString)
+  return formatDisplayTime(dateString || '', timeString || '')
 }
 
-const formatGoalLine = (goalLine: number | null): string => {
+const formatGoalLine = (goalLine: string | null): string => {
   if (goalLine === null) return ''
-  if (goalLine > 0) return `${goalLine}`
-  return goalLine.toString()
+  const num = parseFloat(goalLine)
+  if (isNaN(num)) return goalLine
+  if (num > 0) return `${num}`
+  return num.toString()
 }
 
 const onAnalyze = async () => {

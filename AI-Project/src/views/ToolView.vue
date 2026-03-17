@@ -114,7 +114,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { syncApi } from '@/api/sync'
 
@@ -129,23 +129,31 @@ const loadingState = reactive({
   all: false
 })
 
+// 结果接口
+interface SyncResult {
+  time: Date
+  action: string
+  status: string
+  message: string
+}
+
 // 结果列表
-const results = ref([])
+const results = ref<SyncResult[]>([])
 
 // 同步函数封装
-const executeSync = async (taskName, apiFunction, actionName) => {
+const executeSync = async (taskName: keyof typeof loadingState, apiFunction: () => Promise<any>, actionName: string) => {
   loadingState[taskName] = true
-  
+
   try {
     const response = await apiFunction()
     const result = response
-    
+
     if (result) {
       addResult(actionName, 'success', result.message || '同步成功')
     } else {
       addResult(actionName, 'error', result.message || '同步失败')
     }
-  } catch (error) {
+  } catch (error: any) {
     const errorMsg = error.response?.data?.message || error.message || '请求失败'
     addResult(actionName, 'error', errorMsg)
   } finally {
@@ -198,7 +206,7 @@ const syncAllData = async () => {
     } else {
       addResult('批量同步所有数据', 'error', result.message || '批量同步失败')
     }
-  } catch (error) {
+  } catch (error: any) {
     const errorMsg = error.response?.data?.message || error.message || '批量同步请求失败'
     addResult('批量同步所有数据', 'error', errorMsg)
   } finally {
@@ -207,14 +215,14 @@ const syncAllData = async () => {
 }
 
 // 添加结果记录
-const addResult = (action, status, message) => {
+const addResult = (action: string, status: string, message: string) => {
   results.value.unshift({
     time: new Date(),
     action,
     status,
     message
   })
-  
+
   // 只保留最近10条记录
   if (results.value.length > 10) {
     results.value = results.value.slice(0, 10)
@@ -222,7 +230,7 @@ const addResult = (action, status, message) => {
 }
 
 // 格式化时间
-const formatTime = (date) => {
+const formatTime = (date: Date) => {
   const d = new Date(date)
   return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`
 }

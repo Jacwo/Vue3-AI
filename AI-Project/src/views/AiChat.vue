@@ -421,12 +421,15 @@ const addTypingChunk = (chunk: string) => {
   let currentChunk = ''
   
   for (let i = 0; i < chunk.length; i++) {
-    currentChunk += chunk[i]
-    
-    // 根据字符类型调整块大小
-    if (chunk[i].match(/[\n。！？；]/) || currentChunk.length >= 3) {
-      chunks.push(currentChunk)
-      currentChunk = ''
+    const char = chunk[i]
+    if (char) {
+      currentChunk += char
+
+      // 根据字符类型调整块大小
+      if (char.match(/[\n。！？；]/) || currentChunk.length >= 3) {
+        chunks.push(currentChunk)
+        currentChunk = ''
+      }
     }
   }
   
@@ -481,7 +484,6 @@ const handleSend = async () => {
       role: msg.role,
       content: msg.content
     }))],
-    stream: true,
     deepThinking: useDeepThinking.value
   }
 
@@ -723,7 +725,7 @@ const loadQuickQuestions = async () => {
     // 调用后端接口获取猜你想问
     const question = await guestApi.getGuestAsk()
     console.log(question)
-    quickQuestions.value = question.questionName || []
+    quickQuestions.value = question.data.questionName || []
     if (quickQuestions.value.length === 0) {
       // 如果接口失败或返回空，使用默认问题
       quickQuestions.value = [

@@ -25,20 +25,17 @@ const loadUserInfo = async () => {
     return
   }
 
-  if (userStore.userInfo) {
-    userInfo.value = userStore.userInfo
-    editForm.value = {
-      nickname: userStore.userInfo.userName || '',
-      avatar: userStore.userInfo.avatar || ''
-    }
-  } else {
+  let info = userStore.userInfo
+  if (!info) {
     await userStore.fetchUserInfo()
-    userInfo.value = userStore.userInfo
-    if (userStore.userInfo) {
-      editForm.value = {
-        nickname: userStore.userInfo.userName || '',
-        avatar: userStore.userInfo.avatar || ''
-      }
+    info = userStore.userInfo
+  }
+
+  userInfo.value = info
+  if (info) {
+    editForm.value = {
+      nickname: info.userName || '',
+      avatar: info.avatar || ''
     }
   }
 }

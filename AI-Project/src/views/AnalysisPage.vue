@@ -36,17 +36,17 @@
     <!-- 标签页区域 -->
     <div class="analysis-tabs card">
       <div class="tabs-header">
-        <div 
-          v-for="tab in tabs" 
-          :key="tab.id" 
-          :class="['tab-item', { active: activeTab === tab.id, loading: loading[tab.id] }]"
+        <div
+          v-for="tab in tabs"
+          :key="tab.id"
+          :class="['tab-item', { active: activeTab === tab.id, loading: loading[tab.id as keyof typeof loading] }]"
           @click="switchTab(tab.id)"
           :aria-label="tab.label"
           role="tab"
           :aria-selected="activeTab === tab.id"
         >
           <span class="tab-label">{{ tab.label }}</span>
-          <span v-if="loading[tab.id]" class="tab-loading-indicator"></span>
+          <span v-if="loading[tab.id as keyof typeof loading]" class="tab-loading-indicator"></span>
         </div>
       </div>
 
@@ -380,13 +380,13 @@
                         <div class="time">{{ record.updateTime }}</div>
                       </div>
                     </td>
-                    <td :class="{ 'changed': index > 0 && record.h !== oddsHistory[index - 1].h }">
+                    <td :class="{ 'changed': index > 0 && record.h !== oddsHistory[index - 1]?.h }">
                       {{ record.h }}
                     </td>
-                    <td :class="{ 'changed': index > 0 && record.d !== oddsHistory[index - 1].d }">
+                    <td :class="{ 'changed': index > 0 && record.d !== oddsHistory[index - 1]?.d }">
                       {{ record.d }}
                     </td>
-                    <td :class="{ 'changed': index > 0 && record.a !== oddsHistory[index - 1].a }">
+                    <td :class="{ 'changed': index > 0 && record.a !== oddsHistory[index - 1]?.a }">
                       {{ record.a }}
                     </td>
                   </tr>
@@ -498,7 +498,7 @@ const goBack = () => {
 
 const formatMatchTime = (fullTime: string) => {
   const [dateString, timeString] = fullTime.split(' ')
-  return formatDisplayTime(dateString, timeString)
+  return formatDisplayTime(dateString || '', timeString || '')
 }
 
 const formatDate = (dateString: string) => {
@@ -530,9 +530,11 @@ const formatOddsDate = (dateString: string) => {
   }
 }
 
-const parseScore = (score: string) => {
+const parseScore = (score: string): { home: number; away: number } => {
   if (!score) return { home: 0, away: 0 }
-  const [home, away] = score.split(':').map(s => parseInt(s.trim()) || 0)
+  const parts = score.split(':')
+  const home = parseInt((parts[0] || '').trim()) || 0
+  const away = parseInt((parts[1] || '').trim()) || 0
   return { home, away }
 }
 
@@ -662,7 +664,7 @@ const fetchRecentMatches = async () => {
   try {
     loading.value.recent = true
     const response = await matchApi.getRecentMatches(matchId.value)
-    recentMatches.value = response
+    recentMatches.value = response.data
   } catch (error) {
     console.error('获取近期战绩失败:', error)
     recentMatches.value = []
@@ -676,7 +678,7 @@ const fetchXgData = async () => {
   try {
     loading.value.xg = true
     const response = await matchApi.getXgData(matchId.value)
-    xgData.value = response
+    xgData.value = response.data.data
   } catch (error) {
     console.error('获取xG数据失败:', error)
     xgData.value = { home: null, away: null, all: null }
@@ -689,7 +691,7 @@ const fetchSimilarMatches = async () => {
   try {
     loading.value.similar = true
     const response = await matchApi.getSimilarMatches(matchId.value)
-    similarMatches.value = response
+    similarMatches.value = response.data
   } catch (error) {
     console.error('获取相似比赛失败:', error)
     similarMatches.value = []
@@ -702,7 +704,7 @@ const fetchOddsHistory = async () => {
   try {
     loading.value.odds = true
     const response = await matchApi.getOddsHistory(matchId.value)
-    oddsHistory.value = response
+    oddsHistory.value = response.data.history
   } catch (error) {
     console.error('获取赔率历史失败:', error)
     oddsHistory.value = []

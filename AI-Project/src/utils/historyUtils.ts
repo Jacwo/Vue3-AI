@@ -25,8 +25,8 @@ export const parseMatchResult = (result: string): {
   
   try {
     const [homeScoreStr, awayScoreStr] = result.split(':')
-    const homeScore = parseInt(homeScoreStr.trim()) || 0
-    const awayScore = parseInt(awayScoreStr.trim()) || 0
+    const homeScore = parseInt((homeScoreStr || '').trim()) || 0
+    const awayScore = parseInt((awayScoreStr || '').trim()) || 0
     
     let winner: 'home' | 'away' | 'draw' = 'draw'
     let resultText = ''
@@ -167,7 +167,8 @@ export const formatHistoryMatchTime = (matchTime: string | Date): string => {
     if (typeof matchTime === 'string') {
       // 如果包含空格，说明已经有日期和时间
       if (matchTime.includes(' ')) {
-        return formatDisplayTime(matchTime.split(' ')[0], matchTime.split(' ')[1] || '')
+        const parts = matchTime.split(' ')
+        return formatDisplayTime(parts[0] || '', parts[1] || '')
       }
       // 尝试解析为ISO字符串
       const date = new Date(matchTime)

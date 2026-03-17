@@ -203,11 +203,14 @@ const groupedMatches = computed(() => {
   })
   
   Object.keys(groups).forEach(day => {
-    groups[day].sort((a, b) => {
-      const aNum = parseInt(a.matchNumStr.substring(2)) || 0
-      const bNum = parseInt(b.matchNumStr.substring(2)) || 0
-      return aNum - bNum
-    })
+    const group = groups[day]
+    if (group) {
+      group.sort((a, b) => {
+        const aNum = parseInt(a.matchNumStr.substring(2)) || 0
+        const bNum = parseInt(b.matchNumStr.substring(2)) || 0
+        return aNum - bNum
+      })
+    }
   })
   
   return groups
@@ -220,29 +223,32 @@ const sortedGroups = computed(() => {
   const today = new Date().getDay()
   
   // 创建从今天开始的周序数组
-  const createWeekOrder = (startDay) => {
+  const createWeekOrder = (startDay: number): string[] => {
     const days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-    const order = []
+    const order: string[] = []
     for (let i = 0; i < 7; i++) {
-      order.push(days[(startDay + i) % 7])
+      const day = days[(startDay + i) % 7]
+      if (day) order.push(day)
     }
     return order
   }
-  
+
   const dayOrder = createWeekOrder(today)
-  const sorted = {}
-  
+  const sorted: Record<string, Match[]> = {}
+
   // 首先按从今天开始的周序添加已有的分组
   dayOrder.forEach(day => {
-    if (groupedMatches.value[day]) {
-      sorted[day] = groupedMatches.value[day]
+    const group = groupedMatches.value[day]
+    if (group) {
+      sorted[day] = group
     }
   })
-  
+
   // 然后添加不在dayOrder中的其他分组（如具体日期）
   Object.keys(groupedMatches.value).forEach(day => {
-    if (!dayOrder.includes(day) && !sorted[day]) {
-      sorted[day] = groupedMatches.value[day]
+    const group = groupedMatches.value[day]
+    if (!dayOrder.includes(day) && !sorted[day] && group) {
+      sorted[day] = group
     }
   })
   

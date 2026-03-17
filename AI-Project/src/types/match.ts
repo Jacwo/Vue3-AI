@@ -35,6 +35,8 @@ export interface Match {
   league: string
   homeTeam: string
   awayTeam: string
+  homeTeamRank?: number
+  awayTeamRank?: number
   odds: Odds
   matchTime: string
   fullMatchTime: string
