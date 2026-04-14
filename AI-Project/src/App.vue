@@ -51,9 +51,9 @@ const closeMobileMenu = () => {
             <p class="subtitle">专业的足球比赛分析与预测</p>
           </div>
         </div>
-        
-        <button 
-          v-if="isMobile" 
+
+        <button
+          v-if="isMobile"
           class="mobile-menu-btn"
           @click="toggleMobileMenu"
           :aria-expanded="isMobileMenuOpen"
@@ -69,37 +69,37 @@ const closeMobileMenu = () => {
 
       <div class="wrapper">
         <nav :class="{ 'mobile-open': isMobileMenuOpen }" v-show="!isMobile || isMobileMenuOpen">
-          
-          <RouterLink 
-            to="/" 
+
+          <RouterLink
+            to="/"
             @click="closeMobileMenu"
             :class="{ 'mobile-link': isMobile }"
           >
             比赛列表
           </RouterLink>
-          <RouterLink 
-            to="/history" 
+          <RouterLink
+            to="/history"
             @click="closeMobileMenu"
             :class="{ 'mobile-link': isMobile }"
           >
             历史记录
           </RouterLink>
-          <RouterLink 
-            to="/ai" 
+          <RouterLink
+            to="/ai"
             @click="closeMobileMenu"
             :class="{ 'mobile-link': isMobile }"
           >
             AI对话
           </RouterLink>
-          <RouterLink 
-            to="/tool" 
+          <RouterLink
+            to="/tool"
             @click="closeMobileMenu"
             :class="{ 'mobile-link': isMobile }"
           >
             小工具
           </RouterLink>
-               <RouterLink 
-            to="/profile" 
+               <RouterLink
+            to="/profile"
             @click="closeMobileMenu"
             :class="{ 'mobile-link': isMobile }"
           >
@@ -112,6 +112,14 @@ const closeMobileMenu = () => {
     <main>
       <RouterView />
     </main>
+
+    <footer class="app-footer">
+      <div class="footer-content">
+        <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">
+          豫ICP备19039052号-3
+        </a>
+      </div>
+    </footer>
   </div>
 </template>
 
@@ -253,6 +261,26 @@ main {
   max-width: 1200px;
   margin: 0 auto;
   box-sizing: border-box;
+}
+
+/* 底部备案号 */
+.app-footer {
+  background-color: #f8f9fa;
+  border-top: 1px solid #e0e0e0;
+  padding: 20px 15px;
+  text-align: center;
+  margin-top: auto;
+}
+
+.footer-content a {
+  color: #666;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.3s ease;
+}
+
+.footer-content a:hover {
+  color: #667eea;
 }
 
 /* 移动端特定样式 */
