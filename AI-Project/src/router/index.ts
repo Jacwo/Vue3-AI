@@ -49,25 +49,26 @@ const router = createRouter({
         title: '分析'
       }
     },
-    {
-      path: '/tool',
-      name: 'tool',
-      component: () => import('../views/ToolView.vue'),
-      meta: {
-        requiresAuth: true,
-        title: '小工具'
-      }
-
-    },
-    {
-      path: '/ai',
-      name: 'ai-chat',
-      component: () => import('../views/AiChat.vue'),
-      meta: {
-        requiresAuth: true,
-        title: 'ai对话'
-      }
-    }, {
+    // 已屏蔽：小工具路由
+    // {
+    //   path: '/tool',
+    //   name: 'tool',
+    //   component: () => import('../views/ToolView.vue'),
+    //   meta: {
+    //     requiresAuth: true,
+    //     title: '小工具'
+    //   }
+    // },
+    // 已屏蔽：AI对话路由
+    // {
+    //   path: '/ai',
+    //   name: 'ai-chat',
+    //   component: () => import('../views/AiChat.vue'),
+    //   meta: {
+    //     requiresAuth: true,
+    //     title: 'ai对话'
+    //   }
+    // }, {
       path: '/login',
       name: 'Login',
       component: () => import('@/views/Login.vue'),

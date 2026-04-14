@@ -84,20 +84,22 @@ const closeMobileMenu = () => {
           >
             历史记录
           </RouterLink>
-          <RouterLink
+          <!-- 已屏蔽：AI对话导航 -->
+          <!-- <RouterLink
             to="/ai"
             @click="closeMobileMenu"
             :class="{ 'mobile-link': isMobile }"
           >
             AI对话
-          </RouterLink>
-          <RouterLink
+          </RouterLink> -->
+          <!-- 已屏蔽：小工具导航 -->
+          <!-- <RouterLink
             to="/tool"
             @click="closeMobileMenu"
             :class="{ 'mobile-link': isMobile }"
           >
             小工具
-          </RouterLink>
+          </RouterLink> -->
                <RouterLink
             to="/profile"
             @click="closeMobileMenu"
