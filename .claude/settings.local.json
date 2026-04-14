@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(grep -r \"全部比赛\\\\|全局统计\\\\|全部数据\" /d/personal/Vue3-AI/AI-Project/src --include=*.ts --include=*.vue)",
+      "Bash(npm install:*)",
+      "Bash(grep -n \"role: ''''user'''',\" AiChat.vue)",
+      "Bash(grep -n \"role: ''assistant'',\" AiChat.vue)"
+    ]
+  }
+}

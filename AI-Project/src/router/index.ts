@@ -86,6 +86,15 @@ const router = createRouter({
         requiresAuth: true,
         title: '个人中心'
       }
+    },
+    {
+      path: '/credits',
+      name: 'Credits',
+      component: () => import('@/views/CreditsView.vue'),
+      meta: {
+        requiresAuth: false,
+        title: '积分充值'
+      }
     }
   ]
 })

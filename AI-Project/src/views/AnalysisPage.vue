@@ -33,20 +33,7 @@
       </div>
     </div>
 
-    <!-- 微信小程序提示 -->
-    <div class="wechat-mini-program-tip" @click="openWeChatMiniProgram">
-      <svg class="tip-icon" viewBox="0 0 1024 1024" width="20" height="20">
-        <path d="M351.909 330.635c-23.273 0-42.775 19.502-42.775 42.775s19.502 42.775 42.775 42.775c23.273 0 42.775-19.502 42.775-42.775s-19.502-42.775-42.775-42.775zM583.588 330.635c-23.273 0-42.775 19.502-42.775 42.775s19.502 42.775 42.775 42.775c23.273 0 42.775-19.502 42.775-42.775s-19.502-42.775-42.775-42.775z" fill="#52C41A"></path>
-        <path d="M935.384 573.288c0-154.83-154.83-279.945-340.078-279.945-190.149 0-344.979 125.115-344.979 279.945 0 154.83 154.83 279.945 344.979 279.945 40.001 0 77.227-6.701 112.003-17.853l104.851 53.576-29.401-96.75c70.526-53.576 152.625-124.264 152.625-218.918z m-429.304-39.151c-14.552 0-26.9-11.498-26.9-26.9s12.348-27.75 26.9-27.75c17.852 0 30.201 12.348 30.201 27.75-0.001 15.402-12.349 26.9-30.201 26.9z m190.149 0c-14.552 0-26.9-11.498-26.9-26.9s11.498-27.75 26.9-27.75c17.852 0 30.201 12.348 30.201 27.75s-12.349 26.9-30.201 26.9z" fill="#52C41A"></path>
-        <path d="M351.909 303.735c26.049 0 49.322 11.498 65.626 29.351-78.927 26.9-140.278 75.527-177.504 137.728-5.801-2.55-11.498-3.401-17.852-3.401-26.9 0-48.471 21.571-48.471 48.471s21.571 48.471 48.471 48.471c26.9 0 48.471-21.571 48.471-48.471 0-3.401-0.85-6.801-1.7-10.201 29.351-66.476 98.75-128.678 198.049-153.1 30.201-7.651 61.375-11.498 93.399-11.498 20.721 0 40.851 1.7 60.131 4.251-21.571-110.653-123.414-192.751-247.679-192.751-139.428 0-252.629 96.75-252.629 215.518 0 65.626 35.776 124.264 92.55 162.34L139.907 635.49l72.227-38.301c22.421 7.651 46.545 12.348 70.526 17.852 5.801-17.852 13.453-35.776 24.951-51.221-109.801-25.2-187.599-100.451-187.599-188.449 0.001-112.003 107.252-204.249 231.897-204.249z" fill="#52C41A"></path>
-      </svg>
-      <span class="tip-text">获取更多详细分析，请前往微信搜索「<strong>AI足球智能体</strong>」小程序</span>
-      <svg class="tip-arrow" viewBox="0 0 1024 1024" width="16" height="16">
-        <path d="M364.8 106.666667L298.666667 172.8 637.866667 512 298.666667 851.2l66.133333 66.133333L768 512z" fill="currentColor"></path>
-      </svg>
-    </div>
-
-    <!-- 标签页区域 -->
+    <!-- 标签页区域（带模糊遮罩） -->
     <div class="analysis-tabs card">
       <div class="tabs-header">
         <div
@@ -409,6 +396,37 @@
           </div>
         </div>
       </div>
+
+      <!-- 模糊遮罩层 -->
+      <div class="blur-overlay">
+        <div class="unlock-content">
+          <div class="unlock-icon">
+            <svg viewBox="0 0 1024 1024" width="60" height="60">
+              <path d="M351.909 330.635c-23.273 0-42.775 19.502-42.775 42.775s19.502 42.775 42.775 42.775c23.273 0 42.775-19.502 42.775-42.775s-19.502-42.775-42.775-42.775zM583.588 330.635c-23.273 0-42.775 19.502-42.775 42.775s19.502 42.775 42.775 42.775c23.273 0 42.775-19.502 42.775-42.775s-19.502-42.775-42.775-42.775z" fill="#52C41A"></path>
+              <path d="M935.384 573.288c0-154.83-154.83-279.945-340.078-279.945-190.149 0-344.979 125.115-344.979 279.945 0 154.83 154.83 279.945 344.979 279.945 40.001 0 77.227-6.701 112.003-17.853l104.851 53.576-29.401-96.75c70.526-53.576 152.625-124.264 152.625-218.918z m-429.304-39.151c-14.552 0-26.9-11.498-26.9-26.9s12.348-27.75 26.9-27.75c17.852 0 30.201 12.348 30.201 27.75-0.001 15.402-12.349 26.9-30.201 26.9z m190.149 0c-14.552 0-26.9-11.498-26.9-26.9s11.498-27.75 26.9-27.75c17.852 0 30.201 12.348 30.201 27.75s-12.349 26.9-30.201 26.9z" fill="#52C41A"></path>
+              <path d="M351.909 303.735c26.049 0 49.322 11.498 65.626 29.351-78.927 26.9-140.278 75.527-177.504 137.728-5.801-2.55-11.498-3.401-17.852-3.401-26.9 0-48.471 21.571-48.471 48.471s21.571 48.471 48.471 48.471c26.9 0 48.471-21.571 48.471-48.471 0-3.401-0.85-6.801-1.7-10.201 29.351-66.476 98.75-128.678 198.049-153.1 30.201-7.651 61.375-11.498 93.399-11.498 20.721 0 40.851 1.7 60.131 4.251-21.571-110.653-123.414-192.751-247.679-192.751-139.428 0-252.629 96.75-252.629 215.518 0 65.626 35.776 124.264 92.55 162.34L139.907 635.49l72.227-38.301c22.421 7.651 46.545 12.348 70.526 17.852 5.801-17.852 13.453-35.776 24.951-51.221-109.801-25.2-187.599-100.451-187.599-188.449 0.001-112.003 107.252-204.249 231.897-204.249z" fill="#52C41A"></path>
+            </svg>
+          </div>
+          <h3>解锁完整分析内容</h3>
+          <p class="unlock-desc">查看详细的历史交锋、xG数据、赔率分析等完整内容</p>
+
+          <div class="qrcode-box">
+            <img src="/mini.jpg" alt="AI足球智能体" class="mini-qrcode" @error="handleQrcodeError" />
+            <p class="scan-tip">微信扫码查看完整分析</p>
+          </div>
+
+          <div class="or-divider">
+            <span>或</span>
+          </div>
+
+          <div class="search-tip">
+            <p>在微信中搜索小程序</p>
+            <div class="mini-name" @click="copyMiniProgramName">
+              AI足球智能体
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -630,18 +648,28 @@ const getSimilarMatchClass = (match: SimilarMatch) => {
   }
 }
 
-// 打开微信小程序
-const openWeChatMiniProgram = () => {
-  // 微信小程序的搜索提示
+// 复制小程序名称
+const copyMiniProgramName = () => {
   const miniProgramName = 'AI足球智能体'
-  const message = `请在微信中搜索「${miniProgramName}」小程序，获取更多详细的足球比赛分析和预测功能！\n\n操作步骤：\n1. 打开微信\n2. 点击顶部搜索栏\n3. 搜索「${miniProgramName}」\n4. 点击进入小程序`
-
-  // 复制小程序名称到剪贴板
   navigator.clipboard.writeText(miniProgramName).then(() => {
-    alert(`小程序名称「${miniProgramName}」已复制到剪贴板！\n\n${message}`)
+    alert(`小程序名称「${miniProgramName}」已复制到剪贴板！\n\n请打开微信搜索进入小程序查看完整分析`)
   }).catch(() => {
-    alert(message)
+    alert('请在微信中搜索「AI足球智能体」小程序')
   })
+}
+
+// 处理二维码加载错误
+const handleQrcodeError = (e: Event) => {
+  const target = e.target as HTMLImageElement
+  // 如果图片加载失败，显示占位文本
+  target.style.display = 'none'
+  const container = target.parentElement
+  if (container) {
+    const placeholder = document.createElement('div')
+    placeholder.className = 'qrcode-placeholder'
+    placeholder.innerHTML = '<p>二维码加载中...</p><p>请在微信中搜索<br/>「AI足球智能体」</p>'
+    container.appendChild(placeholder)
+  }
 }
 
 // 标签页切换
@@ -916,66 +944,336 @@ const handleResize = () => {
   border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* 微信小程序提示 */
-.wechat-mini-program-tip {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
+/* 小程序引导卡片 */
+.mini-program-guide {
   margin: 16px;
-  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
-  border: 1px solid #a5d6a7;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.1);
+  padding: 32px 24px;
 }
 
-.wechat-mini-program-tip:hover {
-  background: linear-gradient(135deg, #c8e6c9 0%, #dcedc8 100%);
-  border-color: #81c784;
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
-  transform: translateY(-2px);
+.guide-header {
+  text-align: center;
+  margin-bottom: 32px;
 }
 
-.wechat-mini-program-tip:active {
-  transform: translateY(0);
+.guide-header .wechat-icon {
+  margin-bottom: 16px;
 }
 
-.tip-icon {
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
+.guide-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  background: linear-gradient(135deg, #52C41A 0%, #3da914 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.tip-text {
-  flex: 1;
+.guide-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.guide-description {
+  font-size: 16px;
+  color: #666;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 32px 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.feature-list li {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  padding: 12px 16px;
+  border-radius: 8px;
   font-size: 14px;
-  color: #2e7d32;
-  line-height: 1.5;
+  color: #334155;
+  border-left: 3px solid #0ea5e9;
 }
 
-.tip-text strong {
-  color: #1b5e20;
+.qrcode-section {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 16px;
+  margin-bottom: 24px;
+}
+
+.qrcode-container {
+  text-align: center;
+}
+
+.qrcode-image {
+  width: 200px;
+  height: 200px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border: 4px solid white;
+}
+
+.qrcode-placeholder {
+  width: 200px;
+  height: 200px;
+  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid white;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.qrcode-placeholder p {
+  margin: 8px 0;
+  color: #2e7d32;
+  font-size: 14px;
+  text-align: center;
+}
+
+.qrcode-tip {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #52C41A;
+  font-weight: 500;
+}
+
+.scan-guide {
+  flex: 1;
+  max-width: 300px;
+}
+
+.scan-guide h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.scan-guide ol {
+  margin: 0;
+  padding-left: 20px;
+  color: #666;
+}
+
+.scan-guide ol li {
+  margin-bottom: 12px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.scan-guide ol li strong {
+  color: #52C41A;
   font-weight: 600;
 }
 
-.tip-arrow {
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-  color: #4caf50;
+.alternative-method {
+  text-align: center;
+  padding: 24px;
+  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+  border-radius: 12px;
+}
+
+.alternative-method p {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  color: #666;
+}
+
+.mini-program-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: white;
+  border: 2px solid #52C41A;
+  border-radius: 24px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #52C41A;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.2);
+}
+
+.mini-program-name:hover {
+  background: #52C41A;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(82, 196, 26, 0.3);
+}
+
+.mini-program-name:active {
+  transform: translateY(0);
+}
+
+.mini-program-name svg {
   transition: transform 0.3s ease;
 }
 
-.wechat-mini-program-tip:hover .tip-arrow {
-  transform: translateX(4px);
+.mini-program-name:hover svg {
+  transform: scale(1.1);
 }
 
 /* 标签页 */
 .analysis-tabs {
   margin: 0 16px 16px;
   min-height: 400px;
+  position: relative;
+}
+
+/* 模糊遮罩层 */
+.blur-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+}
+
+.blur-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  z-index: -1;
+}
+
+.unlock-content {
+  text-align: center;
+  padding: 40px 20px;
+  max-width: 500px;
+}
+
+.unlock-icon {
+  margin-bottom: 24px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.unlock-content h3 {
+  margin: 0 0 12px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  background: linear-gradient(135deg, #52C41A 0%, #3da914 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.unlock-desc {
+  margin: 0 0 32px 0;
+  font-size: 15px;
+  color: #666;
+  line-height: 1.6;
+}
+
+.qrcode-box {
+  margin-bottom: 24px;
+}
+
+.mini-qrcode {
+  width: 180px;
+  height: 180px;
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(82, 196, 26, 0.2);
+  border: 4px solid white;
+  transition: all 0.3s ease;
+}
+
+.mini-qrcode:hover {
+  transform: scale(1.05);
+  box-shadow: 0 16px 40px rgba(82, 196, 26, 0.3);
+}
+
+.scan-tip {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #52C41A;
+  font-weight: 500;
+}
+
+.or-divider {
+  position: relative;
+  text-align: center;
+  margin: 24px 0;
+}
+
+.or-divider::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
+}
+
+.or-divider span {
+  position: relative;
+  background: white;
+  padding: 0 16px;
+  color: #999;
+  font-size: 14px;
+}
+
+.search-tip p {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.mini-name {
+  display: inline-block;
+  padding: 12px 32px;
+  background: linear-gradient(135deg, #52C41A 0%, #3da914 100%);
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 28px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 20px rgba(82, 196, 26, 0.3);
+}
+
+.mini-name:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(82, 196, 26, 0.4);
+}
+
+.mini-name:active {
+  transform: translateY(-1px);
 }
 
 .analysis-tabs .tabs-header {
@@ -1649,24 +1947,26 @@ const handleResize = () => {
     padding: 16px;
   }
 
-  .wechat-mini-program-tip {
-    margin: 0 12px 12px;
-    padding: 12px 14px;
-    gap: 8px;
+  .unlock-content {
+    padding: 32px 16px;
   }
 
-  .tip-icon {
-    width: 20px;
-    height: 20px;
+  .unlock-content h3 {
+    font-size: 20px;
   }
 
-  .tip-text {
-    font-size: 13px;
+  .unlock-desc {
+    font-size: 14px;
   }
 
-  .tip-arrow {
-    width: 14px;
-    height: 14px;
+  .mini-qrcode {
+    width: 160px;
+    height: 160px;
+  }
+
+  .mini-name {
+    font-size: 16px;
+    padding: 10px 24px;
   }
 
   .match-basic-info .team-name {
