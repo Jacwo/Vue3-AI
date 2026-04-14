@@ -68,7 +68,8 @@ const router = createRouter({
     //     requiresAuth: true,
     //     title: 'ai对话'
     //   }
-    // }, {
+    // },
+    {
       path: '/login',
       name: 'Login',
       component: () => import('@/views/Login.vue'),
