@@ -1,5 +1,16 @@
 <template>
   <div class="credits-page">
+    <!-- 顶部导航栏 -->
+    <div class="top-nav">
+      <button class="back-btn" @click="goBack">
+        <svg viewBox="0 0 1024 1024" width="24" height="24">
+          <path d="M671.968 912c-12.288 0-24.576-4.672-33.952-14.048L286.048 545.984c-18.752-18.72-18.752-49.12 0-67.872l351.968-352c18.752-18.752 49.12-18.752 67.872 0 18.752 18.72 18.752 49.12 0 67.872L387.872 512.032l318.016 318.016c18.752 18.752 18.752 49.12 0 67.872C696.544 907.328 684.256 912 671.968 912z" fill="currentColor"/>
+        </svg>
+      </button>
+      <span class="nav-title">积分充值</span>
+      <div class="nav-placeholder"></div>
+    </div>
+
     <!-- 页面头部 -->
     <div class="page-header">
       <div class="header-content">
@@ -205,8 +216,14 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const qrcodeUrl = ref('/me.png')
+
+const goBack = () => {
+  router.back()
+}
 
 const handleQrcodeError = (e: Event) => {
   const target = e.target as HTMLImageElement
@@ -220,6 +237,55 @@ const handleQrcodeError = (e: Event) => {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding-bottom: 40px;
+  padding-bottom: calc(40px + env(safe-area-inset-bottom));
+}
+
+/* 顶部导航栏 */
+.top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  padding-top: calc(12px + env(safe-area-inset-top));
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.back-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.back-btn:active {
+  transform: scale(0.95);
+}
+
+.nav-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+}
+
+.nav-placeholder {
+  width: 40px;
 }
 
 /* 页面头部 */
@@ -687,7 +753,7 @@ const handleQrcodeError = (e: Event) => {
 /* 响应式 */
 @media (max-width: 768px) {
   .page-title {
-    font-size: 28px;
+    font-size: 26px;
   }
 
   .packages-grid {
@@ -695,42 +761,294 @@ const handleQrcodeError = (e: Event) => {
   }
 
   .package-card {
-    padding: 28px 20px;
+    padding: 24px 18px;
+  }
+
+  .package-card:hover {
+    transform: translateY(-5px);
   }
 
   .credits-range {
-    font-size: 40px;
+    font-size: 38px;
   }
 
   .price-value {
-    font-size: 36px;
+    font-size: 34px;
   }
 
   .qrcode-wrapper {
-    width: 200px;
-    height: 200px;
+    width: 180px;
+    height: 180px;
+  }
+
+  .info-card {
+    margin: -20px 12px 20px;
+    padding: 20px;
+  }
+
+  .packages-section {
+    padding: 0 12px 24px;
+  }
+
+  .contact-section {
+    padding: 0 12px 24px;
+  }
+
+  .contact-card {
+    padding: 24px 18px;
   }
 }
 
 @media (max-width: 480px) {
+  .top-nav {
+    padding: 10px 12px;
+    padding-top: calc(10px + env(safe-area-inset-top));
+  }
+
+  .back-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .nav-title {
+    font-size: 16px;
+  }
+
+  .nav-placeholder {
+    width: 36px;
+  }
+
   .page-header {
-    padding: 40px 16px 32px;
+    padding: 30px 16px 28px;
+  }
+
+  .header-icon svg {
+    width: 40px;
+    height: 40px;
   }
 
   .page-title {
-    font-size: 24px;
+    font-size: 22px;
   }
 
   .page-subtitle {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .section-title {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+
+  .info-card {
+    margin: -16px 10px 16px;
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .card-header h3 {
+    font-size: 16px;
+  }
+
+  .info-content {
+    gap: 12px;
+  }
+
+  .info-item {
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .info-icon {
     font-size: 20px;
   }
 
-  .contact-header h2 {
+  .info-text {
+    font-size: 13px;
+  }
+
+  .packages-section {
+    padding: 0 10px 20px;
+  }
+
+  .package-card {
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+
+  .package-badge {
+    padding: 5px 12px;
+    font-size: 12px;
+    margin-bottom: 16px;
+  }
+
+  .package-icon svg {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .package-card.premium .package-icon svg {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .credits-range {
+    font-size: 32px;
+  }
+
+  .credits-label {
+    font-size: 14px;
+  }
+
+  .package-price {
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+
+  .price-symbol {
     font-size: 20px;
+  }
+
+  .price-value {
+    font-size: 28px;
+  }
+
+  .package-features {
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+
+  .feature-item {
+    padding: 8px 0;
+    font-size: 13px;
+    gap: 8px;
+  }
+
+  .feature-item svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .package-value {
+    padding-top: 12px;
+    gap: 8px;
+  }
+
+  .value-text {
+    font-size: 13px;
+  }
+
+  .save-badge {
+    padding: 3px 10px;
+    font-size: 11px;
+  }
+
+  .recommend-tag {
+    top: 12px;
+    right: -32px;
+    padding: 3px 36px;
+    font-size: 11px;
+  }
+
+  .contact-section {
+    padding: 0 10px 20px;
+  }
+
+  .contact-card {
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+
+  .contact-header {
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .contact-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .contact-header h2 {
+    font-size: 18px;
+  }
+
+  .contact-desc {
+    font-size: 13px;
+    margin-bottom: 24px;
+  }
+
+  .qrcode-container {
+    margin-bottom: 24px;
+  }
+
+  .qrcode-wrapper {
+    width: 160px;
+    height: 160px;
+    border-radius: 12px;
+  }
+
+  .contact-tips {
+    gap: 12px;
+  }
+
+  .tip-item {
+    padding: 12px;
+    gap: 12px;
+    border-radius: 10px;
+  }
+
+  .tip-number {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+
+  .tip-text {
+    font-size: 13px;
+  }
+
+  .footer-note {
+    padding: 20px 16px;
+  }
+
+  .footer-note p {
+    font-size: 12px;
+    margin: 6px 0;
+  }
+}
+
+/* 超小屏幕 */
+@media (max-width: 360px) {
+  .page-title {
+    font-size: 20px;
+  }
+
+  .credits-range {
+    font-size: 28px;
+  }
+
+  .price-value {
+    font-size: 24px;
+  }
+
+  .qrcode-wrapper {
+    width: 140px;
+    height: 140px;
+  }
+
+  .info-text,
+  .feature-item,
+  .tip-text {
+    font-size: 12px;
+  }
+}
+
+/* iOS 安全区域适配 */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .credits-page {
+    padding-bottom: calc(40px + env(safe-area-inset-bottom));
   }
 }
 </style>

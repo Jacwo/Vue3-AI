@@ -1,10 +1,16 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import { ref, onMounted, onUnmounted } from 'vue'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useUserStore } from '@/stores/user'
 
+const route = useRoute()
 const isMobileMenuOpen = ref(false)
 const isMobile = ref(false)
+
+// 是否隐藏头部导航
+const hideHeader = computed(() => {
+  return route.path === '/credits'
+})
 
 const checkScreenSize = () => {
   isMobile.value = window.innerWidth < 768
@@ -42,7 +48,7 @@ const closeMobileMenu = () => {
 
 <template>
   <div class="app-container">
-    <header>
+    <header v-if="!hideHeader">
       <div class="app-header">
         <div class="header-left">
           <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="60" height="60" />
@@ -107,15 +113,22 @@ const closeMobileMenu = () => {
           >
             个人中心
           </RouterLink>
+          <RouterLink
+            to="/credits"
+            @click="closeMobileMenu"
+            :class="{ 'mobile-link': isMobile }"
+          >
+            积分充值
+          </RouterLink>
         </nav>
       </div>
     </header>
 
-    <main>
+    <main :class="{ 'no-header': hideHeader }">
       <RouterView />
     </main>
 
-    <footer class="app-footer">
+    <footer v-if="!hideHeader" class="app-footer">
       <div class="footer-content">
         <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">
           豫ICP备19039052号-3
@@ -263,6 +276,11 @@ main {
   max-width: 1200px;
   margin: 0 auto;
   box-sizing: border-box;
+}
+
+main.no-header {
+  padding: 0;
+  max-width: 100%;
 }
 
 /* 底部备案号 */
