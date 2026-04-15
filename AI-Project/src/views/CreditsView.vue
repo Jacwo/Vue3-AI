@@ -38,11 +38,11 @@
       <div class="info-content">
         <div class="info-item">
           <span class="info-icon">✨</span>
-          <span class="info-text">积分可用于解锁比赛分析、AI预测等高级功能</span>
+          <span class="info-text">积分可用于解锁比赛分析、情报等高级功能</span>
         </div>
         <div class="info-item">
           <span class="info-icon">🎯</span>
-          <span class="info-text">每次查看详细分析消耗1积分</span>
+          <span class="info-text">每次查看AI分析消耗1积分</span>
         </div>
         <div class="info-item">
           <span class="info-icon">💎</span>
@@ -83,19 +83,7 @@
               <svg viewBox="0 0 1024 1024" width="16" height="16">
                 <path d="M912 190h-69.9c-9.8 0-19.1 4.5-25.1 12.2L404.7 724.5 207 474c-6.1-7.7-15.3-12.2-25.1-12.2H112c-6.7 0-10.4 7.7-6.3 12.9l273.9 347c12.8 16.2 37.4 16.2 50.3 0l488.4-618.9c4.1-5.1 0.4-12.8-6.3-12.8z" fill="#52c41a"></path>
               </svg>
-              <span>查看99次详细分析</span>
-            </div>
-            <div class="feature-item">
-              <svg viewBox="0 0 1024 1024" width="16" height="16">
-                <path d="M912 190h-69.9c-9.8 0-19.1 4.5-25.1 12.2L404.7 724.5 207 474c-6.1-7.7-15.3-12.2-25.1-12.2H112c-6.7 0-10.4 7.7-6.3 12.9l273.9 347c12.8 16.2 37.4 16.2 50.3 0l488.4-618.9c4.1-5.1 0.4-12.8-6.3-12.8z" fill="#52c41a"></path>
-              </svg>
-              <span>AI智能预测</span>
-            </div>
-            <div class="feature-item">
-              <svg viewBox="0 0 1024 1024" width="16" height="16">
-                <path d="M912 190h-69.9c-9.8 0-19.1 4.5-25.1 12.2L404.7 724.5 207 474c-6.1-7.7-15.3-12.2-25.1-12.2H112c-6.7 0-10.4 7.7-6.3 12.9l273.9 347c12.8 16.2 37.4 16.2 50.3 0l488.4-618.9c4.1-5.1 0.4-12.8-6.3-12.8z" fill="#52c41a"></path>
-              </svg>
-              <span>历史数据对比</span>
+              <span>查看99次AI分析</span>
             </div>
           </div>
           <div class="package-value">
@@ -136,19 +124,7 @@
               <svg viewBox="0 0 1024 1024" width="16" height="16">
                 <path d="M912 190h-69.9c-9.8 0-19.1 4.5-25.1 12.2L404.7 724.5 207 474c-6.1-7.7-15.3-12.2-25.1-12.2H112c-6.7 0-10.4 7.7-6.3 12.9l273.9 347c12.8 16.2 37.4 16.2 50.3 0l488.4-618.9c4.1-5.1 0.4-12.8-6.3-12.8z" fill="#52c41a"></path>
               </svg>
-              <span>查看999次详细分析</span>
-            </div>
-            <div class="feature-item">
-              <svg viewBox="0 0 1024 1024" width="16" height="16">
-                <path d="M912 190h-69.9c-9.8 0-19.1 4.5-25.1 12.2L404.7 724.5 207 474c-6.1-7.7-15.3-12.2-25.1-12.2H112c-6.7 0-10.4 7.7-6.3 12.9l273.9 347c12.8 16.2 37.4 16.2 50.3 0l488.4-618.9c4.1-5.1 0.4-12.8-6.3-12.8z" fill="#52c41a"></path>
-              </svg>
-              <span>高级AI智能预测</span>
-            </div>
-            <div class="feature-item">
-              <svg viewBox="0 0 1024 1024" width="16" height="16">
-                <path d="M912 190h-69.9c-9.8 0-19.1 4.5-25.1 12.2L404.7 724.5 207 474c-6.1-7.7-15.3-12.2-25.1-12.2H112c-6.7 0-10.4 7.7-6.3 12.9l273.9 347c12.8 16.2 37.4 16.2 50.3 0l488.4-618.9c4.1-5.1 0.4-12.8-6.3-12.8z" fill="#52c41a"></path>
-              </svg>
-              <span>完整历史数据</span>
+              <span>查看999次AI分析</span>
             </div>
             <div class="feature-item highlight">
               <svg viewBox="0 0 1024 1024" width="16" height="16">
@@ -209,7 +185,6 @@
     <!-- 底部说明 -->
     <div class="footer-note">
       <p>💡 温馨提示：积分永久有效，不设使用期限</p>
-      <p>🔒 支付安全有保障，充值后可随时查询余额</p>
     </div>
   </div>
 </template>
