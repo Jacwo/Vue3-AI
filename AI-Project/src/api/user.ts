@@ -84,11 +84,11 @@ export const userApi = {
 
   // 获取用户列表
   getUserList(data?: any, config?: CustomRequestConfig) {
-    return apiClient.post<UserListItem[]>('/api/user/list', data || {}, config)
+    return apiClient.post('/api/user/list', data || {}, config) as Promise<UserListItem[]>
   },
 
   // 发放积分
   addPoint(data: { userId: string; point: number }, config?: CustomRequestConfig) {
-    return apiClient.post('/api/user/point/add', data, config)
+    return apiClient.post('/api/user/point/add', data, config) as Promise<any>
   }
 }
