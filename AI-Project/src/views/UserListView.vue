@@ -15,10 +15,8 @@
       >
         <el-table-column prop="phone" label="手机号" min-width="110" />
         <el-table-column prop="userName" label="用户名" min-width="120" />
-        <el-table-column prop="gender" label="性别" width="80" :formatter="genderFormatter" />
         <el-table-column prop="point" label="积分" width="100" align="center" :formatter="pointFormatter" />
         <el-table-column prop="createTime" label="注册时间" min-width="160" :formatter="timeFormatter" />
-        <el-table-column prop="status" label="状态" width="100" align="center" :formatter="statusFormatter" />
         <el-table-column prop="signToday" label="签到" width="100" align="center" :formatter="signTodayFormatter" />
         <el-table-column label="操作" width="120" align="center" fixed="right">
           <template #default="scope">
@@ -68,13 +66,6 @@ const pointForm = ref({
   point: 10
 })
 
-// 格式化性别
-const genderFormatter = (row: UserListItem) => {
-  if (row.gender === 0) return '女'
-  if (row.gender === 1) return '男'
-  return '未知'
-}
-
 // 格式化积分
 const pointFormatter = (row: UserListItem) => {
   return row.point || 0
@@ -83,13 +74,6 @@ const pointFormatter = (row: UserListItem) => {
 // 格式化时间
 const timeFormatter = (row: UserListItem) => {
   return new Date(row.createTime).toLocaleString('zh-CN')
-}
-
-// 格式化状态
-const statusFormatter = (row: UserListItem) => {
-  const statusStr = String(row.status)
-  if (statusStr === '1') return '活跃'
-  return '禁用'
 }
 
 // 格式化今日签到
