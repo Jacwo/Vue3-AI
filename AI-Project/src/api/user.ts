@@ -20,6 +20,26 @@ export interface UserInfo {
   gender: number
   status: string
   createTime: string
+  isAdmin?: boolean
+}
+
+export interface UserListItem {
+  id: string
+  phone: string
+  userName: string
+  gender: number
+  point: number
+  createTime: string
+  status: string
+  signToday: boolean
+  isAdmin: boolean
+}
+
+export interface UserListResponse {
+  data: UserListItem[]
+  total: number
+  pageNum: number
+  pageSize: number
 }
 
 export interface SendSmsRequest {
@@ -41,24 +61,29 @@ export const userApi = {
   sendSms(data: SendSmsRequest, config?: CustomRequestConfig) {
     return apiClient.post<SendSmsResponse>('/api/sms/send', data, config)
   },
-  
+
   // 登录
   login(data: LoginRequest, config?: CustomRequestConfig) {
     return apiClient.post<LoginResponse>('/api/user/login', data, config)
   },
-  
+
   // 退出登录
   logout(config?: CustomRequestConfig) {
     return apiClient.post<LogoutResponse>('/api/user/logout', config)
   },
-  
+
   // 获取用户信息
   getUserInfo(config?: CustomRequestConfig) {
     return apiClient.get<UserInfo>('/api/user/info', config)
   },
-  
+
   // 更新用户信息
   updateUserInfo(data: Partial<UserInfo>, config?: CustomRequestConfig) {
     return apiClient.post<UserInfo>('/api/user/update', data, config)
+  },
+
+  // 获取用户列表
+  getUserList(data?: any, config?: CustomRequestConfig) {
+    return apiClient.post<UserListResponse>('/api/user/list', data || {}, config)
   }
 }

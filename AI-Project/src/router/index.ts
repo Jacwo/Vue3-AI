@@ -95,6 +95,16 @@ const router = createRouter({
         requiresAuth: false,
         title: '积分充值'
       }
+    },
+    {
+      path: '/users',
+      name: 'Users',
+      component: () => import('@/views/UserListView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: '用户列表',
+        requiresAdmin: true
+      }
     }
   ]
 })
@@ -115,6 +125,9 @@ router.beforeEach((to, from, next) => {
     })
   } else if (to.path === '/login' && userStore.isLoggedIn) {
     // 如果已登录但访问登录页，重定向到个人中心
+    next('/profile')
+  } else if (to.meta.requiresAdmin && !userStore.userInfo?.isAdmin) {
+    // 检查是否需要管理员权限
     next('/profile')
   } else {
     next()
