@@ -38,34 +38,34 @@
         <el-table-column prop="phone" label="手机号" width="120" />
         <el-table-column prop="userName" label="用户名" width="120" />
         <el-table-column prop="gender" label="性别" width="80">
-          <template #default="{ row }">
-            {{ row.gender === 0 ? '女' : row.gender === 1 ? '男' : '未知' }}
+          <template #default="scope">
+            {{ scope.row.gender === 0 ? '女' : scope.row.gender === 1 ? '男' : '未知' }}
           </template>
         </el-table-column>
         <el-table-column prop="point" label="积分" width="100" />
         <el-table-column prop="createTime" label="创建时间" width="180">
-          <template #default="{ row }">
-            {{ formatTime(row.createTime) }}
+          <template #default="scope">
+            {{ formatTime(scope.row.createTime) }}
           </template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 'active' ? 'success' : 'danger'">
-              {{ row.status === 'active' ? '活跃' : '禁用' }}
+          <template #default="scope">
+            <el-tag :type="scope.row.status === 'active' ? 'success' : 'danger'">
+              {{ scope.row.status === 'active' ? '活跃' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="signToday" label="今日签到" width="100">
-          <template #default="{ row }">
-            <el-tag :type="row.signToday ? 'success' : 'info'">
-              {{ row.signToday ? '已签到' : '未签到' }}
+          <template #default="scope">
+            <el-tag :type="scope.row.signToday ? 'success' : 'info'">
+              {{ scope.row.signToday ? '已签到' : '未签到' }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="isAdmin" label="管理员" width="100">
-          <template #default="{ row }">
-            <el-tag :type="row.isAdmin ? 'danger' : 'info'">
-              {{ row.isAdmin ? '是' : '否' }}
+          <template #default="scope">
+            <el-tag :type="scope.row.isAdmin ? 'danger' : 'info'">
+              {{ scope.row.isAdmin ? '是' : '否' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -88,7 +88,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { ElMessage, ElLoading } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { userApi, type UserListItem } from '@/api/user'
 
 // 数据
