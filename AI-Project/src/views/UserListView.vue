@@ -18,10 +18,25 @@
         <el-table-column prop="point" label="积分" width="100" align="center" :formatter="pointFormatter" />
         <el-table-column prop="createTime" label="注册时间" min-width="160" :formatter="timeFormatter" />
         <el-table-column prop="signToday" label="签到" width="100" align="center" :formatter="signTodayFormatter" />
-        <el-table-column label="操作" width="120" align="center" fixed="right">
+        <el-table-column prop="isVip" label="VIP" width="80" align="center">
+          <template #default="scope">
+            <el-tag v-if="scope.row.isVip" type="warning" size="small">VIP</el-tag>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="vipExpireTime" label="VIP到期时间" min-width="160">
+          <template #default="scope">
+            <span v-if="scope.row.isVip">{{ formatTime(scope.row.vipExpireTime) }}</span>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="180" align="center" fixed="right">
           <template #default="scope">
             <el-button link type="primary" size="small" @click="handleAddPoint(scope.row)">
               发放积分
+            </el-button>
+            <el-button link type="success" size="small" @click="handleOpenVip(scope.row)">
+              开通会员
             </el-button>
           </template>
         </el-table-column>
@@ -43,6 +58,25 @@
         <el-button type="primary" @click="handleConfirmAddPoint" :loading="pointLoading">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 开通会员对话框 -->
+    <el-dialog v-model="vipDialogVisible" title="开通会员" width="400px">
+      <el-form :model="vipForm" label-width="80px">
+        <el-form-item label="用户">
+          <span>{{ vipForm.userName }} ({{ vipForm.phone }})</span>
+        </el-form-item>
+        <el-form-item label="会员类型">
+          <el-radio-group v-model="vipForm.vipType">
+            <el-radio :value="1">月卡</el-radio>
+            <el-radio :value="2">年卡</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="vipDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleConfirmOpenVip" :loading="vipLoading">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -50,6 +84,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { userApi, type UserListItem } from '@/api/user'
+import request from '@/utils/request'
 
 // 数据
 const userList = ref<UserListItem[]>([])
@@ -66,6 +101,16 @@ const pointForm = ref({
   point: 10
 })
 
+// 开通会员相关
+const vipDialogVisible = ref(false)
+const vipLoading = ref(false)
+const vipForm = ref({
+  userId: '',
+  phone: '',
+  userName: '',
+  vipType: 1 // 1月卡 2年卡
+})
+
 // 格式化积分
 const pointFormatter = (row: UserListItem) => {
   return row.point || 0
@@ -79,6 +124,12 @@ const timeFormatter = (row: UserListItem) => {
 // 格式化今日签到
 const signTodayFormatter = (row: UserListItem) => {
   return row.signToday ? '✓ 已签到' : '未签到'
+}
+
+// 格式化时间（通用）
+const formatTime = (time: string | number) => {
+  if (!time) return '-'
+  return new Date(time).toLocaleString('zh-CN')
 }
 
 // 获取用户列表
@@ -128,6 +179,36 @@ const handleConfirmAddPoint = async () => {
     ElMessage.error(error.message || '发放积分失败')
   } finally {
     pointLoading.value = false
+  }
+}
+
+// 打开开通会员对话框
+const handleOpenVip = (row: UserListItem) => {
+  vipForm.value = {
+    userId: row.id,
+    phone: row.phone,
+    userName: row.userName,
+    vipType: 1
+  }
+  vipDialogVisible.value = true
+}
+
+// 确认开通会员
+const handleConfirmOpenVip = async () => {
+  vipLoading.value = true
+  try {
+    await request.post('/api/vip/open', {
+      userId: vipForm.value.userId,
+      vipType: vipForm.value.vipType
+    })
+    const vipTypeName = vipForm.value.vipType === 1 ? '月卡' : '年卡'
+    ElMessage.success(`成功开通${vipTypeName}会员`)
+    vipDialogVisible.value = false
+    fetchUserList()
+  } catch (error: any) {
+    ElMessage.error(error.message || '开通会员失败')
+  } finally {
+    vipLoading.value = false
   }
 }
 
