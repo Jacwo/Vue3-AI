@@ -84,7 +84,6 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { userApi, type UserListItem } from '@/api/user'
-import request from '@/utils/request'
 
 // 数据
 const userList = ref<UserListItem[]>([])
@@ -197,7 +196,7 @@ const handleOpenVip = (row: UserListItem) => {
 const handleConfirmOpenVip = async () => {
   vipLoading.value = true
   try {
-    await request.post('/api/vip/open', {
+    await userApi.openVip({
       userId: vipForm.value.userId,
       vipType: vipForm.value.vipType
     })

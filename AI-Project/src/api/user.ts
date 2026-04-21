@@ -90,5 +90,10 @@ export const userApi = {
   // 发放积分
   addPoint(data: { userId: string; point: number }, config?: CustomRequestConfig) {
     return apiClient.post('/api/user/point/add', data, config) as Promise<any>
+  },
+
+  // 开通会员
+  openVip(data: { userId: string; vipType: number }, config?: CustomRequestConfig) {
+    return apiClient.post('/api/vip/open', data, config) as Promise<any>
   }
 }
