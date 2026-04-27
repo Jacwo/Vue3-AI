@@ -58,5 +58,10 @@ export const topicApi = {
     return apiClient.post<any>('/api/admin/topic/hot-match/batch-add', {
       matchIds
     }, config)
+  },
+
+  // 获取热门比赛列表
+  getHotMatches(config?: CustomRequestConfig) {
+    return apiClient.post<any>('/api/admin/topic/hot-match/list', {}, config)
   }
 }

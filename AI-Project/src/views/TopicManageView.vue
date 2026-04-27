@@ -3,7 +3,7 @@
     <div class="page-header">
       <h1>专题配置</h1>
       <div class="header-actions">
-        <el-button type="primary" @click="handleAdd">新增专题</el-button>
+        <el-button v-if="activeTab === 'MAJOR_EVENT'" type="primary" @click="handleAdd">新增专题</el-button>
         <el-button v-if="activeTab === 'HOT_LEAGUE'" type="success" @click="handleOpenBatchAdd">
           批量添加热门比赛
         </el-button>
@@ -18,8 +18,50 @@
       </el-tabs>
     </div>
 
-    <!-- 专题列表表格 -->
-    <div class="table-section">
+    <!-- 热门比赛列表（HOT_LEAGUE Tab）-->
+    <div v-if="activeTab === 'HOT_LEAGUE'" class="table-section">
+      <el-table
+        :data="hotMatchList"
+        stripe
+        style="width: 100%"
+        v-loading="loading"
+      >
+        <el-table-column prop="league" label="联赛" min-width="100" />
+        <el-table-column label="比赛" min-width="200">
+          <template #default="scope">
+            {{ scope.row.homeTeam }} vs {{ scope.row.awayTeam }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="matchTime" label="比赛时间" width="120" align="center" />
+        <el-table-column label="状态" width="100" align="center">
+          <template #default="scope">
+            <el-tag :type="getMatchStatusType(scope.row.status)">
+              {{ scope.row.matchStatusName || scope.row.status }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="主队排名" width="100" align="center">
+          <template #default="scope">
+            {{ scope.row.homeTeamRank || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="客队排名" width="100" align="center">
+          <template #default="scope">
+            {{ scope.row.awayTeamRank || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="100" align="center" fixed="right">
+          <template #default="scope">
+            <el-button link type="danger" size="small" @click="handleRemoveHotMatch(scope.row)">
+              移除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+
+    <!-- 专题列表（MAJOR_EVENT Tab）-->
+    <div v-if="activeTab === 'MAJOR_EVENT'" class="table-section">
       <el-table
         :data="topicList"
         stripe
@@ -73,7 +115,7 @@
         label-width="100px"
       >
         <el-form-item label="专题类型" prop="topicType">
-          <el-select v-model="topicForm.topicType" disabled>
+          <el-select v-model="topicForm.topicType" :disabled="!!topicForm.id">
             <el-option label="热门赛事" value="HOT_LEAGUE" />
             <el-option label="重大赛事" value="MAJOR_EVENT" />
           </el-select>
@@ -119,7 +161,7 @@
     </el-dialog>
 
     <!-- 批量添加热门比赛对话框 -->
-    <el-dialog v-model="batchAddDialogVisible" title="批量添加热门比赛" width="600px">
+    <el-dialog v-model="batchAddDialogVisible" title="批量添加热门比赛" width="700px">
       <div v-loading="batchAddLoading" class="batch-add-container">
         <div v-if="todayMatches.length === 0" class="empty-state">
           <p>今天暂无比赛</p>
@@ -130,8 +172,9 @@
             <div v-for="match in todayMatches" :key="match.id" class="match-item">
               <el-checkbox :value="match.id">
                 <span class="match-info">
-                  {{ match.league }} | {{ match.homeTeam }} vs {{ match.awayTeam }}
-                  <span class="match-time">{{ match.matchTime }}</span>
+                  <span class="league">{{ match.league }}</span>
+                  <span class="teams">{{ match.homeTeam }} vs {{ match.awayTeam }}</span>
+                  <span class="time">{{ match.matchTime }}</span>
                 </span>
               </el-checkbox>
             </div>
@@ -163,6 +206,7 @@ import { matchApi, type Match } from '@/api/match'
 // 状态管理
 const activeTab = ref<TopicType>('HOT_LEAGUE')
 const topicList = ref<Topic[]>([])
+const hotMatchList = ref<Match[]>([])
 const loading = ref(false)
 const dialogVisible = ref(false)
 const dialogTitle = computed(() => (topicForm.value.id ? '编辑专题' : '新增专题'))
@@ -176,7 +220,7 @@ const topicForm = ref<TopicFormData>({
   imageUrl: '',
   displaySort: 0,
   status: 1,
-  topicType: 'HOT_LEAGUE'
+  topicType: 'MAJOR_EVENT'
 })
 
 // 表单验证规则
@@ -221,9 +265,45 @@ const fetchTopicList = async () => {
   }
 }
 
+// 获取热门比赛列表
+const fetchHotMatches = async () => {
+  loading.value = true
+  try {
+    const response: any = await topicApi.getHotMatches()
+    const matchIds = (response?.data || response?.matchIds || response) || []
+
+    // 如果获取到的是matchIds，需要调用比赛详情接口获取详细信息
+    if (Array.isArray(matchIds) && matchIds.length > 0) {
+      const matches: Match[] = []
+      for (const matchId of matchIds) {
+        try {
+          const match = await matchApi.getMatchDetail(matchId)
+          if (match) {
+            matches.push(match)
+          }
+        } catch (error) {
+          console.error(`获取比赛 ${matchId} 详情失败:`, error)
+        }
+      }
+      hotMatchList.value = matches
+    } else {
+      hotMatchList.value = []
+    }
+  } catch (error: any) {
+    ElMessage.error(error.message || '获取热门比赛列表失败')
+    hotMatchList.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
 // Tab 切换
 const handleTabChange = () => {
-  fetchTopicList()
+  if (activeTab.value === 'HOT_LEAGUE') {
+    fetchHotMatches()
+  } else {
+    fetchTopicList()
+  }
 }
 
 // 打开新增对话框
@@ -234,7 +314,7 @@ const handleAdd = () => {
     imageUrl: '',
     displaySort: 0,
     status: 1,
-    topicType: activeTab.value
+    topicType: activeTab.value as TopicType
   }
   topicFormRef.value?.clearValidate()
   dialogVisible.value = true
@@ -303,12 +383,28 @@ const handleConfirmBatch = async () => {
     await topicApi.batchAddHotMatches(selectedMatchIds.value)
     ElMessage.success(`成功添加 ${selectedMatchIds.value.length} 场热门比赛`)
     batchAddDialogVisible.value = false
-    fetchTopicList()
+    fetchHotMatches()
   } catch (error: any) {
     ElMessage.error(error.message || '批量添加失败')
   } finally {
     batchConfirmLoading.value = false
   }
+}
+
+// 移除热门比赛
+const handleRemoveHotMatch = (match: Match) => {
+  ElMessage.warning('移除功能需要后端支持对应接口')
+}
+
+// 获取比赛状态标签类型
+const getMatchStatusType = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    '未开赛': 'info',
+    '进行中': 'warning',
+    '已结束': 'success',
+    '延期': 'danger'
+  }
+  return statusMap[status] || 'info'
 }
 
 // 处理图片加载错误
@@ -318,7 +414,7 @@ const handleImageError = (event: any) => {
 
 // 初始化
 onMounted(() => {
-  fetchTopicList()
+  fetchHotMatches()
 })
 </script>
 
@@ -429,12 +525,24 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  gap: 15px;
 }
 
-.match-time {
-  margin-left: auto;
+.league {
+  font-weight: 500;
+  color: #333;
+  min-width: 60px;
+}
+
+.teams {
+  flex: 1;
+  color: #666;
+}
+
+.time {
   color: #999;
   font-size: 12px;
+  white-space: nowrap;
 }
 
 /* 响应式设计 */
@@ -486,7 +594,7 @@ onMounted(() => {
     gap: 5px;
   }
 
-  .match-time {
+  .time {
     margin-left: 0;
   }
 }
