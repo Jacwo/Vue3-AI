@@ -115,6 +115,14 @@ const closeMobileMenu = () => {
             用户列表
           </RouterLink>
           <RouterLink
+            v-if="userStore.userInfo?.isAdmin"
+            to="/topics"
+            @click="closeMobileMenu"
+            :class="{ 'mobile-link': isMobile }"
+          >
+            专题配置
+          </RouterLink>
+          <RouterLink
             to="/profile"
             @click="closeMobileMenu"
             :class="{ 'mobile-link': isMobile }"

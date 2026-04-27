@@ -105,6 +105,16 @@ const router = createRouter({
         title: '用户列表',
         requiresAdmin: true
       }
+    },
+    {
+      path: '/topics',
+      name: 'Topics',
+      component: () => import('@/views/TopicManageView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: '专题配置',
+        requiresAdmin: true
+      }
     }
   ]
 })
