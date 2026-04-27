@@ -76,7 +76,7 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="图片预览" width="100" align="center">
+        <el-table-column label="专题图片" width="80" align="center">
           <template #default="scope">
             <img
               v-if="scope.row.imageUrl"
@@ -88,15 +88,37 @@
             <span v-else class="image-placeholder">-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="displaySort" label="排序" width="100" align="center" />
-        <el-table-column label="状态" width="100" align="center">
+        <el-table-column label="轮播图" width="80" align="center">
+          <template #default="scope">
+            <img
+              v-if="scope.row.carouselImageUrl"
+              :src="scope.row.carouselImageUrl"
+              :alt="'轮播-' + scope.row.topicName"
+              class="image-preview"
+              @error="handleImageError"
+            />
+            <span v-else class="image-placeholder">-</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="开始时间" width="170" align="center">
+          <template #default="scope">
+            {{ scope.row.startDate ? formatTime(scope.row.startDate) : '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="结束时间" width="170" align="center">
+          <template #default="scope">
+            {{ scope.row.endDate ? formatTime(scope.row.endDate) : '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="displaySort" label="排序" width="80" align="center" />
+        <el-table-column label="状态" width="80" align="center">
           <template #default="scope">
             <el-tag :type="scope.row.status === 1 ? 'success' : 'info'">
               {{ scope.row.status === 1 ? '启用' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="120" align="center" fixed="right">
+        <el-table-column label="操作" width="100" align="center" fixed="right">
           <template #default="scope">
             <el-button link type="primary" size="small" @click="handleEdit(scope.row)">
               编辑
@@ -107,51 +129,82 @@
     </div>
 
     <!-- 专题表单对话框 -->
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
-      <el-form
-        :model="topicForm"
-        :rules="formRules"
-        ref="topicFormRef"
-        label-width="100px"
-      >
-        <el-form-item label="专题类型" prop="topicType">
-          <el-select v-model="topicForm.topicType" :disabled="!!topicForm.id">
-            <el-option label="热门赛事" value="HOT_LEAGUE" />
-            <el-option label="重大赛事" value="MAJOR_EVENT" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="专题名称" prop="topicName">
-          <el-input v-model="topicForm.topicName" placeholder="请输入专题名称" />
-        </el-form-item>
-        <el-form-item label="专题描述" prop="topicDesc">
-          <el-input
-            v-model="topicForm.topicDesc"
-            type="textarea"
-            placeholder="请输入专题描述"
-            :rows="4"
-          />
-        </el-form-item>
-        <el-form-item label="图片地址" prop="imageUrl">
-          <el-input v-model="topicForm.imageUrl" placeholder="请输入图片地址" />
-          <div v-if="topicForm.imageUrl" class="image-preview-container">
-            <img
-              :src="topicForm.imageUrl"
-              alt="预览"
-              class="image-preview-large"
-              @error="handleImageError"
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
+      <el-scrollbar>
+        <el-form
+          :model="topicForm"
+          :rules="formRules"
+          ref="topicFormRef"
+          label-width="120px"
+        >
+          <el-form-item label="专题类型" prop="topicType">
+            <el-select v-model="topicForm.topicType" :disabled="!!topicForm.id">
+              <el-option label="热门赛事" value="HOT_LEAGUE" />
+              <el-option label="重大赛事" value="MAJOR_EVENT" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="专题名称" prop="topicName">
+            <el-input v-model="topicForm.topicName" placeholder="请输入专题名称" />
+          </el-form-item>
+          <el-form-item label="专题描述" prop="topicDesc">
+            <el-input
+              v-model="topicForm.topicDesc"
+              type="textarea"
+              placeholder="请输入专题描述"
+              :rows="3"
             />
-          </div>
-        </el-form-item>
-        <el-form-item label="显示排序" prop="displaySort">
-          <el-input-number v-model="topicForm.displaySort" :min="0" :max="9999" />
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-radio-group v-model="topicForm.status">
-            <el-radio :value="1">启用</el-radio>
-            <el-radio :value="0">禁用</el-radio>
-          </el-radio-group>
-        </el-form-item>
-      </el-form>
+          </el-form-item>
+          <el-form-item label="图片地址" prop="imageUrl">
+            <el-input v-model="topicForm.imageUrl" placeholder="请输入专题展示图片地址" />
+            <div v-if="topicForm.imageUrl" class="image-preview-container">
+              <div class="preview-title">专题图片预览：</div>
+              <img
+                :src="topicForm.imageUrl"
+                alt="预览"
+                class="image-preview-large"
+                @error="handleImageError"
+              />
+            </div>
+          </el-form-item>
+          <el-form-item label="轮播图片URL" prop="carouselImageUrl">
+            <el-input v-model="topicForm.carouselImageUrl" placeholder="请输入轮播图片URL（可选）" />
+            <div v-if="topicForm.carouselImageUrl" class="image-preview-container">
+              <div class="preview-title">轮播图片预览：</div>
+              <img
+                :src="topicForm.carouselImageUrl"
+                alt="轮播预览"
+                class="image-preview-large"
+                @error="handleImageError"
+              />
+            </div>
+          </el-form-item>
+          <el-form-item label="开始时间" prop="startDate">
+            <el-date-picker
+              v-model="topicForm.startDate"
+              type="datetime"
+              placeholder="请选择开始时间（可选）"
+              :default-time="new Date(2000, 0, 1, 0, 0, 0)"
+            />
+          </el-form-item>
+          <el-form-item label="结束时间" prop="endDate">
+            <el-date-picker
+              v-model="topicForm.endDate"
+              type="datetime"
+              placeholder="请选择结束时间（可选）"
+              :default-time="new Date(2000, 0, 1, 23, 59, 59)"
+            />
+          </el-form-item>
+          <el-form-item label="显示排序" prop="displaySort">
+            <el-input-number v-model="topicForm.displaySort" :min="0" :max="9999" />
+          </el-form-item>
+          <el-form-item label="状态" prop="status">
+            <el-radio-group v-model="topicForm.status">
+              <el-radio :value="1">启用</el-radio>
+              <el-radio :value="0">禁用</el-radio>
+            </el-radio-group>
+          </el-form-item>
+        </el-form>
+      </el-scrollbar>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleSubmit" :loading="submitLoading">
@@ -218,9 +271,12 @@ const topicForm = ref<TopicFormData>({
   topicName: '',
   topicDesc: '',
   imageUrl: '',
+  carouselImageUrl: '',
   displaySort: 0,
   status: 1,
-  topicType: 'MAJOR_EVENT'
+  topicType: 'MAJOR_EVENT',
+  startDate: null,
+  endDate: null
 })
 
 // 表单验证规则
@@ -314,9 +370,12 @@ const handleAdd = () => {
     topicName: '',
     topicDesc: '',
     imageUrl: '',
+    carouselImageUrl: '',
     displaySort: 0,
     status: 1,
-    topicType: activeTab.value as TopicType
+    topicType: activeTab.value as TopicType,
+    startDate: null,
+    endDate: null
   }
   topicFormRef.value?.clearValidate()
   dialogVisible.value = true
@@ -329,9 +388,12 @@ const handleEdit = (row: Topic) => {
     topicName: row.topicName,
     topicDesc: row.topicDesc,
     imageUrl: row.imageUrl,
+    carouselImageUrl: row.carouselImageUrl || '',
     displaySort: row.displaySort,
     status: row.status,
-    topicType: row.topicType
+    topicType: row.topicType,
+    startDate: row.startDate ? new Date(row.startDate) : null,
+    endDate: row.endDate ? new Date(row.endDate) : null
   }
   topicFormRef.value?.clearValidate()
   dialogVisible.value = true
@@ -414,6 +476,24 @@ const handleImageError = (event: any) => {
   event.target.style.display = 'none'
 }
 
+// 格式化时间
+const formatTime = (time: string | Date | null | undefined): string => {
+  if (!time) return '-'
+  try {
+    const date = new Date(time)
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    })
+  } catch {
+    return '-'
+  }
+}
+
 // 初始化
 onMounted(() => {
   fetchHotMatches()
@@ -481,10 +561,18 @@ onMounted(() => {
   text-align: center;
 }
 
+.preview-title {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
 .image-preview-large {
   max-width: 100%;
   max-height: 200px;
   border-radius: 4px;
+  border: 1px solid #f0f0f0;
 }
 
 .batch-add-container {

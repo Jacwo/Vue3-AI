@@ -16,6 +16,9 @@ export interface Topic {
   displaySort: number
   status: TopicStatus
   topicType: TopicType
+  carouselImageUrl?: string
+  startDate?: string
+  endDate?: string
   createTime?: string
   updateTime?: string
 }
@@ -29,6 +32,9 @@ export interface TopicFormData {
   displaySort: number
   status: TopicStatus
   topicType: TopicType
+  carouselImageUrl?: string
+  startDate?: string | Date | null
+  endDate?: string | Date | null
 }
 
 // 专题列表响应
