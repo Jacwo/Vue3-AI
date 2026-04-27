@@ -270,19 +270,21 @@ const fetchHotMatches = async () => {
   loading.value = true
   try {
     const response: any = await topicApi.getHotMatches()
-    const matchIds = (response?.data || response?.matchIds || response) || []
+    // 获取响应中的数据数组（后端返回的是 HotMatchRecord 数组）
+    const hotMatchRecords = response?.data || response || []
 
-    // 如果获取到的是matchIds，需要调用比赛详情接口获取详细信息
-    if (Array.isArray(matchIds) && matchIds.length > 0) {
+    // 从热门比赛记录中提取matchId，然后调用比赛详情接口获取详细信息
+    if (Array.isArray(hotMatchRecords) && hotMatchRecords.length > 0) {
       const matches: Match[] = []
-      for (const matchId of matchIds) {
+      for (const record of hotMatchRecords) {
         try {
+          const matchId = record.matchId
           const match = await matchApi.getMatchDetail(matchId)
           if (match) {
             matches.push(match)
           }
         } catch (error) {
-          console.error(`获取比赛 ${matchId} 详情失败:`, error)
+          console.error(`获取比赛 ${record.matchId} 详情失败:`, error)
         }
       }
       hotMatchList.value = matches

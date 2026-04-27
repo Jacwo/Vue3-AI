@@ -42,6 +42,16 @@ export interface BatchAddHotMatchesRequest {
   matchIds: number[]
 }
 
+// 热门比赛记录（后端返回的记录）
+export interface HotMatchRecord {
+  id: string | number
+  matchId: number
+  displaySort: number
+  status: number
+  deleted: number
+  createTime: string
+}
+
 export const topicApi = {
   // 保存专题（新增/编辑）
   saveTopic(data: TopicFormData, config?: CustomRequestConfig) {
@@ -62,6 +72,6 @@ export const topicApi = {
 
   // 获取热门比赛列表
   getHotMatches(config?: CustomRequestConfig) {
-    return apiClient.post<any>('/api/admin/topic/hot-match/list', {}, config)
+    return apiClient.post<HotMatchRecord[]>('/api/admin/topic/hot-match/list', {}, config)
   }
 }
