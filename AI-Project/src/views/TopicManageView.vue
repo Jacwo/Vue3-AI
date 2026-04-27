@@ -180,7 +180,7 @@ const topicForm = ref<TopicFormData>({
 })
 
 // 表单验证规则
-const formRules = {
+const formRules: any = {
   topicName: [
     { required: true, message: '请输入专题名称', trigger: 'blur' },
     { min: 1, max: 50, message: '专题名称长度应为1-50个字符', trigger: 'blur' }
@@ -190,12 +190,10 @@ const formRules = {
     { min: 1, max: 500, message: '专题描述长度应为1-500个字符', trigger: 'blur' }
   ],
   imageUrl: [
-    { required: true, message: '请输入图片地址', trigger: 'blur' },
-    { type: 'url', message: '请输入有效的图片地址', trigger: 'blur' }
+    { required: true, message: '请输入图片地址', trigger: 'blur' }
   ],
   displaySort: [
-    { required: true, message: '请输入显示排序', trigger: 'blur' },
-    { type: 'number', message: '显示排序必须是数字', trigger: 'blur' }
+    { required: true, message: '请输入显示排序', trigger: 'blur' }
   ],
   status: [
     { required: true, message: '请选择状态', trigger: 'change' }
@@ -213,8 +211,8 @@ const selectedMatchIds = ref<number[]>([])
 const fetchTopicList = async () => {
   loading.value = true
   try {
-    const response = await topicApi.getTopicList(activeTab.value)
-    topicList.value = response.data || []
+    const response: any = await topicApi.getTopicList(activeTab.value)
+    topicList.value = (response?.data || response) || []
   } catch (error: any) {
     ElMessage.error(error.message || '获取专题列表失败')
     topicList.value = []
