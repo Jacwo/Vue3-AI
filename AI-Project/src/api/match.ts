@@ -203,7 +203,7 @@ export const matchApi = {
   // 获取今天的比赛
   getTodayMatches(config?: CustomRequestConfig) {
     const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
-    return apiClient.get<RawMatch[]>('/match/list', {
+    return apiClient.get<RawMatch[]>('/api/match/list', {
       params: { date: today },
       ...config,
     }).then((data) => {
