@@ -125,6 +125,16 @@ const router = createRouter({
         title: '商品管理',
         requiresAdmin: true
       }
+    },
+    {
+      path: '/subscription',
+      name: 'Subscription',
+      component: () => import('@/views/SubscriptionView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: '订阅会员',
+        requiresAdmin: true
+      }
     }
   ]
 })
