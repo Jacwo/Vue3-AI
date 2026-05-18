@@ -111,12 +111,15 @@
     >
       <div class="qrcode-content">
         <div class="qrcode-wrapper">
-          <img v-if="qrcodeUrl" :src="qrcodeUrl" alt="支付二维码" class="qrcode-image" />
-          <div v-else class="qrcode-loading">
+          <div v-if="generatingQrcode" class="qrcode-loading">
             <el-icon class="is-loading" :size="48">
               <Loading />
             </el-icon>
             <span>正在生成二维码...</span>
+          </div>
+          <img v-else-if="qrcodeUrl" :src="qrcodeUrl" alt="支付二维码" class="qrcode-image" />
+          <div v-else class="qrcode-loading">
+            <span>二维码生成失败</span>
           </div>
         </div>
         <div class="order-info">
@@ -168,6 +171,7 @@ const selectedSku = ref<Sku | null>(null)
 const paying = ref(false)
 const qrcodeDialogVisible = ref(false)
 const qrcodeUrl = ref('')
+const generatingQrcode = ref(false)
 const currentOrder = ref<{
   outTradeNo: string
   amount: number
@@ -252,7 +256,10 @@ const handleSubscribe = async () => {
   if (!selectedSku.value || !userStore.userInfo) return
 
   paying.value = true
+  generatingQrcode.value = true
   qrcodeUrl.value = '' // 清空二维码
+  qrcodeDialogVisible.value = true
+
   try {
     const clientIp = await getClientIp()
     const orderData = {
@@ -269,7 +276,6 @@ const handleSubscribe = async () => {
       amount: res.amount,
       description: res.description || selectedSku.value.name
     }
-    qrcodeDialogVisible.value = true
 
     // 使用 qrcode 库生成二维码
     qrcodeUrl.value = await QRCode.toDataURL(res.codeUrl, {
@@ -285,6 +291,7 @@ const handleSubscribe = async () => {
     qrcodeDialogVisible.value = false
   } finally {
     paying.value = false
+    generatingQrcode.value = false
   }
 }
 
@@ -292,6 +299,7 @@ const handleSubscribe = async () => {
 const handleCancelPay = () => {
   qrcodeDialogVisible.value = false
   qrcodeUrl.value = ''
+  generatingQrcode.value = false
   currentOrder.value = null
 }
 
@@ -300,6 +308,7 @@ const handleCheckPayment = () => {
   ElMessage.success('支付成功！会员权益已到账')
   qrcodeDialogVisible.value = false
   qrcodeUrl.value = ''
+  generatingQrcode.value = false
   currentOrder.value = null
   selectedSku.value = null
 }
