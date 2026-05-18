@@ -251,7 +251,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { ElMessage, ElForm } from 'element-plus'
+import { ElMessage, ElMessageBox, ElForm } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { topicApi, type Topic, type TopicFormData, type TopicType } from '@/api/topic'
 import { matchApi, type Match } from '@/api/match'
@@ -456,8 +456,25 @@ const handleConfirmBatch = async () => {
 }
 
 // 移除热门比赛
-const handleRemoveHotMatch = (match: Match) => {
-  ElMessage.warning('移除功能需要后端支持对应接口')
+const handleRemoveHotMatch = async (match: Match) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要移除热门比赛 "${match.homeTeam} vs ${match.awayTeam}" 吗？`,
+      '确认移除',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    await topicApi.deleteHotMatch(match.id)
+    ElMessage.success('移除成功')
+    fetchHotMatches() // 刷新列表
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '移除失败')
+    }
+  }
 }
 
 // 获取比赛状态标签类型

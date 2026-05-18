@@ -79,5 +79,10 @@ export const topicApi = {
   // 获取热门比赛列表
   getHotMatches(config?: CustomRequestConfig) {
     return apiClient.post<HotMatchRecord[]>('/api/admin/topic/hot-match/list', {}, config)
+  },
+
+  // 删除热门比赛
+  deleteHotMatch(id: number | string, config?: CustomRequestConfig) {
+    return apiClient.delete(`/api/admin/topic/hot-match/delete/${id}`, config)
   }
 }

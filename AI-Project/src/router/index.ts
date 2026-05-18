@@ -115,6 +115,16 @@ const router = createRouter({
         title: '专题配置',
         requiresAdmin: true
       }
+    },
+    {
+      path: '/sku',
+      name: 'SkuManage',
+      component: () => import('@/views/SkuManageView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: '商品管理',
+        requiresAdmin: true
+      }
     }
   ]
 })
