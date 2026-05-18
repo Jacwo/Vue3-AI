@@ -30,7 +30,7 @@ const rules = {
 // 验证码相关
 const isSending = ref(false)
 const countdown = ref(0)
-const countdownInterval = ref<number | null>(null)
+const countdownInterval = ref<ReturnType<typeof setInterval> | null>(null)
 
 // 移动端检测
 const mobileMode = ref(isMobile())
