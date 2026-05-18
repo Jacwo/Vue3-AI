@@ -143,7 +143,7 @@
       </div>
       <template #footer>
         <el-button @click="handleCancelPay">取消支付</el-button>
-        <el-button type="primary" @click="handleCheckPayment">已完成支付</el-button>
+        <el-button type="primary" :loading="checkingPayment" @click="handleCheckPayment">已完成支付</el-button>
       </template>
     </el-dialog>
   </div>
@@ -172,6 +172,8 @@ const paying = ref(false)
 const qrcodeDialogVisible = ref(false)
 const qrcodeUrl = ref('')
 const generatingQrcode = ref(false)
+const checkingPayment = ref(false)
+const paymentCheckInterval = ref<ReturnType<typeof setInterval> | null>(null)
 const currentOrder = ref<{
   outTradeNo: string
   amount: number
@@ -277,6 +279,9 @@ const handleSubscribe = async () => {
     if (base64Qrcode.startsWith('data:')) {
       qrcodeUrl.value = base64Qrcode
     }
+
+    // 开始轮询查询订单状态
+    startPaymentCheck(res.outTradeNo)
   } catch (error: any) {
     ElMessage.error(error.message || '创建订单失败')
     qrcodeDialogVisible.value = false
@@ -286,22 +291,85 @@ const handleSubscribe = async () => {
   }
 }
 
+// 开始轮询查询订单状态
+const startPaymentCheck = (orderNo: string) => {
+  // 清除之前的轮询
+  stopPaymentCheck()
+
+  // 每3秒查询一次
+  paymentCheckInterval.value = setInterval(async () => {
+    try {
+      const res = await payApi.getOrderStatus(orderNo)
+      if (res.paid) {
+        // 支付成功
+        stopPaymentCheck()
+        handlePaymentSuccess(res)
+      } else if (res.status === 2 || res.status === 3) {
+        // 支付失败或已关闭
+        stopPaymentCheck()
+        handlePaymentFailed(res)
+      }
+    } catch {
+      // 查询失败，继续轮询
+    }
+  }, 3000)
+}
+
+// 停止轮询
+const stopPaymentCheck = () => {
+  if (paymentCheckInterval.value) {
+    clearInterval(paymentCheckInterval.value)
+    paymentCheckInterval.value = null
+  }
+}
+
+// 支付成功处理
+const handlePaymentSuccess = (orderStatus: any) => {
+  qrcodeDialogVisible.value = false
+  qrcodeUrl.value = ''
+  generatingQrcode.value = false
+  currentOrder.value = null
+  selectedSku.value = null
+  ElMessage.success('支付成功！会员权益已到账')
+}
+
+// 支付失败处理
+const handlePaymentFailed = (orderStatus: any) => {
+  qrcodeDialogVisible.value = false
+  qrcodeUrl.value = ''
+  generatingQrcode.value = false
+  currentOrder.value = null
+  ElMessage.error(orderStatus.tradeStateDesc || '支付失败，请重试')
+}
+
 // 取消支付
 const handleCancelPay = () => {
+  stopPaymentCheck()
   qrcodeDialogVisible.value = false
   qrcodeUrl.value = ''
   generatingQrcode.value = false
   currentOrder.value = null
 }
 
-// 检查支付状态
-const handleCheckPayment = () => {
-  ElMessage.success('支付成功！会员权益已到账')
-  qrcodeDialogVisible.value = false
-  qrcodeUrl.value = ''
-  generatingQrcode.value = false
-  currentOrder.value = null
-  selectedSku.value = null
+// 手动检查支付状态
+const handleCheckPayment = async () => {
+  if (!currentOrder.value) return
+
+  checkingPayment.value = true
+  try {
+    const res = await payApi.getOrderStatus(currentOrder.value.outTradeNo)
+    if (res.paid) {
+      handlePaymentSuccess(res)
+    } else if (res.status === 2 || res.status === 3) {
+      handlePaymentFailed(res)
+    } else {
+      ElMessage.info('订单尚未支付，请完成支付后重试')
+    }
+  } catch (error: any) {
+    ElMessage.error(error.message || '查询订单状态失败')
+  } finally {
+    checkingPayment.value = false
+  }
 }
 
 // 初始化
