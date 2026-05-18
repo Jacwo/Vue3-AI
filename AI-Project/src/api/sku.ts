@@ -74,35 +74,35 @@ export interface SkuListQuery {
 export const skuApi = {
   // 查询商品列表
   getSkuList(query?: SkuListQuery, config?: CustomRequestConfig) {
-    return apiClient.get<Sku[]>('/api/sku/list', {
+    return apiClient.get('/api/sku/list', {
       ...config,
       params: query
-    })
+    }) as Promise<Sku[]>
   },
 
   // 根据ID查询商品详情
   getSkuById(id: number, config?: CustomRequestConfig) {
-    return apiClient.get<Sku>(`/api/sku/${id}`, config)
+    return apiClient.get(`/api/sku/${id}`, config) as Promise<Sku>
   },
 
   // 根据SKU编码查询
   getSkuByCode(skuCode: string, config?: CustomRequestConfig) {
-    return apiClient.get<Sku>(`/api/sku/code/${skuCode}`, config)
+    return apiClient.get(`/api/sku/code/${skuCode}`, config) as Promise<Sku>
   },
 
   // 新增商品
   createSku(data: SkuCreateData, config?: CustomRequestConfig) {
-    return apiClient.post<Sku>('/api/sku', data, config)
+    return apiClient.post('/api/sku', data, config) as Promise<Sku>
   },
 
   // 修改商品
   updateSku(data: SkuUpdateData, config?: CustomRequestConfig) {
-    return apiClient.put<Sku>('/api/sku', data, config)
+    return apiClient.put('/api/sku', data, config) as Promise<Sku>
   },
 
   // 删除商品
   deleteSku(id: number, config?: CustomRequestConfig) {
-    return apiClient.delete(`/api/sku/${id}`, config)
+    return apiClient.delete(`/api/sku/${id}`, config) as Promise<any>
   },
 
   // 批量删除商品
@@ -110,6 +110,6 @@ export const skuApi = {
     return apiClient.delete('/api/sku/batch', {
       ...config,
       data: ids
-    })
+    }) as Promise<any>
   }
 }
