@@ -1,95 +1,87 @@
 import apiClient from './index'
 import type { CustomRequestConfig } from './index'
 
-// 商品状态枚举
-export type SkuStatus = 0 | 1 // 0: 下架, 1: 上架
+// 商品状态：0-下架 1-上架 2-售罄
+export type SkuStatus = 0 | 1 | 2
 
-// 商品分类
-export interface Category {
-  id: string
-  name: string
-  parentId?: string
-  level: number
-}
+// 商品分类：1-VIP会员 2-道具 3-服务
+export type SkuCategory = 1 | 2 | 3
 
-// 商品数据类型
+// 商品数据类型（后端响应）
 export interface Sku {
-  id?: string
+  id: number
   skuCode: string
-  skuName: string
-  categoryId: string
+  name: string
+  description?: string
+  category: SkuCategory
   categoryName?: string
   price: number
-  costPrice?: number
+  priceYuan?: string
+  originalPrice?: number
+  originalPriceYuan?: string
   stock: number
   status: SkuStatus
-  description?: string
-  images?: string[]
-  specs?: Record<string, any>
+  statusName?: string
+  mainImage?: string
+  validDays?: number
+  sortOrder?: number
+  limitPerUser?: number
+  virtualFlag?: number
   createTime?: string
   updateTime?: string
 }
 
-// 商品表单数据（提交表单用）
-export interface SkuFormData {
-  id?: string
+// 新增商品请求参数
+export interface SkuCreateData {
   skuCode: string
-  skuName: string
-  categoryId: string
-  price: number
-  costPrice?: number
-  stock: number
-  status: SkuStatus
+  name: string
   description?: string
-  images?: string[]
-  specs?: Record<string, any>
+  category: SkuCategory
+  price: number
+  originalPrice?: number
+  stock?: number
+  limitPerUser?: number
+  mainImage?: string
+  validDays?: number
+  virtualFlag?: number
+  status?: SkuStatus
+  sortOrder?: number
+}
+
+// 修改商品请求参数
+export interface SkuUpdateData {
+  id: number
+  name?: string
+  description?: string
+  category?: SkuCategory
+  price?: number
+  originalPrice?: number
+  stock?: number
+  limitPerUser?: number
+  mainImage?: string
+  validDays?: number
+  virtualFlag?: number
+  status?: SkuStatus
+  sortOrder?: number
 }
 
 // 商品列表查询参数
 export interface SkuListQuery {
-  pageNum?: number
-  pageSize?: number
   status?: SkuStatus
-  categoryId?: string
-  skuName?: string
-  skuCode?: string
-}
-
-// 商品列表响应
-export interface SkuListResponse {
-  data: Sku[]
-  total: number
-  pageNum: number
-  pageSize: number
-}
-
-// 批量删除请求
-export interface BatchDeleteRequest {
-  ids: string[]
-}
-
-// 状态修改请求
-export interface StatusChangeRequest {
-  status: SkuStatus
-}
-
-// 库存操作请求
-export interface StockOperationRequest {
-  quantity: number
-  remark?: string
+  category?: SkuCategory
 }
 
 export const skuApi = {
-  // 分页查询商品列表（支持 status/category 筛选）
-  getSkuList(query: SkuListQuery, config?: CustomRequestConfig) {
-    return apiClient.get<SkuListResponse>('/api/sku/list', {
+  // 查询商品列表
+  getSkuList(query?: SkuListQuery, config?: CustomRequestConfig) {
+    return apiClient.get<Sku[]>('/api/sku/list', {
       ...config,
       params: query
     })
   },
 
   // 根据ID查询商品详情
-  getSkuById(id: string, config?: CustomRequestConfig) {
+  getSkuById(id: number, config?: CustomRequestConfig) {
     return apiClient.get<Sku>(`/api/sku/${id}`, config)
   },
 
@@ -99,40 +91,25 @@ export const skuApi = {
   },
 
   // 新增商品
-  createSku(data: SkuFormData, config?: CustomRequestConfig) {
+  createSku(data: SkuCreateData, config?: CustomRequestConfig) {
     return apiClient.post<Sku>('/api/sku', data, config)
   },
 
   // 修改商品
-  updateSku(id: string, data: SkuFormData, config?: CustomRequestConfig) {
-    return apiClient.put<Sku>(`/api/sku/${id}`, data, config)
+  updateSku(data: SkuUpdateData, config?: CustomRequestConfig) {
+    return apiClient.put<Sku>('/api/sku', data, config)
   },
 
   // 删除商品
-  deleteSku(id: string, config?: CustomRequestConfig) {
+  deleteSku(id: number, config?: CustomRequestConfig) {
     return apiClient.delete(`/api/sku/${id}`, config)
   },
 
   // 批量删除商品
-  batchDeleteSku(data: BatchDeleteRequest, config?: CustomRequestConfig) {
+  batchDeleteSku(ids: number[], config?: CustomRequestConfig) {
     return apiClient.delete('/api/sku/batch', {
       ...config,
-      data
+      data: ids
     })
-  },
-
-  // 修改商品状态（上架/下架）
-  updateSkuStatus(id: string, data: StatusChangeRequest, config?: CustomRequestConfig) {
-    return apiClient.patch(`/api/sku/${id}/status`, data, config)
-  },
-
-  // 扣减库存
-  deductStock(id: string, data: StockOperationRequest, config?: CustomRequestConfig) {
-    return apiClient.patch(`/api/sku/${id}/stock/deduct`, data, config)
-  },
-
-  // 增加库存
-  addStock(id: string, data: StockOperationRequest, config?: CustomRequestConfig) {
-    return apiClient.patch(`/api/sku/${id}/stock/add`, data, config)
   }
 }

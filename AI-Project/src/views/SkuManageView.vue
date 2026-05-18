@@ -7,25 +7,22 @@
     <!-- 搜索筛选区域 -->
     <div class="filter-section">
       <el-form :inline="true" :model="queryForm" class="filter-form">
-        <el-form-item label="商品名称">
-          <el-input v-model="queryForm.skuName" placeholder="请输入商品名称" clearable @clear="handleSearch" />
-        </el-form-item>
-        <el-form-item label="SKU编码">
-          <el-input v-model="queryForm.skuCode" placeholder="请输入SKU编码" clearable @clear="handleSearch" />
-        </el-form-item>
         <el-form-item label="分类">
-          <el-select v-model="queryForm.categoryId" placeholder="全部分类" clearable @change="handleSearch">
-            <el-option v-for="cat in categoryList" :key="cat.id" :label="cat.name" :value="cat.id" />
+          <el-select v-model="queryForm.category" placeholder="全部分类" clearable @change="fetchSkuList">
+            <el-option label="VIP会员" :value="1" />
+            <el-option label="道具" :value="2" />
+            <el-option label="服务" :value="3" />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="queryForm.status" placeholder="全部状态" clearable @change="handleSearch">
+          <el-select v-model="queryForm.status" placeholder="全部状态" clearable @change="fetchSkuList">
             <el-option label="上架" :value="1" />
             <el-option label="下架" :value="0" />
+            <el-option label="售罄" :value="2" />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleSearch">查询</el-button>
+          <el-button type="primary" @click="fetchSkuList">查询</el-button>
           <el-button @click="handleResetQuery">重置</el-button>
         </el-form-item>
       </el-form>
@@ -34,8 +31,8 @@
     <!-- 操作区域 -->
     <div class="action-bar">
       <el-button type="primary" @click="handleAdd">新增商品</el-button>
-      <el-button type="danger" :disabled="!selectedIds.length" @click="handleBatchDelete">
-        批量删除{{ selectedIds.length ? `(${selectedIds.length})` : '' }}
+      <el-button type="danger" :disabled="!selectedRows.length" @click="handleBatchDelete">
+        批量删除{{ selectedRows.length ? `(${selectedRows.length})` : '' }}
       </el-button>
     </div>
 
@@ -50,19 +47,32 @@
       >
         <el-table-column type="selection" width="50" align="center" />
         <el-table-column prop="skuCode" label="SKU编码" min-width="130" />
-        <el-table-column prop="skuName" label="商品名称" min-width="160" show-overflow-tooltip />
-        <el-table-column prop="categoryName" label="分类" width="120" />
-        <el-table-column prop="price" label="价格" width="100" align="right">
+        <el-table-column prop="name" label="商品名称" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="categoryName" label="分类" width="100" />
+        <el-table-column prop="priceYuan" label="价格" width="100" align="right">
           <template #default="{ row }">
-            ¥{{ (row.price / 100).toFixed(2) }}
+            ¥{{ row.priceYuan || (row.price / 100).toFixed(2) }}
           </template>
         </el-table-column>
-        <el-table-column prop="stock" label="库存" width="90" align="center" />
-        <el-table-column prop="status" label="状态" width="90" align="center">
+        <el-table-column prop="originalPriceYuan" label="原价" width="100" align="right">
           <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small">
-              {{ row.status === 1 ? '上架' : '下架' }}
+            <span v-if="row.originalPrice" class="original-price">
+              ¥{{ row.originalPriceYuan || (row.originalPrice / 100).toFixed(2) }}
+            </span>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="stock" label="库存" width="80" align="center" />
+        <el-table-column prop="status" label="状态" width="80" align="center">
+          <template #default="{ row }">
+            <el-tag :type="statusTagType(row.status)" size="small">
+              {{ row.statusName || statusLabel(row.status) }}
             </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="validDays" label="有效天数" width="90" align="center">
+          <template #default="{ row }">
+            {{ row.validDays ? row.validDays + '天' : '永久' }}
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间" min-width="160">
@@ -70,62 +80,43 @@
             {{ formatTime(row.createTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="280" align="center" fixed="right">
+        <el-table-column label="操作" width="140" align="center" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button
-              link
-              :type="row.status === 1 ? 'warning' : 'success'"
-              size="small"
-              @click="handleToggleStatus(row)"
-            >
-              {{ row.status === 1 ? '下架' : '上架' }}
-            </el-button>
-            <el-button link type="primary" size="small" @click="handleStockOper(row, 'add')">加库存</el-button>
-            <el-button link type="warning" size="small" @click="handleStockOper(row, 'deduct')">减库存</el-button>
             <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
-
-      <!-- 分页 -->
-      <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="queryForm.pageNum"
-          v-model:page-size="queryForm.pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handlePageChange"
-        />
-      </div>
     </div>
 
     <!-- 新增/编辑对话框 -->
     <el-dialog
       v-model="formDialogVisible"
       :title="isEdit ? '编辑商品' : '新增商品'"
-      width="600px"
+      width="640px"
       :close-on-click-modal="false"
     >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="90px">
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px">
         <el-form-item label="SKU编码" prop="skuCode">
-          <el-input v-model="formData.skuCode" placeholder="请输入SKU编码" :disabled="isEdit" />
+          <el-input v-model="formData.skuCode" placeholder="请输入SKU编码" :disabled="isEdit" maxlength="64" />
         </el-form-item>
-        <el-form-item label="商品名称" prop="skuName">
-          <el-input v-model="formData.skuName" placeholder="请输入商品名称" />
+        <el-form-item label="商品名称" prop="name">
+          <el-input v-model="formData.name" placeholder="请输入商品名称" maxlength="128" />
         </el-form-item>
-        <el-form-item label="分类" prop="categoryId">
-          <el-select v-model="formData.categoryId" placeholder="请选择分类" style="width: 100%">
-            <el-option v-for="cat in categoryList" :key="cat.id" :label="cat.name" :value="cat.id" />
+        <el-form-item label="分类" prop="category">
+          <el-select v-model="formData.category" placeholder="请选择分类" style="width: 100%">
+            <el-option label="VIP会员" :value="1" />
+            <el-option label="道具" :value="2" />
+            <el-option label="服务" :value="3" />
           </el-select>
         </el-form-item>
-        <el-form-item label="价格(元)" prop="price">
-          <el-input-number v-model="formData.priceYuan" :min="0.01" :precision="2" :step="1" style="width: 100%" />
+        <el-form-item label="价格(分)" prop="price">
+          <el-input-number v-model="formData.price" :min="1" :step="100" style="width: 100%" />
+          <span class="form-tip">≈ ¥{{ (formData.price / 100).toFixed(2) }}</span>
         </el-form-item>
-        <el-form-item label="成本价(元)" prop="costPrice">
-          <el-input-number v-model="formData.costPriceYuan" :min="0" :precision="2" :step="1" style="width: 100%" />
+        <el-form-item label="原价(分)" prop="originalPrice">
+          <el-input-number v-model="formData.originalPrice" :min="0" :step="100" style="width: 100%" />
+          <span v-if="formData.originalPrice" class="form-tip">≈ ¥{{ (formData.originalPrice / 100).toFixed(2) }}</span>
         </el-form-item>
         <el-form-item label="库存" prop="stock">
           <el-input-number v-model="formData.stock" :min="0" :step="1" style="width: 100%" />
@@ -136,8 +127,28 @@
             <el-radio :value="0">下架</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="描述" prop="description">
-          <el-input v-model="formData.description" type="textarea" :rows="3" placeholder="请输入商品描述" />
+        <el-form-item label="有效天数" prop="validDays">
+          <el-input-number v-model="formData.validDays" :min="0" :step="1" style="width: 100%" />
+          <span class="form-tip">0表示永久</span>
+        </el-form-item>
+        <el-form-item label="限购数量" prop="limitPerUser">
+          <el-input-number v-model="formData.limitPerUser" :min="0" :step="1" style="width: 100%" />
+          <span class="form-tip">0表示不限购</span>
+        </el-form-item>
+        <el-form-item label="排序权重" prop="sortOrder">
+          <el-input-number v-model="formData.sortOrder" :min="0" :step="1" style="width: 100%" />
+        </el-form-item>
+        <el-form-item label="虚拟商品" prop="virtualFlag">
+          <el-radio-group v-model="formData.virtualFlag">
+            <el-radio :value="1">虚拟</el-radio>
+            <el-radio :value="0">实物</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="主图URL" prop="mainImage">
+          <el-input v-model="formData.mainImage" placeholder="请输入主图URL" />
+        </el-form-item>
+        <el-form-item label="商品描述" prop="description">
+          <el-input v-model="formData.description" type="textarea" :rows="3" placeholder="请输入商品描述" maxlength="512" show-word-limit />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -145,110 +156,68 @@
         <el-button type="primary" @click="handleSubmitForm" :loading="formLoading">确定</el-button>
       </template>
     </el-dialog>
-
-    <!-- 库存操作对话框 -->
-    <el-dialog v-model="stockDialogVisible" :title="stockDialogTitle" width="400px">
-      <el-form :model="stockForm" label-width="80px">
-        <el-form-item label="商品名称">
-          <span>{{ stockForm.skuName }}</span>
-        </el-form-item>
-        <el-form-item label="当前库存">
-          <span>{{ stockForm.currentStock }}</span>
-        </el-form-item>
-        <el-form-item label="操作数量">
-          <el-input-number v-model="stockForm.quantity" :min="1" :max="99999" />
-        </el-form-item>
-        <el-form-item label="备注">
-          <el-input v-model="stockForm.remark" placeholder="请输入备注（选填）" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="stockDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleConfirmStock" :loading="stockLoading">确定</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { skuApi, type Sku, type SkuListQuery, type SkuFormData } from '@/api/sku'
-
-// 分类列表（可根据实际接口替换）
-const categoryList = ref([
-  { id: '1', name: '积分包', level: 1 },
-  { id: '2', name: '会员卡', level: 1 },
-  { id: '3', name: '其他', level: 1 }
-])
+import { skuApi, type Sku, type SkuListQuery, type SkuCreateData, type SkuUpdateData, type SkuStatus } from '@/api/sku'
 
 // 查询参数
 const queryForm = reactive<SkuListQuery>({
-  pageNum: 1,
-  pageSize: 10,
-  skuName: '',
-  skuCode: '',
-  categoryId: '',
-  status: undefined
+  status: undefined,
+  category: undefined
 })
 
 // 列表数据
 const skuList = ref<Sku[]>([])
 const loading = ref(false)
-const total = ref(0)
 
 // 多选
-const selectedIds = ref<string[]>([])
+const selectedRows = ref<Sku[]>([])
 
 // 表单相关
 const formDialogVisible = ref(false)
 const formLoading = ref(false)
 const isEdit = ref(false)
-const editId = ref('')
 const formRef = ref<FormInstance>()
 
-const formData = reactive<{
-  skuCode: string
-  skuName: string
-  categoryId: string
-  priceYuan: number
-  costPriceYuan: number
-  stock: number
-  status: 0 | 1
-  description: string
-}>({
+const formData = reactive({
+  id: undefined as number | undefined,
   skuCode: '',
-  skuName: '',
-  categoryId: '',
-  priceYuan: 0.01,
-  costPriceYuan: 0,
+  name: '',
+  description: '',
+  category: 1 as 1 | 2 | 3,
+  price: 100,
+  originalPrice: 0,
   stock: 0,
-  status: 1,
-  description: ''
+  status: 1 as SkuStatus,
+  validDays: 0,
+  limitPerUser: 0,
+  sortOrder: 0,
+  virtualFlag: 1,
+  mainImage: ''
 })
 
 const formRules = reactive<FormRules>({
   skuCode: [{ required: true, message: '请输入SKU编码', trigger: 'blur' }],
-  skuName: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
-  categoryId: [{ required: true, message: '请选择分类', trigger: 'change' }],
-  priceYuan: [{ required: true, message: '请输入价格', trigger: 'blur' }],
-  stock: [{ required: true, message: '请输入库存', trigger: 'blur' }]
+  name: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
+  category: [{ required: true, message: '请选择分类', trigger: 'change' }],
+  price: [{ required: true, message: '请输入价格', trigger: 'blur' }]
 })
 
-// 库存操作相关
-const stockDialogVisible = ref(false)
-const stockLoading = ref(false)
-const stockType = ref<'add' | 'deduct'>('add')
-const stockForm = reactive({
-  skuId: '',
-  skuName: '',
-  currentStock: 0,
-  quantity: 1,
-  remark: ''
-})
+// 状态标签
+const statusLabel = (status: SkuStatus) => {
+  const map: Record<number, string> = { 0: '下架', 1: '上架', 2: '售罄' }
+  return map[status] || '未知'
+}
 
-const stockDialogTitle = computed(() => stockType.value === 'add' ? '增加库存' : '扣减库存')
+const statusTagType = (status: SkuStatus) => {
+  const map: Record<number, string> = { 0: 'info', 1: 'success', 2: 'warning' }
+  return map[status] || 'info'
+}
 
 // 格式化时间
 const formatTime = (time?: string) => {
@@ -261,8 +230,7 @@ const fetchSkuList = async () => {
   loading.value = true
   try {
     const res = await skuApi.getSkuList(queryForm)
-    skuList.value = res.data || []
-    total.value = res.total || 0
+    skuList.value = res || []
   } catch (error: any) {
     ElMessage.error(error.message || '获取商品列表失败')
     skuList.value = []
@@ -271,49 +239,35 @@ const fetchSkuList = async () => {
   }
 }
 
-// 查询
-const handleSearch = () => {
-  queryForm.pageNum = 1
-  fetchSkuList()
-}
-
 // 重置查询
 const handleResetQuery = () => {
-  queryForm.skuName = ''
-  queryForm.skuCode = ''
-  queryForm.categoryId = ''
   queryForm.status = undefined
-  queryForm.pageNum = 1
-  fetchSkuList()
-}
-
-// 分页
-const handleSizeChange = () => {
-  queryForm.pageNum = 1
-  fetchSkuList()
-}
-
-const handlePageChange = () => {
+  queryForm.category = undefined
   fetchSkuList()
 }
 
 // 多选
 const handleSelectionChange = (rows: Sku[]) => {
-  selectedIds.value = rows.map(r => r.id!).filter(Boolean)
+  selectedRows.value = rows
 }
 
 // 重置表单
 const resetFormData = () => {
+  formData.id = undefined
   formData.skuCode = ''
-  formData.skuName = ''
-  formData.categoryId = ''
-  formData.priceYuan = 0.01
-  formData.costPriceYuan = 0
+  formData.name = ''
+  formData.description = ''
+  formData.category = 1
+  formData.price = 100
+  formData.originalPrice = 0
   formData.stock = 0
   formData.status = 1
-  formData.description = ''
+  formData.validDays = 0
+  formData.limitPerUser = 0
+  formData.sortOrder = 0
+  formData.virtualFlag = 1
+  formData.mainImage = ''
   isEdit.value = false
-  editId.value = ''
 }
 
 // 新增
@@ -325,15 +279,20 @@ const handleAdd = () => {
 // 编辑
 const handleEdit = (row: Sku) => {
   isEdit.value = true
-  editId.value = row.id!
+  formData.id = row.id
   formData.skuCode = row.skuCode
-  formData.skuName = row.skuName
-  formData.categoryId = row.categoryId
-  formData.priceYuan = row.price ? row.price / 100 : 0
-  formData.costPriceYuan = row.costPrice ? row.costPrice / 100 : 0
+  formData.name = row.name
+  formData.description = row.description || ''
+  formData.category = row.category
+  formData.price = row.price
+  formData.originalPrice = row.originalPrice || 0
   formData.stock = row.stock
   formData.status = row.status
-  formData.description = row.description || ''
+  formData.validDays = row.validDays || 0
+  formData.limitPerUser = row.limitPerUser || 0
+  formData.sortOrder = row.sortOrder || 0
+  formData.virtualFlag = row.virtualFlag ?? 1
+  formData.mainImage = row.mainImage || ''
   formDialogVisible.value = true
 }
 
@@ -345,22 +304,41 @@ const handleSubmitForm = async () => {
 
   formLoading.value = true
   try {
-    const submitData: SkuFormData = {
-      skuCode: formData.skuCode,
-      skuName: formData.skuName,
-      categoryId: formData.categoryId,
-      price: Math.round(formData.priceYuan * 100), // 元转分
-      costPrice: Math.round(formData.costPriceYuan * 100),
-      stock: formData.stock,
-      status: formData.status,
-      description: formData.description
-    }
-
-    if (isEdit.value) {
-      await skuApi.updateSku(editId.value, submitData)
+    if (isEdit.value && formData.id) {
+      const updateData: SkuUpdateData = {
+        id: formData.id,
+        name: formData.name,
+        description: formData.description || undefined,
+        category: formData.category,
+        price: formData.price,
+        originalPrice: formData.originalPrice || undefined,
+        stock: formData.stock,
+        status: formData.status,
+        validDays: formData.validDays,
+        limitPerUser: formData.limitPerUser,
+        sortOrder: formData.sortOrder,
+        virtualFlag: formData.virtualFlag,
+        mainImage: formData.mainImage || undefined
+      }
+      await skuApi.updateSku(updateData)
       ElMessage.success('修改成功')
     } else {
-      await skuApi.createSku(submitData)
+      const createData: SkuCreateData = {
+        skuCode: formData.skuCode,
+        name: formData.name,
+        description: formData.description || undefined,
+        category: formData.category,
+        price: formData.price,
+        originalPrice: formData.originalPrice || undefined,
+        stock: formData.stock,
+        status: formData.status,
+        validDays: formData.validDays,
+        limitPerUser: formData.limitPerUser,
+        sortOrder: formData.sortOrder,
+        virtualFlag: formData.virtualFlag,
+        mainImage: formData.mainImage || undefined
+      }
+      await skuApi.createSku(createData)
       ElMessage.success('新增成功')
     }
     formDialogVisible.value = false
@@ -374,13 +352,13 @@ const handleSubmitForm = async () => {
 
 // 删除
 const handleDelete = (row: Sku) => {
-  ElMessageBox.confirm(`确认删除商品「${row.skuName}」？`, '删除确认', {
+  ElMessageBox.confirm(`确认删除商品「${row.name}」？`, '删除确认', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
   }).then(async () => {
     try {
-      await skuApi.deleteSku(row.id!)
+      await skuApi.deleteSku(row.id)
       ElMessage.success('删除成功')
       fetchSkuList()
     } catch (error: any) {
@@ -391,79 +369,20 @@ const handleDelete = (row: Sku) => {
 
 // 批量删除
 const handleBatchDelete = () => {
-  ElMessageBox.confirm(`确认批量删除选中的 ${selectedIds.value.length} 个商品？`, '批量删除确认', {
+  ElMessageBox.confirm(`确认批量删除选中的 ${selectedRows.value.length} 个商品？`, '批量删除确认', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
   }).then(async () => {
     try {
-      await skuApi.batchDeleteSku({ ids: selectedIds.value })
+      const ids = selectedRows.value.map(r => r.id)
+      await skuApi.batchDeleteSku(ids)
       ElMessage.success('批量删除成功')
       fetchSkuList()
     } catch (error: any) {
       ElMessage.error(error.message || '批量删除失败')
     }
   }).catch(() => {})
-}
-
-// 切换状态（上架/下架）
-const handleToggleStatus = (row: Sku) => {
-  const newStatus = row.status === 1 ? 0 : 1
-  const action = newStatus === 1 ? '上架' : '下架'
-  ElMessageBox.confirm(`确认将商品「${row.skuName}」${action}？`, '状态变更确认', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(async () => {
-    try {
-      await skuApi.updateSkuStatus(row.id!, { status: newStatus as 0 | 1 })
-      ElMessage.success(`${action}成功`)
-      fetchSkuList()
-    } catch (error: any) {
-      ElMessage.error(error.message || `${action}失败`)
-    }
-  }).catch(() => {})
-}
-
-// 库存操作
-const handleStockOper = (row: Sku, type: 'add' | 'deduct') => {
-  stockType.value = type
-  stockForm.skuId = row.id!
-  stockForm.skuName = row.skuName
-  stockForm.currentStock = row.stock
-  stockForm.quantity = 1
-  stockForm.remark = ''
-  stockDialogVisible.value = true
-}
-
-// 确认库存操作
-const handleConfirmStock = async () => {
-  if (stockForm.quantity < 1) {
-    ElMessage.error('操作数量不能小于1')
-    return
-  }
-  if (stockType.value === 'deduct' && stockForm.quantity > stockForm.currentStock) {
-    ElMessage.error('扣减数量不能超过当前库存')
-    return
-  }
-
-  stockLoading.value = true
-  try {
-    const params = { quantity: stockForm.quantity, remark: stockForm.remark }
-    if (stockType.value === 'add') {
-      await skuApi.addStock(stockForm.skuId, params)
-      ElMessage.success('增加库存成功')
-    } else {
-      await skuApi.deductStock(stockForm.skuId, params)
-      ElMessage.success('扣减库存成功')
-    }
-    stockDialogVisible.value = false
-    fetchSkuList()
-  } catch (error: any) {
-    ElMessage.error(error.message || '操作失败')
-  } finally {
-    stockLoading.value = false
-  }
 }
 
 // 初始化
@@ -517,10 +436,15 @@ onMounted(() => {
   -webkit-overflow-scrolling: touch;
 }
 
-.pagination-wrapper {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 16px;
+.original-price {
+  color: #999;
+  text-decoration: line-through;
+}
+
+.form-tip {
+  margin-left: 8px;
+  color: #999;
+  font-size: 12px;
 }
 
 @media (max-width: 768px) {
@@ -551,22 +475,12 @@ onMounted(() => {
   }
 
   .table-section :deep(.el-table) {
-    min-width: 900px;
+    min-width: 1000px;
     font-size: 12px;
   }
 
   .table-section :deep(.el-table__cell) {
     padding: 8px 4px;
-  }
-
-  .pagination-wrapper {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .pagination-wrapper :deep(.el-pagination) {
-    flex-wrap: wrap;
-    justify-content: center;
   }
 }
 
@@ -580,7 +494,7 @@ onMounted(() => {
   }
 
   .table-section :deep(.el-table) {
-    min-width: 700px;
+    min-width: 800px;
     font-size: 11px;
   }
 
