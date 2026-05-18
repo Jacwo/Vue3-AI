@@ -240,18 +240,7 @@ const getValidityText = (sku: Sku): string => {
   return '永久有效'
 }
 
-// 获取客户端IP
-const getClientIp = async (): Promise<string> => {
-  try {
-    const response = await fetch('https://api.ipify.org?format=json')
-    const data = await response.json()
-    return data.ip || '127.0.0.1'
-  } catch {
-    return '127.0.0.1'
-  }
-}
 
-// 订阅/支付
 const handleSubscribe = async () => {
   if (!selectedSku.value || !userStore.userInfo) return
 
@@ -261,12 +250,10 @@ const handleSubscribe = async () => {
   qrcodeDialogVisible.value = true
 
   try {
-    const clientIp = await getClientIp()
     const orderData = {
       skuId: selectedSku.value.id,
       amount: selectedSku.value.price,
       attach: `subscribe_${selectedSku.value.skuCode}`,
-      clientIp,
       userId: userStore.userInfo.id
     }
 
@@ -277,8 +264,8 @@ const handleSubscribe = async () => {
       description: res.description || selectedSku.value.name
     }
 
-    // 使用 qrcode 库生成二维码
-    qrcodeUrl.value = await QRCode.toDataURL(res.codeUrl, {
+    // 使用 qrcode 库生成二维码（只接受 base64 数据）
+    const base64Qrcode = await QRCode.toDataURL(res.codeUrl, {
       width: 200,
       margin: 2,
       color: {
@@ -286,6 +273,10 @@ const handleSubscribe = async () => {
         light: '#ffffff'
       }
     })
+    // 确保只有 base64 图片才显示
+    if (base64Qrcode.startsWith('data:')) {
+      qrcodeUrl.value = base64Qrcode
+    }
   } catch (error: any) {
     ElMessage.error(error.message || '创建订单失败')
     qrcodeDialogVisible.value = false

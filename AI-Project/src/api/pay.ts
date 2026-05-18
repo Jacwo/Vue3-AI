@@ -9,8 +9,6 @@ export interface PayOrderRequest {
   amount: number
   /** 附加数据 */
   attach?: string
-  /** 用户终端IP */
-  clientIp: string
   /** 用户ID */
   userId: string
 }
