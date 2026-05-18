@@ -150,6 +150,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
+import QRCode from 'qrcode'
 import { skuApi, type Sku } from '@/api/sku'
 import { payApi } from '@/api/pay'
 import { useUserStore } from '@/stores/user'
@@ -251,6 +252,7 @@ const handleSubscribe = async () => {
   if (!selectedSku.value || !userStore.userInfo) return
 
   paying.value = true
+  qrcodeUrl.value = '' // 清空二维码
   try {
     const clientIp = await getClientIp()
     const orderData = {
@@ -267,10 +269,20 @@ const handleSubscribe = async () => {
       amount: res.amount,
       description: res.description || selectedSku.value.name
     }
-    qrcodeUrl.value = res.codeUrl
     qrcodeDialogVisible.value = true
+
+    // 使用 qrcode 库生成二维码
+    qrcodeUrl.value = await QRCode.toDataURL(res.codeUrl, {
+      width: 200,
+      margin: 2,
+      color: {
+        dark: '#000000',
+        light: '#ffffff'
+      }
+    })
   } catch (error: any) {
     ElMessage.error(error.message || '创建订单失败')
+    qrcodeDialogVisible.value = false
   } finally {
     paying.value = false
   }
