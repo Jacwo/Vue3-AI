@@ -261,6 +261,8 @@ const activeTab = ref<TopicType>('HOT_LEAGUE')
 const topicList = ref<Topic[]>([])
 const hotMatchList = ref<Match[]>([])
 const loading = ref(false)
+// 存储 matchId -> HotMatchRecord.id 的映射
+const matchIdToRecordId = ref<Map<number, number | string>>(new Map())
 const dialogVisible = ref(false)
 const dialogTitle = computed(() => (topicForm.value.id ? '编辑专题' : '新增专题'))
 const submitLoading = ref(false)
@@ -324,6 +326,7 @@ const fetchTopicList = async () => {
 // 获取热门比赛列表
 const fetchHotMatches = async () => {
   loading.value = true
+  matchIdToRecordId.value.clear()
   try {
     const response: any = await topicApi.getHotMatches()
     // 获取响应中的数据数组（后端返回的是 HotMatchRecord 数组）
@@ -333,6 +336,8 @@ const fetchHotMatches = async () => {
     if (Array.isArray(hotMatchRecords) && hotMatchRecords.length > 0) {
       const matches: Match[] = []
       for (const record of hotMatchRecords) {
+        // 保存 matchId -> record.id 的映射
+        matchIdToRecordId.value.set(record.matchId, record.id)
         try {
           const matchId = record.matchId
           const match = await matchApi.getMatchDetail(matchId)
@@ -467,7 +472,12 @@ const handleRemoveHotMatch = async (match: Match) => {
         type: 'warning'
       }
     )
-    await topicApi.deleteHotMatch(match.id)
+    const recordId = matchIdToRecordId.value.get(match.id)
+    if (!recordId) {
+      ElMessage.error('移除失败：未找到记录ID')
+      return
+    }
+    await topicApi.deleteHotMatch(recordId)
     ElMessage.success('移除成功')
     fetchHotMatches() // 刷新列表
   } catch (error: any) {
