@@ -241,7 +241,7 @@ onUnmounted(() => {
     <div class="login-card">
       <div class="login-header">
         <h2>手机验证码登录</h2>
-        <p>欢迎使用足球分析助手</p>
+        <p>欢迎使用AI足球智能体</p>
       </div>
 
       <div class="login-form">

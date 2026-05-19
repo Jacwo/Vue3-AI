@@ -53,7 +53,7 @@ const closeMobileMenu = () => {
         <div class="header-left">
           <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="60" height="60" />
           <div class="app-title">
-            <h1>足球分析助手</h1>
+            <h1>AI足球智能体</h1>
             <p class="subtitle">专业的足球比赛分析与预测</p>
           </div>
         </div>
