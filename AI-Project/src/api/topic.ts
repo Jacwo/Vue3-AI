@@ -83,6 +83,6 @@ export const topicApi = {
 
   // 删除热门比赛
   deleteHotMatch(id: number | string, config?: CustomRequestConfig) {
-    return apiClient.delete(`/api/admin/topic/hot-match/delete/${id}`, config)
+    return apiClient.post(`/api/admin/topic/hot-match/delete/${id}`, {}, config)
   }
 }
