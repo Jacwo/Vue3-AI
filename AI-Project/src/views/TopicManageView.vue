@@ -13,13 +13,13 @@
     <!-- Tab 切换 -->
     <div class="tab-section">
       <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-        <el-tab-pane label="热门赛事" name="HOT_LEAGUE" />
+        <el-tab-pane label="热门比赛" name="HOT_MATCH" />
         <el-tab-pane label="重大赛事" name="MAJOR_EVENT" />
       </el-tabs>
     </div>
 
     <!-- 热门比赛列表（HOT_LEAGUE Tab）-->
-    <div v-if="activeTab === 'HOT_LEAGUE'" class="table-section">
+    <div v-if="activeTab === 'HOT_MATCH'" class="table-section">
       <el-table
         :data="hotMatchList"
         stripe
@@ -330,6 +330,25 @@ const fetchTopicList = async () => {
   }
 }
 
+// 获取重大赛事列表（合并 MAJOR_EVENT + HOT_LEAGUE）
+const fetchMajorEventList = async () => {
+  loading.value = true
+  try {
+    const [majorRes, hotRes] = await Promise.all([
+      topicApi.getTopicList('MAJOR_EVENT'),
+      topicApi.getTopicList('HOT_LEAGUE')
+    ])
+    const majorList = ((majorRes as any)?.data || majorRes) || []
+    const hotList = ((hotRes as any)?.data || hotRes) || []
+    topicList.value = [...majorList, ...hotList]
+  } catch (error: any) {
+    ElMessage.error(error.message || '获取重大赛事列表失败')
+    topicList.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
 // 获取热门比赛列表
 const fetchHotMatches = async () => {
   loading.value = true
@@ -369,10 +388,10 @@ const fetchHotMatches = async () => {
 
 // Tab 切换
 const handleTabChange = () => {
-  if (activeTab.value === 'HOT_LEAGUE') {
+  if (activeTab.value === 'HOT_MATCH') {
     fetchHotMatches()
   } else {
-    fetchTopicList()
+    fetchMajorEventList()
   }
 }
 

@@ -2,7 +2,7 @@ import apiClient from './index'
 import type { CustomRequestConfig } from './index'
 
 // 专题类型枚举
-export type TopicType = 'HOT_LEAGUE' | 'MAJOR_EVENT'
+export type TopicType = 'HOT_MATCH' | 'MAJOR_EVENT' | 'HOT_LEAGUE'
 
 // 专题状态（0禁用、1启用）
 export type TopicStatus = 0 | 1
@@ -82,6 +82,7 @@ export const topicApi = {
   getHotMatches(config?: CustomRequestConfig) {
     return apiClient.post<HotMatchRecord[]>('/api/admin/topic/hot-match/list', {}, config)
   },
+
 
   // 删除热门比赛
   deleteHotMatch(id: number | string, config?: CustomRequestConfig) {
