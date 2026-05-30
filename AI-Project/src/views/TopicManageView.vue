@@ -138,7 +138,7 @@
           label-width="120px"
         >
           <el-form-item label="专题类型" prop="topicType">
-            <el-select v-model="topicForm.topicType" :disabled="!!topicForm.id">
+            <el-select v-model="topicForm.topicType">
               <el-option label="热门赛事" value="HOT_LEAGUE" />
               <el-option label="重大赛事" value="MAJOR_EVENT" />
             </el-select>
@@ -196,6 +196,12 @@
           </el-form-item>
           <el-form-item label="显示排序" prop="displaySort">
             <el-input-number v-model="topicForm.displaySort" :min="0" :max="9999" />
+          </el-form-item>
+          <el-form-item label="是否跳转" prop="jump">
+            <el-radio-group v-model="topicForm.jump">
+              <el-radio :value="1">是</el-radio>
+              <el-radio :value="0">否</el-radio>
+            </el-radio-group>
           </el-form-item>
           <el-form-item label="状态" prop="status">
             <el-radio-group v-model="topicForm.status">
@@ -278,7 +284,8 @@ const topicForm = ref<TopicFormData>({
   status: 1,
   topicType: 'MAJOR_EVENT',
   startDate: null,
-  endDate: null
+  endDate: null,
+  jump: 1
 })
 
 // 表单验证规则
@@ -380,7 +387,8 @@ const handleAdd = () => {
     status: 1,
     topicType: activeTab.value as TopicType,
     startDate: null,
-    endDate: null
+    endDate: null,
+    jump: 1
   }
   topicFormRef.value?.clearValidate()
   dialogVisible.value = true
@@ -398,7 +406,8 @@ const handleEdit = (row: Topic) => {
     status: row.status,
     topicType: row.topicType,
     startDate: row.startDate ? new Date(row.startDate) : null,
-    endDate: row.endDate ? new Date(row.endDate) : null
+    endDate: row.endDate ? new Date(row.endDate) : null,
+    jump: row.jump ?? 1
   }
   topicFormRef.value?.clearValidate()
   dialogVisible.value = true

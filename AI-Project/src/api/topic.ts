@@ -19,6 +19,7 @@ export interface Topic {
   carouselImageUrl?: string
   startDate?: string
   endDate?: string
+  jump?: number
   createTime?: string
   updateTime?: string
 }
@@ -35,6 +36,7 @@ export interface TopicFormData {
   carouselImageUrl?: string
   startDate?: string | Date | null
   endDate?: string | Date | null
+  jump?: number
 }
 
 // 专题列表响应
