@@ -1,14 +1,10 @@
 <template>
   <div class="worldcup-page">
-    <!-- 炫酷动态背景 -->
+    <!-- 炫酷动态背景（纯CSS，零JS开销） -->
     <div class="bg-animated">
       <div class="bg-stars"></div>
       <div class="bg-glow bg-glow-1"></div>
       <div class="bg-glow bg-glow-2"></div>
-      <div class="bg-glow bg-glow-3"></div>
-      <div class="bg-particles">
-        <span v-for="i in 30" :key="i" class="particle" :style="particleStyle(i)"></span>
-      </div>
     </div>
 
     <!-- 页面头部 - AI足球智能体品牌 -->
@@ -116,67 +112,116 @@
       <!-- 淘汰赛预测阶段 -->
       <div v-else class="knockout-stage">
         <div class="knockout-hint">
-          <span>点击球队图片或名称，即代表预测它成功晋级下一轮</span>
+          <span>点击球队即预测它赢得该场比赛并晋级下一轮</span>
           <el-tooltip content="点击对阵中的球队，预测它赢得该场比赛并晋级" placement="top">
             <el-icon class="hint-icon"><QuestionFilled /></el-icon>
           </el-tooltip>
         </div>
 
-        <div class="knockout-container">
+        <!-- ==================== 树状淘汰赛对阵图 ==================== -->
+        <div class="bracket-tree">
           <!-- 上半区 -->
-          <div class="knockout-half">
-            <div class="half-title">上半区</div>
-            <div class="bracket-side left">
-              <!-- 1/16决赛 -->
-              <div class="round round-16">
-                <div v-for="(match, idx) in leftBracket.round16" :key="idx" class="bracket-match">
-                  <div class="bracket-team" :class="{ winner: match.winner === 'home', eliminated: match.winner === 'away' }" @click="predictMatch('left', 'round16', idx, 'home')">
-                    <team-flag :name="match.homeTeam" size="small" />
-                    <span class="team-name">{{ match.homeTeam }}</span>
+          <div class="half-tree">
+            <div class="half-tree-title">上半区</div>
+            <div class="half-tree-body">
+              <!-- 左侧 -->
+              <div class="side-tree left-tree">
+                <div class="tree-col r16-col">
+                  <div v-for="(match, idx) in upperLeft.round16" :key="'ul-r16-'+idx" class="tree-match">
+                    <div class="tree-team" :class="{ winner: match.winner === 'home', eliminated: match.winner === 'away' }" @click="predictMatch('upperLeft', 'round16', idx, 'home')">
+                      <team-flag :name="match.homeTeam" size="small" />
+                      <span class="tree-team-name">{{ match.homeTeam }}</span>
+                    </div>
+                    <div class="tree-team" :class="{ winner: match.winner === 'away', eliminated: match.winner === 'home' }" @click="predictMatch('upperLeft', 'round16', idx, 'away')">
+                      <team-flag :name="match.awayTeam" size="small" />
+                      <span class="tree-team-name">{{ match.awayTeam }}</span>
+                    </div>
                   </div>
-                  <div class="bracket-team" :class="{ winner: match.winner === 'away', eliminated: match.winner === 'home' }" @click="predictMatch('left', 'round16', idx, 'away')">
-                    <team-flag :name="match.awayTeam" size="small" />
-                    <span class="team-name">{{ match.awayTeam }}</span>
+                </div>
+                <div class="tree-col r8-col">
+                  <div v-for="(match, idx) in upperLeft.round8" :key="'ul-r8-'+idx" class="tree-match">
+                    <div class="tree-team" :class="{ 'has-team': match.homeTeam, winner: match.winner === 'home', eliminated: match.winner === 'away' }" @click="match.homeTeam && predictMatch('upperLeft', 'round8', idx, 'home')">
+                      <team-flag v-if="match.homeTeam" :name="match.homeTeam" size="small" />
+                      <span v-if="match.homeTeam" class="tree-team-name">{{ match.homeTeam }}</span>
+                      <span v-else class="tree-placeholder">?</span>
+                    </div>
+                    <div class="tree-team" :class="{ 'has-team': match.awayTeam, winner: match.winner === 'away', eliminated: match.winner === 'home' }" @click="match.awayTeam && predictMatch('upperLeft', 'round8', idx, 'away')">
+                      <team-flag v-if="match.awayTeam" :name="match.awayTeam" size="small" />
+                      <span v-if="match.awayTeam" class="tree-team-name">{{ match.awayTeam }}</span>
+                      <span v-else class="tree-placeholder">?</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="tree-col qf-col">
+                  <div class="tree-match">
+                    <div class="tree-team" :class="{ 'has-team': quarterFinals[0].homeTeam, winner: quarterFinals[0].winner === 'home', eliminated: quarterFinals[0].winner === 'away' }" @click="quarterFinals[0].homeTeam && predictQuarterFinal(0, 'home')">
+                      <team-flag v-if="quarterFinals[0].homeTeam" :name="quarterFinals[0].homeTeam" size="small" />
+                      <span v-if="quarterFinals[0].homeTeam" class="tree-team-name">{{ quarterFinals[0].homeTeam }}</span>
+                      <span v-else class="tree-placeholder">?</span>
+                    </div>
+                    <div class="tree-team" :class="{ 'has-team': quarterFinals[0].awayTeam, winner: quarterFinals[0].winner === 'away', eliminated: quarterFinals[0].winner === 'home' }" @click="quarterFinals[0].awayTeam && predictQuarterFinal(0, 'away')">
+                      <team-flag v-if="quarterFinals[0].awayTeam" :name="quarterFinals[0].awayTeam" size="small" />
+                      <span v-if="quarterFinals[0].awayTeam" class="tree-team-name">{{ quarterFinals[0].awayTeam }}</span>
+                      <span v-else class="tree-placeholder">?</span>
+                    </div>
                   </div>
                 </div>
               </div>
-              <!-- 1/8决赛 -->
-              <div class="round round-8">
-                <div v-for="(match, idx) in leftBracket.round8" :key="idx" class="bracket-match">
-                  <div class="bracket-team" :class="{ 'has-team': match.homeTeam, winner: match.winner === 'home', eliminated: match.winner === 'away' }" @click="match.homeTeam && predictMatch('left', 'round8', idx, 'home')">
-                    <team-flag v-if="match.homeTeam" :name="match.homeTeam" size="small" />
-                    <span v-if="match.homeTeam" class="team-name">{{ match.homeTeam }}</span>
-                    <span v-else class="placeholder">?</span>
+              <!-- 中间 半决赛 -->
+              <div class="semi-center">
+                <div class="tree-match semi-match">
+                  <div class="tree-team" :class="{ 'has-team': semiFinals[0].homeTeam, winner: semiFinals[0].winner === 'home', eliminated: semiFinals[0].winner === 'away' }" @click="semiFinals[0].homeTeam && predictSemiFinal(0, 'home')">
+                    <team-flag v-if="semiFinals[0].homeTeam" :name="semiFinals[0].homeTeam" size="small" />
+                    <span v-if="semiFinals[0].homeTeam" class="tree-team-name">{{ semiFinals[0].homeTeam }}</span>
+                    <span v-else class="tree-placeholder">?</span>
                   </div>
-                  <div class="bracket-team" :class="{ 'has-team': match.awayTeam, winner: match.winner === 'away', eliminated: match.winner === 'home' }" @click="match.awayTeam && predictMatch('left', 'round8', idx, 'away')">
-                    <team-flag v-if="match.awayTeam" :name="match.awayTeam" size="small" />
-                    <span v-if="match.awayTeam" class="team-name">{{ match.awayTeam }}</span>
-                    <span v-else class="placeholder">?</span>
-                  </div>
-                </div>
-              </div>
-              <!-- 1/4决赛 -->
-              <div class="round round-4">
-                <div v-for="(match, idx) in leftBracket.round4" :key="idx" class="bracket-match">
-                  <div class="bracket-team" :class="{ 'has-team': match.homeTeam, winner: match.winner === 'home', eliminated: match.winner === 'away' }" @click="match.homeTeam && predictMatch('left', 'round4', idx, 'home')">
-                    <team-flag v-if="match.homeTeam" :name="match.homeTeam" size="small" />
-                    <span v-if="match.homeTeam" class="team-name">{{ match.homeTeam }}</span>
-                    <span v-else class="placeholder">?</span>
-                  </div>
-                  <div class="bracket-team" :class="{ 'has-team': match.awayTeam, winner: match.winner === 'away', eliminated: match.winner === 'home' }" @click="match.awayTeam && predictMatch('left', 'round4', idx, 'away')">
-                    <team-flag v-if="match.awayTeam" :name="match.awayTeam" size="small" />
-                    <span v-if="match.awayTeam" class="team-name">{{ match.awayTeam }}</span>
-                    <span v-else class="placeholder">?</span>
+                  <div class="tree-team" :class="{ 'has-team': semiFinals[0].awayTeam, winner: semiFinals[0].winner === 'away', eliminated: semiFinals[0].winner === 'home' }" @click="semiFinals[0].awayTeam && predictSemiFinal(0, 'away')">
+                    <team-flag v-if="semiFinals[0].awayTeam" :name="semiFinals[0].awayTeam" size="small" />
+                    <span v-if="semiFinals[0].awayTeam" class="tree-team-name">{{ semiFinals[0].awayTeam }}</span>
+                    <span v-else class="tree-placeholder">?</span>
                   </div>
                 </div>
               </div>
-              <!-- 半决赛 -->
-              <div class="round round-2">
-                <div class="bracket-match">
-                  <div class="bracket-team" :class="{ 'has-team': leftBracket.semi.homeTeam, winner: leftBracket.semi.winner === 'home', eliminated: leftBracket.semi.winner === 'away' }" @click="leftBracket.semi.homeTeam && predictMatch('left', 'semi', 0, 'home')">
-                    <team-flag v-if="leftBracket.semi.homeTeam" :name="leftBracket.semi.homeTeam" size="small" />
-                    <span v-if="leftBracket.semi.homeTeam" class="team-name">{{ leftBracket.semi.homeTeam }}</span>
-                    <span v-else class="placeholder">?</span>
+              <!-- 右侧 -->
+              <div class="side-tree right-tree">
+                <div class="tree-col qf-col">
+                  <div class="tree-match">
+                    <div class="tree-team" :class="{ 'has-team': quarterFinals[1].homeTeam, winner: quarterFinals[1].winner === 'home', eliminated: quarterFinals[1].winner === 'away' }" @click="quarterFinals[1].homeTeam && predictQuarterFinal(1, 'home')">
+                      <team-flag v-if="quarterFinals[1].homeTeam" :name="quarterFinals[1].homeTeam" size="small" />
+                      <span v-if="quarterFinals[1].homeTeam" class="tree-team-name">{{ quarterFinals[1].homeTeam }}</span>
+                      <span v-else class="tree-placeholder">?</span>
+                    </div>
+                    <div class="tree-team" :class="{ 'has-team': quarterFinals[1].awayTeam, winner: quarterFinals[1].winner === 'away', eliminated: quarterFinals[1].winner === 'home' }" @click="quarterFinals[1].awayTeam && predictQuarterFinal(1, 'away')">
+                      <team-flag v-if="quarterFinals[1].awayTeam" :name="quarterFinals[1].awayTeam" size="small" />
+                      <span v-if="quarterFinals[1].awayTeam" class="tree-team-name">{{ quarterFinals[1].awayTeam }}</span>
+                      <span v-else class="tree-placeholder">?</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="tree-col r8-col">
+                  <div v-for="(match, idx) in upperRight.round8" :key="'ur-r8-'+idx" class="tree-match">
+                    <div class="tree-team" :class="{ 'has-team': match.homeTeam, winner: match.winner === 'home', eliminated: match.winner === 'away' }" @click="match.homeTeam && predictMatch('upperRight', 'round8', idx, 'home')">
+                      <team-flag v-if="match.homeTeam" :name="match.homeTeam" size="small" />
+                      <span v-if="match.homeTeam" class="tree-team-name">{{ match.homeTeam }}</span>
+                      <span v-else class="tree-placeholder">?</span>
+                    </div>
+                    <div class="tree-team" :class="{ 'has-team': match.awayTeam, winner: match.winner === 'away', eliminated: match.winner === 'home' }" @click="match.awayTeam && predictMatch('upperRight', 'round8', idx, 'away')">
+                      <team-flag v-if="match.awayTeam" :name="match.awayTeam" size="small" />
+                      <span v-if="match.awayTeam" class="tree-team-name">{{ match.awayTeam }}</span>
+                      <span v-else class="tree-placeholder">?</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="tree-col r16-col">
+                  <div v-for="(match, idx) in upperRight.round16" :key="'ur-r16-'+idx" class="tree-match">
+                    <div class="tree-team" :class="{ winner: match.winner === 'home', eliminated: match.winner === 'away' }" @click="predictMatch('upperRight', 'round16', idx, 'home')">
+                      <team-flag :name="match.homeTeam" size="small" />
+                      <span class="tree-team-name">{{ match.homeTeam }}</span>
+                    </div>
+                    <div class="tree-team" :class="{ winner: match.winner === 'away', eliminated: match.winner === 'home' }" @click="predictMatch('upperRight', 'round16', idx, 'away')">
+                      <team-flag :name="match.awayTeam" size="small" />
+                      <span class="tree-team-name">{{ match.awayTeam }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -184,21 +229,22 @@
           </div>
 
           <!-- 决赛 -->
-          <div class="final-round">
-            <div class="final-match">
-              <div class="final-team" :class="{ 'has-team': finalMatch.homeTeam, winner: finalMatch.winner === 'home' }" @click="finalMatch.homeTeam && (finalMatch.winner = 'home')">
+          <div class="final-tree-block">
+            <div class="final-tree-label">🏆 决赛</div>
+            <div class="final-tree-match">
+              <div class="final-tree-team" :class="{ 'has-team': finalMatch.homeTeam, winner: finalMatch.winner === 'home' }" @click="finalMatch.homeTeam && pickFinalWinner('home')">
                 <team-flag v-if="finalMatch.homeTeam" :name="finalMatch.homeTeam" size="medium" />
-                <span v-if="finalMatch.homeTeam" class="team-name">{{ finalMatch.homeTeam }}</span>
-                <span v-else class="placeholder">?</span>
+                <span v-if="finalMatch.homeTeam" class="final-tree-name">{{ finalMatch.homeTeam }}</span>
+                <span v-else class="tree-placeholder">?</span>
               </div>
-              <div class="final-vs">VS</div>
-              <div class="final-team" :class="{ 'has-team': finalMatch.awayTeam, winner: finalMatch.winner === 'away' }" @click="finalMatch.awayTeam && (finalMatch.winner = 'away')">
+              <div class="final-tree-vs">VS</div>
+              <div class="final-tree-team" :class="{ 'has-team': finalMatch.awayTeam, winner: finalMatch.winner === 'away' }" @click="finalMatch.awayTeam && pickFinalWinner('away')">
                 <team-flag v-if="finalMatch.awayTeam" :name="finalMatch.awayTeam" size="medium" />
-                <span v-if="finalMatch.awayTeam" class="team-name">{{ finalMatch.awayTeam }}</span>
-                <span v-else class="placeholder">?</span>
+                <span v-if="finalMatch.awayTeam" class="final-tree-name">{{ finalMatch.awayTeam }}</span>
+                <span v-else class="tree-placeholder">?</span>
               </div>
             </div>
-            <div v-if="finalMatch.winner && finalMatch.homeTeam && finalMatch.awayTeam" class="champion-display">
+            <div v-if="finalMatch.winner && finalMatch.homeTeam && finalMatch.awayTeam" class="champion-tree">
               <div class="champion-crown">👑</div>
               <div class="champion-flag">{{ getFlagEmoji(finalMatch.winner === 'home' ? finalMatch.homeTeam : finalMatch.awayTeam) }}</div>
               <div class="champion-name">{{ finalMatch.winner === 'home' ? finalMatch.homeTeam : finalMatch.awayTeam }}</div>
@@ -207,59 +253,107 @@
           </div>
 
           <!-- 下半区 -->
-          <div class="knockout-half">
-            <div class="half-title">下半区</div>
-            <div class="bracket-side right">
-              <!-- 1/16决赛 -->
-              <div class="round round-16">
-                <div v-for="(match, idx) in rightBracket.round16" :key="idx" class="bracket-match">
-                  <div class="bracket-team" :class="{ winner: match.winner === 'away', eliminated: match.winner === 'home' }" @click="predictMatch('right', 'round16', idx, 'away')">
-                    <team-flag :name="match.awayTeam" size="small" />
-                    <span class="team-name">{{ match.awayTeam }}</span>
+          <div class="half-tree">
+            <div class="half-tree-title">下半区</div>
+            <div class="half-tree-body">
+              <!-- 左侧 -->
+              <div class="side-tree left-tree">
+                <div class="tree-col r16-col">
+                  <div v-for="(match, idx) in lowerLeft.round16" :key="'ll-r16-'+idx" class="tree-match">
+                    <div class="tree-team" :class="{ winner: match.winner === 'home', eliminated: match.winner === 'away' }" @click="predictMatch('lowerLeft', 'round16', idx, 'home')">
+                      <team-flag :name="match.homeTeam" size="small" />
+                      <span class="tree-team-name">{{ match.homeTeam }}</span>
+                    </div>
+                    <div class="tree-team" :class="{ winner: match.winner === 'away', eliminated: match.winner === 'home' }" @click="predictMatch('lowerLeft', 'round16', idx, 'away')">
+                      <team-flag :name="match.awayTeam" size="small" />
+                      <span class="tree-team-name">{{ match.awayTeam }}</span>
+                    </div>
                   </div>
-                  <div class="bracket-team" :class="{ winner: match.winner === 'home', eliminated: match.winner === 'away' }" @click="predictMatch('right', 'round16', idx, 'home')">
-                    <team-flag :name="match.homeTeam" size="small" />
-                    <span class="team-name">{{ match.homeTeam }}</span>
+                </div>
+                <div class="tree-col r8-col">
+                  <div v-for="(match, idx) in lowerLeft.round8" :key="'ll-r8-'+idx" class="tree-match">
+                    <div class="tree-team" :class="{ 'has-team': match.homeTeam, winner: match.winner === 'home', eliminated: match.winner === 'away' }" @click="match.homeTeam && predictMatch('lowerLeft', 'round8', idx, 'home')">
+                      <team-flag v-if="match.homeTeam" :name="match.homeTeam" size="small" />
+                      <span v-if="match.homeTeam" class="tree-team-name">{{ match.homeTeam }}</span>
+                      <span v-else class="tree-placeholder">?</span>
+                    </div>
+                    <div class="tree-team" :class="{ 'has-team': match.awayTeam, winner: match.winner === 'away', eliminated: match.winner === 'home' }" @click="match.awayTeam && predictMatch('lowerLeft', 'round8', idx, 'away')">
+                      <team-flag v-if="match.awayTeam" :name="match.awayTeam" size="small" />
+                      <span v-if="match.awayTeam" class="tree-team-name">{{ match.awayTeam }}</span>
+                      <span v-else class="tree-placeholder">?</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="tree-col qf-col">
+                  <div class="tree-match">
+                    <div class="tree-team" :class="{ 'has-team': quarterFinals[2].homeTeam, winner: quarterFinals[2].winner === 'home', eliminated: quarterFinals[2].winner === 'away' }" @click="quarterFinals[2].homeTeam && predictQuarterFinal(2, 'home')">
+                      <team-flag v-if="quarterFinals[2].homeTeam" :name="quarterFinals[2].homeTeam" size="small" />
+                      <span v-if="quarterFinals[2].homeTeam" class="tree-team-name">{{ quarterFinals[2].homeTeam }}</span>
+                      <span v-else class="tree-placeholder">?</span>
+                    </div>
+                    <div class="tree-team" :class="{ 'has-team': quarterFinals[2].awayTeam, winner: quarterFinals[2].winner === 'away', eliminated: quarterFinals[2].winner === 'home' }" @click="quarterFinals[2].awayTeam && predictQuarterFinal(2, 'away')">
+                      <team-flag v-if="quarterFinals[2].awayTeam" :name="quarterFinals[2].awayTeam" size="small" />
+                      <span v-if="quarterFinals[2].awayTeam" class="tree-team-name">{{ quarterFinals[2].awayTeam }}</span>
+                      <span v-else class="tree-placeholder">?</span>
+                    </div>
                   </div>
                 </div>
               </div>
-              <!-- 1/8决赛 -->
-              <div class="round round-8">
-                <div v-for="(match, idx) in rightBracket.round8" :key="idx" class="bracket-match">
-                  <div class="bracket-team" :class="{ 'has-team': match.awayTeam, winner: match.winner === 'away', eliminated: match.winner === 'home' }" @click="match.awayTeam && predictMatch('right', 'round8', idx, 'away')">
-                    <team-flag v-if="match.awayTeam" :name="match.awayTeam" size="small" />
-                    <span v-if="match.awayTeam" class="team-name">{{ match.awayTeam }}</span>
-                    <span v-else class="placeholder">?</span>
+              <!-- 中间 半决赛 -->
+              <div class="semi-center">
+                <div class="tree-match semi-match">
+                  <div class="tree-team" :class="{ 'has-team': semiFinals[1].homeTeam, winner: semiFinals[1].winner === 'home', eliminated: semiFinals[1].winner === 'away' }" @click="semiFinals[1].homeTeam && predictSemiFinal(1, 'home')">
+                    <team-flag v-if="semiFinals[1].homeTeam" :name="semiFinals[1].homeTeam" size="small" />
+                    <span v-if="semiFinals[1].homeTeam" class="tree-team-name">{{ semiFinals[1].homeTeam }}</span>
+                    <span v-else class="tree-placeholder">?</span>
                   </div>
-                  <div class="bracket-team" :class="{ 'has-team': match.homeTeam, winner: match.winner === 'home', eliminated: match.winner === 'away' }" @click="match.homeTeam && predictMatch('right', 'round8', idx, 'home')">
-                    <team-flag v-if="match.homeTeam" :name="match.homeTeam" size="small" />
-                    <span v-if="match.homeTeam" class="team-name">{{ match.homeTeam }}</span>
-                    <span v-else class="placeholder">?</span>
-                  </div>
-                </div>
-              </div>
-              <!-- 1/4决赛 -->
-              <div class="round round-4">
-                <div v-for="(match, idx) in rightBracket.round4" :key="idx" class="bracket-match">
-                  <div class="bracket-team" :class="{ 'has-team': match.awayTeam, winner: match.winner === 'away', eliminated: match.winner === 'home' }" @click="match.awayTeam && predictMatch('right', 'round4', idx, 'away')">
-                    <team-flag v-if="match.awayTeam" :name="match.awayTeam" size="small" />
-                    <span v-if="match.awayTeam" class="team-name">{{ match.awayTeam }}</span>
-                    <span v-else class="placeholder">?</span>
-                  </div>
-                  <div class="bracket-team" :class="{ 'has-team': match.homeTeam, winner: match.winner === 'home', eliminated: match.winner === 'away' }" @click="match.homeTeam && predictMatch('right', 'round4', idx, 'home')">
-                    <team-flag v-if="match.homeTeam" :name="match.homeTeam" size="small" />
-                    <span v-if="match.homeTeam" class="team-name">{{ match.homeTeam }}</span>
-                    <span v-else class="placeholder">?</span>
+                  <div class="tree-team" :class="{ 'has-team': semiFinals[1].awayTeam, winner: semiFinals[1].winner === 'away', eliminated: semiFinals[1].winner === 'home' }" @click="semiFinals[1].awayTeam && predictSemiFinal(1, 'away')">
+                    <team-flag v-if="semiFinals[1].awayTeam" :name="semiFinals[1].awayTeam" size="small" />
+                    <span v-if="semiFinals[1].awayTeam" class="tree-team-name">{{ semiFinals[1].awayTeam }}</span>
+                    <span v-else class="tree-placeholder">?</span>
                   </div>
                 </div>
               </div>
-              <!-- 半决赛 -->
-              <div class="round round-2">
-                <div class="bracket-match">
-                  <div class="bracket-team" :class="{ 'has-team': rightBracket.semi.awayTeam, winner: rightBracket.semi.winner === 'away', eliminated: rightBracket.semi.winner === 'home' }" @click="rightBracket.semi.awayTeam && predictMatch('right', 'semi', 0, 'away')">
-                    <team-flag v-if="rightBracket.semi.awayTeam" :name="rightBracket.semi.awayTeam" size="small" />
-                    <span v-if="rightBracket.semi.awayTeam" class="team-name">{{ rightBracket.semi.awayTeam }}</span>
-                    <span v-else class="placeholder">?</span>
+              <!-- 右侧 -->
+              <div class="side-tree right-tree">
+                <div class="tree-col qf-col">
+                  <div class="tree-match">
+                    <div class="tree-team" :class="{ 'has-team': quarterFinals[3].homeTeam, winner: quarterFinals[3].winner === 'home', eliminated: quarterFinals[3].winner === 'away' }" @click="quarterFinals[3].homeTeam && predictQuarterFinal(3, 'home')">
+                      <team-flag v-if="quarterFinals[3].homeTeam" :name="quarterFinals[3].homeTeam" size="small" />
+                      <span v-if="quarterFinals[3].homeTeam" class="tree-team-name">{{ quarterFinals[3].homeTeam }}</span>
+                      <span v-else class="tree-placeholder">?</span>
+                    </div>
+                    <div class="tree-team" :class="{ 'has-team': quarterFinals[3].awayTeam, winner: quarterFinals[3].winner === 'away', eliminated: quarterFinals[3].winner === 'home' }" @click="quarterFinals[3].awayTeam && predictQuarterFinal(3, 'away')">
+                      <team-flag v-if="quarterFinals[3].awayTeam" :name="quarterFinals[3].awayTeam" size="small" />
+                      <span v-if="quarterFinals[3].awayTeam" class="tree-team-name">{{ quarterFinals[3].awayTeam }}</span>
+                      <span v-else class="tree-placeholder">?</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="tree-col r8-col">
+                  <div v-for="(match, idx) in lowerRight.round8" :key="'lr-r8-'+idx" class="tree-match">
+                    <div class="tree-team" :class="{ 'has-team': match.homeTeam, winner: match.winner === 'home', eliminated: match.winner === 'away' }" @click="match.homeTeam && predictMatch('lowerRight', 'round8', idx, 'home')">
+                      <team-flag v-if="match.homeTeam" :name="match.homeTeam" size="small" />
+                      <span v-if="match.homeTeam" class="tree-team-name">{{ match.homeTeam }}</span>
+                      <span v-else class="tree-placeholder">?</span>
+                    </div>
+                    <div class="tree-team" :class="{ 'has-team': match.awayTeam, winner: match.winner === 'away', eliminated: match.winner === 'home' }" @click="match.awayTeam && predictMatch('lowerRight', 'round8', idx, 'away')">
+                      <team-flag v-if="match.awayTeam" :name="match.awayTeam" size="small" />
+                      <span v-if="match.awayTeam" class="tree-team-name">{{ match.awayTeam }}</span>
+                      <span v-else class="tree-placeholder">?</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="tree-col r16-col">
+                  <div v-for="(match, idx) in lowerRight.round16" :key="'lr-r16-'+idx" class="tree-match">
+                    <div class="tree-team" :class="{ winner: match.winner === 'home', eliminated: match.winner === 'away' }" @click="predictMatch('lowerRight', 'round16', idx, 'home')">
+                      <team-flag :name="match.homeTeam" size="small" />
+                      <span class="tree-team-name">{{ match.homeTeam }}</span>
+                    </div>
+                    <div class="tree-team" :class="{ winner: match.winner === 'away', eliminated: match.winner === 'home' }" @click="predictMatch('lowerRight', 'round16', idx, 'away')">
+                      <team-flag :name="match.awayTeam" size="small" />
+                      <span class="tree-team-name">{{ match.awayTeam }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -276,7 +370,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h, defineComponent, onMounted } from 'vue'
+import { ref, computed, h, defineComponent, onMounted, shallowRef } from 'vue'
 import { ElMessage } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { worldcupApi } from '@/api/worldcup'
@@ -404,6 +498,7 @@ const getFlagEmoji = (teamName: string): string => {
 }
 
 // TeamFlag 组件：优先显示球队Logo，加载失败则显示国旗emoji
+// 使用函数式组件减少响应式开销
 const TeamFlag = defineComponent({
   name: 'TeamFlag',
   props: {
@@ -413,8 +508,9 @@ const TeamFlag = defineComponent({
   setup(props) {
     const showImg = ref(true)
     const pic = getTeamPic(props.name)
+    if (!pic) showImg.value = false
 
-    if (!pic) {
+    const onError = () => {
       showImg.value = false
     }
 
@@ -423,32 +519,14 @@ const TeamFlag = defineComponent({
         return h('img', {
           src: `https:${pic}`,
           class: `team-logo team-logo-${props.size}`,
-          onError: () => { showImg.value = false }
+          onError,
+          loading: 'lazy'
         })
       }
       return h('span', { class: `team-flag team-flag-${props.size}` }, getFlagEmoji(props.name))
     }
   }
 })
-
-// ==================== 粒子动画样式 ====================
-const particleStyle = (_i: number) => {
-  const size = Math.random() * 3 + 1
-  const x = Math.random() * 100
-  const y = Math.random() * 100
-  const duration = Math.random() * 10 + 8
-  const delay = Math.random() * 5
-  const opacity = Math.random() * 0.5 + 0.2
-  return {
-    width: `${size}px`,
-    height: `${size}px`,
-    left: `${x}%`,
-    top: `${y}%`,
-    animationDuration: `${duration}s`,
-    animationDelay: `${delay}s`,
-    opacity: opacity
-  }
-}
 
 // ==================== 晋级预测 - 小组赛选择 ====================
 const predictionPhase = ref<'group' | 'knockout'>('group')
@@ -638,44 +716,83 @@ const goToKnockout = () => {
     return
   }
   initKnockoutBracket()
+  triggerBracketUpdate()
   predictionPhase.value = 'knockout'
 }
 
-// ==================== 晋级预测 - 淘汰赛 ====================
+// ==================== 淘汰赛数据结构（使用 shallowRef 减少深度响应式追踪） ====================
 interface BracketMatch {
   homeTeam: string
   awayTeam: string
   winner: 'home' | 'away' | null
 }
 
-const leftBracket = ref({
+// 用 shallowRef 包装整个淘汰赛状态，只追踪顶层引用变化，大幅减少响应式开销
+// 上半区左侧：场次73-76 (4场)
+const upperLeft = shallowRef({
   round16: [] as BracketMatch[],
   round8: [] as BracketMatch[],
-  round4: [] as BracketMatch[],
-  semi: { homeTeam: '', awayTeam: '', winner: null as 'home' | 'away' | null }
 })
-
-const rightBracket = ref({
+// 上半区右侧：场次79-82 (4场)
+const upperRight = shallowRef({
   round16: [] as BracketMatch[],
   round8: [] as BracketMatch[],
-  round4: [] as BracketMatch[],
-  semi: { homeTeam: '', awayTeam: '', winner: null as 'home' | 'away' | null }
+})
+// 下半区左侧：场次77,78,83,84 (4场)
+const lowerLeft = shallowRef({
+  round16: [] as BracketMatch[],
+  round8: [] as BracketMatch[],
+})
+// 下半区右侧：场次85-88 (4场)
+const lowerRight = shallowRef({
+  round16: [] as BracketMatch[],
+  round8: [] as BracketMatch[],
 })
 
-const finalMatch = ref({
+// 1/4决赛(4场) 和 半决赛(2场) — 独立存储
+// QF1: upperLeft round8胜者  vs  upperLeft round8胜者
+// QF2: upperRight round8胜者 vs upperRight round8胜者
+// QF3: lowerLeft round8胜者  vs  lowerLeft round8胜者
+// QF4: lowerRight round8胜者 vs lowerRight round8胜者
+const quarterFinals = shallowRef<BracketMatch[]>([
+  { homeTeam: '', awayTeam: '', winner: null }, // QF1
+  { homeTeam: '', awayTeam: '', winner: null }, // QF2
+  { homeTeam: '', awayTeam: '', winner: null }, // QF3
+  { homeTeam: '', awayTeam: '', winner: null }, // QF4
+])
+
+const semiFinals = shallowRef<BracketMatch[]>([
+  { homeTeam: '', awayTeam: '', winner: null }, // Semi1: QF1胜者 vs QF2胜者
+  { homeTeam: '', awayTeam: '', winner: null }, // Semi2: QF3胜者 vs QF4胜者
+])
+
+const finalMatch = shallowRef({
   homeTeam: '',
   awayTeam: '',
   winner: null as 'home' | 'away' | null
 })
 
+// 手动触发淘汰赛视图更新（shallowRef 不会自动追踪深层变化）
+const triggerBracketUpdate = () => {
+  upperLeft.value = { ...upperLeft.value }
+  upperRight.value = { ...upperRight.value }
+  lowerLeft.value = { ...lowerLeft.value }
+  lowerRight.value = { ...lowerRight.value }
+  quarterFinals.value = [...quarterFinals.value]
+  semiFinals.value = [...semiFinals.value]
+  finalMatch.value = { ...finalMatch.value }
+}
+
 // ==================== 2026世界杯官方对阵规则 ====================
-// 上半区：A-H组（共16场 → 8场 → 4场 → 半决赛 → 决赛）
-// 下半区：I-L组 + 8个第三名（共16场 → 8场 → 4场 → 半决赛 → 决赛）
-// 种子队保护：西班牙、阿根廷、法国、英格兰 两两分属不同半区
+// 48队赛制，12组 → 32队晋级淘汰赛（12组前2 + 8个最佳第三名）
+// 1/16决赛 16场(73-88) → 1/8决赛 8场 → 1/4决赛 4场 → 半决赛 2场 → 决赛
+// 上半区(左边显示): 73,74,75,76,79,80,81,82 (8场)
+// 下半区(右边显示): 77,78,83,84,85,86,87,88 (8场)
+// 1/8配对: 73v74,75v76,79v80,81v82(上半区) | 77v78,83v84,85v86,87v88(下半区)
+// 1/4: QF1(左R8[0]v左R8[1]) QF2(左R8[2]v右R8[0]) QF3(左R8[3]v右R8[1]) QF4(右R8[2]v右R8[3])
+// 半决: Semi1(QF1vQF2) Semi2(QF3vQF4) → 决赛
 
 // 按成绩从 selectedThirdPlaces 中筛选指定组的第三名
-// candidateGroups: 候选组列表，优先按成绩从高到低取匹配的
-// 如果候选组中无可用球队，则从剩余未使用的第三名中随机选一个
 const getThirdByGroups = (candidateGroups: string[], usedSet: Set<string>): string => {
   const sorted = thirdPlaceCandidates.value
     .filter(c => selectedThirdPlaces.value.has(c.teamName) && candidateGroups.includes(c.groupName))
@@ -697,7 +814,7 @@ const getThirdByGroups = (candidateGroups: string[], usedSet: Set<string>): stri
     usedSet.add(pick)
     return pick
   }
-  return '' // 理论上不会走到这里，因为第三名数量刚好匹配
+  return ''
 }
 
 // 根据小组赛选择结果初始化淘汰赛对阵
@@ -720,124 +837,200 @@ const initKnockoutBracket = () => {
 
   const T = (groups: string[]) => getThirdByGroups(groups, usedThirds)
 
-  // ============ 上半区 (A-H组) 1/16决赛 8场 ============
+  // ============ 上半区左侧 1/16决赛 4场 ============
   // 场次73: A2 vs B2
-  // 场次74: E1 vs T(C/D/F/G/H)  ← 第三名
+  // 场次74: E1 vs T(C/D/F/G/H)
   // 场次75: F1 vs C2
   // 场次76: C1 vs F2
-  // 场次79: A1 vs T(C/E/F/H/I)  ← 第三名
-  // 场次80: D2 vs G2
-  // 场次81: B1 vs T(A/D/E/F/G)  ← 第三名
-  // 场次82: H1 vs J2
-  leftBracket.value.round16 = [
+  upperLeft.value.round16 = [
     { homeTeam: G('A组', 'second'), awayTeam: G('B组', 'second'), winner: null },     // 73
     { homeTeam: G('E组', 'first'),  awayTeam: T(['C组','D组','F组','G组','H组']), winner: null }, // 74
     { homeTeam: G('F组', 'first'),  awayTeam: G('C组', 'second'), winner: null },     // 75
     { homeTeam: G('C组', 'first'),  awayTeam: G('F组', 'second'), winner: null },     // 76
+  ]
+
+  // ============ 上半区右侧 1/16决赛 4场 ============
+  // 场次79: A1 vs T(C/E/F/H/I)
+  // 场次80: D2 vs G2
+  // 场次81: B1 vs T(A/D/E/F/G)
+  // 场次82: H1 vs J2
+  upperRight.value.round16 = [
     { homeTeam: G('A组', 'first'),  awayTeam: T(['C组','E组','F组','H组','I组']), winner: null }, // 79
     { homeTeam: G('D组', 'second'), awayTeam: G('G组', 'second'), winner: null },     // 80
     { homeTeam: G('B组', 'first'),  awayTeam: T(['A组','D组','E组','F组','G组']), winner: null }, // 81
     { homeTeam: G('H组', 'first'),  awayTeam: G('J组', 'second'), winner: null },     // 82
   ]
 
-  // ============ 下半区 (I-L组 + 第三名) 1/16决赛 8场 ============
-  // 场次77: I1 vs T(C/D/F/G/H)  ← 第三名
+  // ============ 下半区左侧 1/16决赛 4场 ============
+  // 场次77: I1 vs T(C/D/F/G/H)
   // 场次78: E2 vs I2
-  // 场次83: G1 vs T(B/E/F/I/J)  ← 第三名
-  // 场次84: F1 vs 第三名
-  // 场次85: K2 vs L2
-  // 场次86: J1 vs H2
-  // 场次87: D1 vs T(B/E/F/I/J)  ← 第三名
-  // 场次88: L1 vs T(A/C/D/G/K)  ← 第三名
-  // 下半区反序排列，使视觉上最右侧的比赛在上方，晋级流向从右向左
-  rightBracket.value.round16 = [
-    { homeTeam: G('L组', 'first'),  awayTeam: T(['A组','C组','D组','G组','K组']), winner: null }, // 88
-    { homeTeam: G('D组', 'first'),  awayTeam: T(['B组','E组','F组','I组','J组']), winner: null }, // 87
-    { homeTeam: G('J组', 'first'),  awayTeam: G('H组', 'second'), winner: null },    // 86
-    { homeTeam: G('K组', 'second'), awayTeam: G('L组', 'second'), winner: null },    // 85
-    { homeTeam: G('F组', 'first'),  awayTeam: T(['D组','E组','G组','H组','I组','J组','K组','L组']), winner: null }, // 84
-    { homeTeam: G('G组', 'first'),  awayTeam: T(['B组','E组','F组','I组','J组']), winner: null }, // 83
-    { homeTeam: G('E组', 'second'), awayTeam: G('I组', 'second'), winner: null },    // 78
+  // 场次83: G1 vs T(B/E/F/I/J)
+  // 场次84: F2 vs T(待定)
+  lowerLeft.value.round16 = [
     { homeTeam: G('I组', 'first'),  awayTeam: T(['C组','D组','F组','G组','H组']), winner: null }, // 77
+    { homeTeam: G('E组', 'second'), awayTeam: G('I组', 'second'), winner: null },     // 78
+    { homeTeam: G('G组', 'first'),  awayTeam: T(['B组','E组','F组','I组','J组']), winner: null }, // 83
+    { homeTeam: G('F组', 'second'), awayTeam: T(['A组','B组','C组','D组','E组','G组','H组','I组','J组','K组','L组']), winner: null }, // 84
   ]
 
-  // 初始化后续轮次
-  leftBracket.value.round8 = Array(4).fill(null).map(() => ({ homeTeam: '', awayTeam: '', winner: null }))
-  leftBracket.value.round4 = Array(2).fill(null).map(() => ({ homeTeam: '', awayTeam: '', winner: null }))
-  leftBracket.value.semi = { homeTeam: '', awayTeam: '', winner: null }
+  // ============ 下半区右侧 1/16决赛 4场 ============
+  // 场次85: K2 vs L2
+  // 场次86: J1 vs H2
+  // 场次87: D1 vs T(B/E/F/I/J)
+  // 场次88: L1 vs T(A/C/D/G/K)
+  lowerRight.value.round16 = [
+    { homeTeam: G('K组', 'second'), awayTeam: G('L组', 'second'), winner: null },    // 85
+    { homeTeam: G('J组', 'first'),  awayTeam: G('H组', 'second'), winner: null },    // 86
+    { homeTeam: G('D组', 'first'),  awayTeam: T(['B组','E组','F组','I组','J组']), winner: null }, // 87
+    { homeTeam: G('L组', 'first'),  awayTeam: T(['A组','C组','D组','G组','K组']), winner: null }, // 88
+  ]
 
-  rightBracket.value.round8 = Array(4).fill(null).map(() => ({ homeTeam: '', awayTeam: '', winner: null }))
-  rightBracket.value.round4 = Array(2).fill(null).map(() => ({ homeTeam: '', awayTeam: '', winner: null }))
-  rightBracket.value.semi = { homeTeam: '', awayTeam: '', winner: null }
+  // 初始化后续轮次（每个子区2场round8）
+  upperLeft.value.round8 = Array(2).fill(null).map(() => ({ homeTeam: '', awayTeam: '', winner: null }))
+  upperRight.value.round8 = Array(2).fill(null).map(() => ({ homeTeam: '', awayTeam: '', winner: null }))
+  lowerLeft.value.round8 = Array(2).fill(null).map(() => ({ homeTeam: '', awayTeam: '', winner: null }))
+  lowerRight.value.round8 = Array(2).fill(null).map(() => ({ homeTeam: '', awayTeam: '', winner: null }))
+
+  quarterFinals.value = [
+    { homeTeam: '', awayTeam: '', winner: null },
+    { homeTeam: '', awayTeam: '', winner: null },
+    { homeTeam: '', awayTeam: '', winner: null },
+    { homeTeam: '', awayTeam: '', winner: null },
+  ]
+  semiFinals.value = [
+    { homeTeam: '', awayTeam: '', winner: null },
+    { homeTeam: '', awayTeam: '', winner: null },
+  ]
 
   finalMatch.value = { homeTeam: '', awayTeam: '', winner: null }
 }
 
-const predictMatch = (side: 'left' | 'right', round: 'round16' | 'round8' | 'round4' | 'semi', index: number, winner: 'home' | 'away') => {
-  const bracket = side === 'left' ? leftBracket.value : rightBracket.value
-  const match = round === 'semi' ? bracket.semi : (bracket as any)[round][index]
-  if (!match) return
-  match.winner = winner
+// 淘汰赛晋级逻辑
+// 四个象限各自独立：round16→round8（同象限内）, round8→QF（同象限内）
+// QF→Semi, Semi→Final
+type Quadrant = 'upperLeft' | 'upperRight' | 'lowerLeft' | 'lowerRight'
 
-  // 晋级到下一轮
+const getAdvanceTarget = (quad: Quadrant, round: 'round16' | 'round8', index: number): { targetRound: 'round8' | 'qf'; targetIndex: number; isHome: boolean } | null => {
+  if (round === 'round16') {
+    // round16 → round8：同象限内 (0,1→0), (2,3→1)
+    return { targetRound: 'round8', targetIndex: Math.floor(index / 2), isHome: index % 2 === 0 }
+  }
+  if (round === 'round8') {
+    // round8 → QF：每个象限2场round8 → 1场QF
+    const qfMap: Record<Quadrant, number> = {
+      upperLeft: 0, upperRight: 1, lowerLeft: 2, lowerRight: 3
+    }
+    const qfIndex = qfMap[quad]
+    return { targetRound: 'qf', targetIndex: qfIndex, isHome: index === 0 }
+  }
+  return null
+}
+
+// QF → semi
+const getQfToSemi = (qfIndex: number): { semiIndex: number; isHome: boolean } | null => {
+  if (qfIndex === 0) return { semiIndex: 0, isHome: true }   // QF1→Semi1.home
+  if (qfIndex === 1) return { semiIndex: 0, isHome: false }   // QF2→Semi1.away
+  if (qfIndex === 2) return { semiIndex: 1, isHome: true }    // QF3→Semi2.home
+  if (qfIndex === 3) return { semiIndex: 1, isHome: false }   // QF4→Semi2.away
+  return null
+}
+
+const predictMatch = (quad: Quadrant, round: 'round16' | 'round8', index: number, winner: 'home' | 'away') => {
+  const quadData = quad === 'upperLeft' ? upperLeft.value : quad === 'upperRight' ? upperRight.value : quad === 'lowerLeft' ? lowerLeft.value : lowerRight.value
+  const match = quadData[round][index]
+  if (!match) return
+  
+  match.winner = winner
   const winnerTeam = winner === 'home' ? match.homeTeam : match.awayTeam
   if (!winnerTeam) return
 
-  if (round === 'round16') {
-    const nextRound = bracket.round8
-    const nextIndex = Math.floor(index / 2)
-    const isHomeSlot = index % 2 === 0
-    const target = nextRound[nextIndex]
-    if (!target) return
-    if (isHomeSlot) target.homeTeam = winnerTeam
-    else target.awayTeam = winnerTeam
-    // 清除后续预测
-    target.winner = null
-    clearSubsequentPredictions(side, 'round8', nextIndex)
-  } else if (round === 'round8') {
-    const nextRound = bracket.round4
-    const nextIndex = Math.floor(index / 2)
-    const isHomeSlot = index % 2 === 0
-    const target = nextRound[nextIndex]
-    if (!target) return
-    if (isHomeSlot) target.homeTeam = winnerTeam
-    else target.awayTeam = winnerTeam
-    target.winner = null
-    clearSubsequentPredictions(side, 'round4', nextIndex)
-  } else if (round === 'round4') {
-    const nextRound = bracket.semi
-    const isHomeSlot = index === 0
-    if (isHomeSlot) nextRound.homeTeam = winnerTeam
-    else nextRound.awayTeam = winnerTeam
-    nextRound.winner = null
-    clearSubsequentPredictions(side, 'semi', 0)
-  } else if (round === 'semi') {
-    const final = finalMatch.value
-    if (side === 'left') final.homeTeam = winnerTeam
-    else final.awayTeam = winnerTeam
-    final.winner = null
+  const target = getAdvanceTarget(quad, round, index)
+  if (!target) return
+
+  if (target.targetRound === 'round8') {
+    // round16 → round8：同象限
+    const tMatch = quadData.round8[target.targetIndex]
+    if (tMatch) {
+      if (target.isHome) tMatch.homeTeam = winnerTeam
+      else tMatch.awayTeam = winnerTeam
+      tMatch.winner = null
+    }
+    // 清除更深层
+    const qfTarget = getAdvanceTarget(quad, 'round8', target.targetIndex)
+    if (qfTarget && qfTarget.targetRound === 'qf') {
+      quarterFinals.value[qfTarget.targetIndex].winner = null
+      const st = getQfToSemi(qfTarget.targetIndex)
+      if (st) {
+        semiFinals.value[st.semiIndex].winner = null
+        if (st.semiIndex === 0) { finalMatch.value.homeTeam = ''; finalMatch.value.winner = null }
+        else { finalMatch.value.awayTeam = ''; finalMatch.value.winner = null }
+      }
+    }
+  } else if (target.targetRound === 'qf') {
+    // round8 → quarterFinals
+    const qfMatch = quarterFinals.value[target.targetIndex]
+    if (qfMatch) {
+      if (target.isHome) qfMatch.homeTeam = winnerTeam
+      else qfMatch.awayTeam = winnerTeam
+      qfMatch.winner = null
+    }
+    // 清除更深层
+    const st = getQfToSemi(target.targetIndex)
+    if (st) {
+      semiFinals.value[st.semiIndex].winner = null
+      if (st.semiIndex === 0) { finalMatch.value.homeTeam = ''; finalMatch.value.winner = null }
+      else { finalMatch.value.awayTeam = ''; finalMatch.value.winner = null }
+    }
   }
+  
+  triggerBracketUpdate()
 }
 
-const clearSubsequentPredictions = (side: 'left' | 'right', fromRound: string, fromIndex: number) => {
-  const bracket = side === 'left' ? leftBracket.value : rightBracket.value
-  if (fromRound === 'round8') {
-    const r4Index = Math.floor(fromIndex / 2)
-    const target = bracket.round4[r4Index]
-    if (target) target.winner = null
-    clearSubsequentPredictions(side, 'round4', r4Index)
-  } else if (fromRound === 'round4') {
-    bracket.semi.winner = null
-    clearSubsequentPredictions(side, 'semi', 0)
-  } else if (fromRound === 'semi') {
-    if (side === 'left') finalMatch.value.homeTeam = ''
-    else finalMatch.value.awayTeam = ''
-    finalMatch.value.winner = null
+// QF 预测
+const predictQuarterFinal = (qfIndex: number, winner: 'home' | 'away') => {
+  const qfMatch = quarterFinals.value[qfIndex]
+  if (!qfMatch) return
+  qfMatch.winner = winner
+  const winnerTeam = winner === 'home' ? qfMatch.homeTeam : qfMatch.awayTeam
+  if (!winnerTeam) return
+
+  const st = getQfToSemi(qfIndex)
+  if (st) {
+    const semiMatch = semiFinals.value[st.semiIndex]
+    if (semiMatch) {
+      if (st.isHome) semiMatch.homeTeam = winnerTeam
+      else semiMatch.awayTeam = winnerTeam
+      semiMatch.winner = null
+    }
+    // 清除决赛
+    if (st.semiIndex === 0) { finalMatch.value.homeTeam = ''; finalMatch.value.winner = null }
+    else { finalMatch.value.awayTeam = ''; finalMatch.value.winner = null }
   }
+  triggerBracketUpdate()
+}
+
+// Semi 预测
+const predictSemiFinal = (semiIndex: number, winner: 'home' | 'away') => {
+  const semiMatch = semiFinals.value[semiIndex]
+  if (!semiMatch) return
+  semiMatch.winner = winner
+  const winnerTeam = winner === 'home' ? semiMatch.homeTeam : semiMatch.awayTeam
+  if (!winnerTeam) return
+
+  if (semiIndex === 0) finalMatch.value.homeTeam = winnerTeam
+  else finalMatch.value.awayTeam = winnerTeam
+  finalMatch.value.winner = null
+  triggerBracketUpdate()
+}
+
+const pickFinalWinner = (winner: 'home' | 'away') => {
+  finalMatch.value.winner = winner
+  triggerBracketUpdate()
 }
 
 const resetKnockout = () => {
   initKnockoutBracket()
+  triggerBracketUpdate()
   ElMessage.success('已重置淘汰赛预测')
 }
 
@@ -862,7 +1055,7 @@ const submitPrediction = () => {
   overflow: hidden;
 }
 
-/* ==================== 炫酷动态背景 ==================== */
+/* ==================== 炫酷动态背景（GPU加速，纯CSS无JS开销） ==================== */
 .bg-animated {
   position: fixed;
   top: 0;
@@ -871,6 +1064,7 @@ const submitPrediction = () => {
   height: 100%;
   z-index: 0;
   pointer-events: none;
+  contain: layout style paint;
 }
 
 /* 星星背景 */
@@ -893,81 +1087,36 @@ const submitPrediction = () => {
     radial-gradient(1px 1px at 35% 90%, rgba(255,255,255,0.3), transparent);
 }
 
-/* 光晕效果 */
+/* 光晕效果 - 减少为2个，降低GPU负载 */
 .bg-glow {
   position: absolute;
   border-radius: 50%;
   filter: blur(80px);
-  opacity: 0.15;
-  animation: glowFloat 8s ease-in-out infinite;
+  opacity: 0.12;
+  will-change: transform;
+  animation: glowFloat 12s ease-in-out infinite;
 }
 
 .bg-glow-1 {
-  width: 400px;
-  height: 400px;
+  width: 300px;
+  height: 300px;
   background: radial-gradient(circle, #58a6ff, transparent);
-  top: -10%;
-  left: -10%;
-  animation-delay: 0s;
+  top: -5%;
+  left: -5%;
 }
 
 .bg-glow-2 {
-  width: 350px;
-  height: 350px;
+  width: 250px;
+  height: 250px;
   background: radial-gradient(circle, #ff6b6b, transparent);
-  bottom: -10%;
-  right: -10%;
-  animation-delay: -3s;
-}
-
-.bg-glow-3 {
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, #ffd93d, transparent);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  bottom: -5%;
+  right: -5%;
   animation-delay: -6s;
 }
 
 @keyframes glowFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(30px, -30px) scale(1.1); }
-  50% { transform: translate(-20px, 20px) scale(0.9); }
-  75% { transform: translate(20px, 10px) scale(1.05); }
-}
-
-/* 粒子动画 */
-.bg-particles {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.particle {
-  position: absolute;
-  background: #58a6ff;
-  border-radius: 50%;
-  animation: particleFloat linear infinite;
-}
-
-@keyframes particleFloat {
-  0% {
-    transform: translateY(0) translateX(0);
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-100vh) translateX(50px);
-    opacity: 0;
-  }
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(20px, -20px, 0) scale(1.05); }
 }
 
 /* ==================== 头部 ==================== */
@@ -1055,6 +1204,13 @@ const submitPrediction = () => {
 @keyframes titleShine {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
+}
+
+/* 移动端降低动画时长以减少GPU负载 */
+@media (max-width: 768px) {
+  .page-title {
+    animation-duration: 6s;
+  }
 }
 
 .page-subtitle {
@@ -1247,7 +1403,7 @@ const submitPrediction = () => {
 }
 
 .team-select-row .team-flag {
-  font-size: 20px;
+  font-size: 14px;
   line-height: 1;
 }
 
@@ -1422,7 +1578,7 @@ const submitPrediction = () => {
   color: #ffd93d;
 }
 
-/* ==================== 淘汰赛 ==================== */
+/* ==================== 淘汰赛 - 树状布局 ==================== */
 .knockout-stage {
   padding: 0 8px 24px;
   position: relative;
@@ -1440,229 +1596,273 @@ const submitPrediction = () => {
   text-align: center;
 }
 
-.knockout-container {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 8px 0;
-  overflow-x: auto;
-}
-
-.knockout-half {
-  flex: 1;
-  min-width: 0;
-}
-
-.half-title {
-  text-align: center;
-  font-size: 14px;
-  font-weight: 700;
-  color: #e6edf3;
-  padding: 10px;
-  margin-bottom: 8px;
-  background: rgba(88, 166, 255, 0.08);
-  border-radius: 8px;
-  border: 1px solid rgba(88,166,255,0.15);
-  text-shadow: 0 0 10px rgba(88,166,255,0.2);
-}
-
-.bracket-side {
-  display: flex;
-  gap: 6px;
-}
-
-.bracket-side.left {
-  flex-direction: row;
-}
-
-.bracket-side.right {
-  flex-direction: row-reverse;
-}
-
-.round {
+/* ==================== 树状淘汰赛对阵图 ==================== */
+.bracket-tree {
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
-  gap: 4px;
+  gap: 16px;
+  padding: 8px 4px;
+  contain: layout style;
+}
+
+/* 半区 */
+.half-tree {
+  background: rgba(22, 27, 34, 0.4);
+  border: 1px solid rgba(88, 166, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.half-tree-title {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 800;
+  color: #58a6ff;
+  padding: 10px 16px;
+  background: rgba(88, 166, 255, 0.06);
+  border-bottom: 1px solid rgba(88, 166, 255, 0.12);
+  letter-spacing: 2px;
+}
+
+.half-tree-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 16px 8px;
+  min-height: 420px;
+}
+
+/* 侧边树 */
+.side-tree {
+  display: flex;
+  align-items: center;
+  gap: 0;
   flex: 1;
 }
 
-.bracket-match {
-  background: rgba(22,27,34,0.6);
-  border: 1px solid rgba(33,38,45,0.5);
-  border-radius: 8px;
-  overflow: hidden;
-  min-width: 80px;
-  backdrop-filter: blur(10px);
+.left-tree {
+  justify-content: flex-end;
 }
 
-.bracket-team {
+.right-tree {
+  justify-content: flex-start;
+}
+
+/* 树列 */
+.tree-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.r16-col {
+  width: 130px;
+}
+
+.r8-col {
+  width: 130px;
+}
+
+.qf-col {
+  width: 130px;
+}
+
+/* 树状对阵卡片 */
+.tree-match {
+  background: rgba(22, 27, 34, 0.7);
+  border: 1px solid rgba(48, 54, 61, 0.6);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* 球队行 */
+.tree-team {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 8px;
+  gap: 6px;
+  padding: 7px 10px;
   cursor: pointer;
-  transition: all 0.25s;
-  font-size: 11px;
-  min-height: 32px;
+  transition: background-color 0.15s, opacity 0.2s;
+  font-size: 12px;
+  min-height: 34px;
+  border-bottom: 1px solid rgba(33, 38, 45, 0.4);
 }
 
-.bracket-team:hover {
-  background: rgba(33,38,45,0.7);
+.tree-team:last-child {
+  border-bottom: none;
 }
 
-.bracket-team.winner {
-  background: linear-gradient(135deg, rgba(88,166,255,0.25), rgba(59,130,246,0.15));
-  color: #58a6ff;
-  box-shadow: inset 0 0 15px rgba(88,166,255,0.1);
+.tree-team:hover {
+  background: rgba(33, 38, 45, 0.8);
 }
 
-.bracket-team.eliminated {
+.tree-team.winner {
+  background: linear-gradient(135deg, rgba(88, 166, 255, 0.25), rgba(59, 130, 246, 0.15));
+  box-shadow: inset 0 0 15px rgba(88, 166, 255, 0.1);
+}
+
+.tree-team.eliminated {
   opacity: 0.35;
   filter: grayscale(0.5);
 }
 
-.bracket-team .team-flag {
-  font-size: 11px;
-  line-height: 1;
+.tree-team .team-flag,
+.tree-team .team-logo {
+  flex-shrink: 0;
 }
 
-.bracket-team .team-name {
+.tree-team-name {
   flex: 1;
   color: #c9d1d9;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 12px;
 }
 
-.bracket-team.winner .team-name {
+.tree-team.winner .tree-team-name {
   color: #58a6ff;
   font-weight: 600;
 }
 
-.bracket-team .placeholder {
+.tree-placeholder {
   color: #484f58;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px;
   width: 100%;
   text-align: center;
 }
 
-/* 决赛区域 */
-.final-round {
+/* 半决赛居中 */
+.semi-center {
+  flex: 0 0 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.semi-match {
+  width: 130px;
+}
+
+/* 决赛区块 */
+.final-tree-block {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-width: 100px;
-  padding: 0 4px;
+  gap: 10px;
+  padding: 16px;
+  background: rgba(255, 217, 61, 0.03);
+  border: 1px solid rgba(255, 217, 61, 0.12);
+  border-radius: 12px;
+  margin: 0 auto;
+  max-width: 320px;
+  width: 100%;
 }
 
-.final-match {
-  background: rgba(22,27,34,0.7);
+.final-tree-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffd93d;
+  letter-spacing: 2px;
+}
+
+.final-tree-match {
+  background: rgba(22, 27, 34, 0.8);
   border: 2px solid #ffd93d;
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
   width: 100%;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 0 30px rgba(255,217,61,0.15), 0 0 60px rgba(255,217,61,0.05);
+  box-shadow: 0 0 20px rgba(255, 217, 61, 0.15), 0 0 40px rgba(255, 217, 61, 0.05);
 }
 
-.final-team {
+.final-tree-team {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 12px 14px;
+  padding: 10px 12px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: background-color 0.15s;
   font-size: 13px;
   min-height: 40px;
 }
 
-.final-team:hover {
-  background: rgba(33,38,45,0.8);
+.final-tree-team:hover {
+  background: rgba(33, 38, 45, 0.8);
 }
 
-.final-team.winner {
-  background: linear-gradient(135deg, rgba(255,217,61,0.3), rgba(255,107,107,0.15));
-  box-shadow: inset 0 0 20px rgba(255,217,61,0.2);
+.final-tree-team.winner {
+  background: linear-gradient(135deg, rgba(255, 217, 61, 0.3), rgba(255, 107, 107, 0.15));
+  box-shadow: inset 0 0 20px rgba(255, 217, 61, 0.2);
 }
 
-.final-team .team-flag {
+.final-tree-name {
+  font-weight: 600;
+  color: #e6edf3;
   font-size: 13px;
 }
 
-.final-team .team-name {
-  font-weight: 600;
-  color: #e6edf3;
-}
-
-.final-vs {
+.final-tree-vs {
   text-align: center;
   padding: 4px;
   font-size: 12px;
   font-weight: 800;
   color: #ffd93d;
-  background: rgba(13,17,23,0.8);
-  border-top: 1px solid rgba(255,217,61,0.2);
-  border-bottom: 1px solid rgba(255,217,61,0.2);
+  background: rgba(13, 17, 23, 0.9);
+  border-top: 1px solid rgba(255, 217, 61, 0.2);
+  border-bottom: 1px solid rgba(255, 217, 61, 0.2);
   letter-spacing: 3px;
-  text-shadow: 0 0 10px rgba(255,217,61,0.5);
+  text-shadow: 0 0 10px rgba(255, 217, 61, 0.5);
 }
 
-.champion-display {
-  margin-top: 14px;
+.champion-tree {
+  margin-top: 8px;
   text-align: center;
-  padding: 16px;
-  background: linear-gradient(135deg, rgba(255,217,61,0.12), rgba(255,107,107,0.08));
-  border-radius: 12px;
-  border: 1px solid rgba(255,217,61,0.25);
-  backdrop-filter: blur(10px);
-  animation: championGlow 2s ease-in-out infinite;
+  padding: 10px;
+  background: linear-gradient(135deg, rgba(255, 217, 61, 0.12), rgba(255, 107, 107, 0.08));
+  border-radius: 10px;
+  border: 1px solid rgba(255, 217, 61, 0.25);
+  animation: championGlow 3s ease-in-out infinite;
+  will-change: box-shadow;
 }
 
 @keyframes championGlow {
-  0%, 100% { box-shadow: 0 0 20px rgba(255,217,61,0.15); }
-  50% { box-shadow: 0 0 35px rgba(255,217,61,0.3); }
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 217, 61, 0.15); }
+  50% { box-shadow: 0 0 30px rgba(255, 217, 61, 0.25); }
 }
 
 .champion-crown {
-  font-size: 28px;
-  filter: drop-shadow(0 0 8px rgba(255,217,61,0.5));
-  animation: crownBounce 1s ease-in-out infinite;
+  font-size: 24px;
+  filter: drop-shadow(0 0 8px rgba(255, 217, 61, 0.5));
+  animation: crownBounce 2s ease-in-out infinite;
+  will-change: transform;
 }
 
 @keyframes crownBounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -3px, 0); }
 }
 
 .champion-flag {
-  font-size: 36px;
-  margin: 6px 0;
+  font-size: 28px;
+  margin: 4px 0;
 }
 
 .champion-name {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
   color: #ffd93d;
-  text-shadow: 0 0 10px rgba(255,217,61,0.4);
+  text-shadow: 0 0 10px rgba(255, 217, 61, 0.4);
 }
 
 .champion-text {
-  font-size: 12px;
+  font-size: 11px;
   color: #8b949e;
-  margin-top: 4px;
+  margin-top: 2px;
   letter-spacing: 2px;
-}
-
-.knockout-actions {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  padding: 20px 16px;
 }
 
 /* ==================== 赛程数据 - 按日期 ==================== */
@@ -1817,7 +2017,7 @@ const submitPrediction = () => {
 }
 
 .team-flag {
-  font-size: 20px;
+  font-size: 14px;
   line-height: 1;
 }
 
@@ -1846,6 +2046,7 @@ const submitPrediction = () => {
   object-fit: contain;
   display: inline-block;
   vertical-align: middle;
+  image-rendering: auto;
 }
 
 .team-logo-tiny {
@@ -1854,8 +2055,8 @@ const submitPrediction = () => {
 }
 
 .team-logo-small {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
 }
 
 .team-logo-medium {
@@ -2209,7 +2410,7 @@ const submitPrediction = () => {
     gap: 4px;
   }
 
-  /* 淘汰赛 - 移动端核心适配 */
+  /* 淘汰赛 - 移动端 */
   .knockout-stage {
     padding: 0 2px 16px;
   }
@@ -2219,125 +2420,119 @@ const submitPrediction = () => {
     padding: 6px;
   }
 
-  .knockout-container {
-    flex-direction: row;
-    gap: 1px;
-    padding: 2px 0;
-    overflow-x: visible;
-    flex-wrap: nowrap;
-    align-items: flex-start;
-    justify-content: center;
+  .bracket-tree {
+    gap: 10px;
+    padding: 4px 2px;
   }
 
-  .knockout-half {
-    flex: 1 1 auto;
-    min-width: 0;
-    max-width: none;
+  .half-tree-title {
+    font-size: 13px;
+    padding: 8px 12px;
   }
 
-  .half-title {
-    font-size: 8px;
-    padding: 2px;
-    margin-bottom: 1px;
-    border-radius: 3px;
+  .half-tree-body {
+    padding: 10px 4px;
+    min-height: 320px;
   }
 
-  .bracket-side {
-    gap: 1px;
-    overflow-x: visible;
-    padding-bottom: 0;
+  .tree-col {
+    gap: 4px;
   }
 
-  .round {
-    min-width: 0;
-    flex: 1;
-    gap: 1px;
+  .r16-col,
+  .r8-col,
+  .qf-col {
+    width: 90px;
   }
 
-  .bracket-match {
-    min-width: 0;
-    border-radius: 3px;
+  .semi-center {
+    flex: 0 0 100px;
   }
 
-  .bracket-team {
-    font-size: 6px;
-    padding: 1px 1px;
-    gap: 1px;
-    min-height: 16px;
+  .semi-match {
+    width: 90px;
   }
 
-  .bracket-team .team-flag {
-    font-size: 6px;
-    line-height: 1;
+  .tree-team {
+    font-size: 10px;
+    padding: 4px 6px;
+    gap: 3px;
+    min-height: 26px;
   }
 
-  .bracket-team .team-name {
-    font-size: 6px;
-    max-width: 28px;
+  .tree-team .team-flag {
+    font-size: 12px;
   }
 
-  .bracket-team .placeholder {
-    font-size: 6px;
+  .tree-team-name {
+    font-size: 10px;
   }
 
-  /* 决赛区域 - 移动端 */
-  .final-round {
-    flex: 0 0 auto;
-    min-width: 0;
-    max-width: 44px;
-    padding: 0;
-    width: auto;
-    margin: 0;
+  .tree-placeholder {
+    font-size: 10px;
   }
 
-  .final-match {
-    border-radius: 4px;
+  .tree-team .team-logo-small {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* 决赛 - 移动端 */
+  .final-tree-block {
+    max-width: 260px;
+    padding: 12px;
+  }
+
+  .final-tree-label {
+    font-size: 11px;
+  }
+
+  .final-tree-match {
+    border-radius: 6px;
     border-width: 1px;
   }
 
-  .final-team {
-    font-size: 6px;
-    padding: 2px 1px;
-    gap: 1px;
-    min-height: 18px;
+  .final-tree-team {
+    font-size: 11px;
+    padding: 6px 8px;
+    gap: 3px;
+    min-height: 32px;
   }
 
-  .final-team .team-flag {
-    font-size: 6px;
-    line-height: 1;
+  .final-tree-team .team-flag {
+    font-size: 14px;
   }
 
-  .final-team .team-name {
-    font-size: 6px;
+  .final-tree-name {
+    font-size: 11px;
   }
 
-  .final-vs {
-    font-size: 7px;
-    padding: 1px;
-    letter-spacing: 1px;
+  .final-tree-vs {
+    font-size: 10px;
+    padding: 2px;
+    letter-spacing: 2px;
   }
 
-  .champion-display {
+  .champion-tree {
     padding: 6px 4px;
-    margin-top: 4px;
+    margin-top: 6px;
   }
 
   .champion-crown {
-    font-size: 16px;
+    font-size: 18px;
   }
 
   .champion-flag {
-    font-size: 20px;
+    font-size: 22px;
     margin: 2px 0;
   }
 
   .champion-name {
-    font-size: 10px;
+    font-size: 12px;
   }
 
   .champion-text {
-    font-size: 8px;
-    margin-top: 2px;
+    font-size: 9px;
   }
 
   .knockout-actions {
@@ -2471,57 +2666,110 @@ const submitPrediction = () => {
     gap: 6px;
   }
 
-  .bracket-side {
-    gap: 1px;
-  }
-
-  .round {
-    min-width: 0;
-    flex: 1;
-    gap: 1px;
-  }
-
-  .bracket-match {
-    min-width: 0;
-  }
-
-  .bracket-team {
-    font-size: 5px;
-    padding: 1px 1px;
-    min-height: 16px;
-  }
-
-  .bracket-team .team-flag {
-    font-size: 5px;
-    line-height: 1;
-  }
-
-  .bracket-team .team-name {
-    font-size: 5px;
-    max-width: 24px;
-  }
-
-  .final-round {
-    max-width: 38px;
-  }
-
-  .final-team {
-    font-size: 5px;
+  .bracket-tree {
+    gap: 6px;
     padding: 2px 1px;
-    min-height: 16px;
   }
 
-  .final-team .team-flag {
-    font-size: 5px;
-    line-height: 1;
+  .half-tree-title {
+    font-size: 11px;
+    padding: 6px 10px;
   }
 
-  .final-team .team-name {
-    font-size: 5px;
+  .half-tree-body {
+    padding: 6px 2px;
+    min-height: 260px;
+  }
+
+  .tree-col {
+    gap: 2px;
+  }
+
+  .r16-col,
+  .r8-col,
+  .qf-col {
+    width: 70px;
+  }
+
+  .semi-center {
+    flex: 0 0 80px;
+  }
+
+  .semi-match {
+    width: 70px;
+  }
+
+  .tree-team {
+    font-size: 8px;
+    padding: 2px 4px;
+    gap: 2px;
+    min-height: 20px;
+  }
+
+  .tree-team .team-flag {
+    font-size: 10px;
+  }
+
+  .tree-team-name {
+    font-size: 8px;
+    max-width: 40px;
+  }
+
+  .tree-placeholder {
+    font-size: 8px;
+  }
+
+  .tree-team .team-logo-small {
+    width: 10px;
+    height: 10px;
+  }
+
+  .final-tree-block {
+    max-width: 200px;
+    padding: 8px;
+  }
+
+  .final-tree-label {
+    font-size: 9px;
+  }
+
+  .final-tree-match {
+    border-radius: 4px;
+  }
+
+  .final-tree-team {
+    font-size: 9px;
+    padding: 4px 6px;
+    gap: 2px;
+    min-height: 24px;
+  }
+
+  .final-tree-team .team-flag {
+    font-size: 12px;
+  }
+
+  .final-tree-name {
+    font-size: 9px;
+  }
+
+  .final-tree-team .team-logo-medium {
+    width: 12px;
+    height: 12px;
+  }
+
+  .final-tree-vs {
+    font-size: 8px;
+    padding: 1px;
+    letter-spacing: 1px;
+  }
+
+  .champion-tree {
+    padding: 4px 2px;
+    margin-top: 4px;
   }
 
   .champion-name {
-    font-size: 9px;
+    font-size: 10px;
   }
 
   .champion-crown {
