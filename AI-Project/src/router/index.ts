@@ -135,6 +135,15 @@ const router = createRouter({
         title: '订阅会员',
         requiresAdmin: true
       }
+    },
+    {
+      path: '/worldcup',
+      name: 'WorldCup',
+      component: () => import('@/views/WorldCupView.vue'),
+      meta: {
+        requiresAuth: false,
+        title: '世界杯预测'
+      }
     }
   ]
 })

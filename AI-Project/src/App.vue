@@ -9,7 +9,7 @@ const isMobile = ref(false)
 
 // 是否隐藏头部导航
 const hideHeader = computed(() => {
-  return route.path === '/credits'
+  return route.path === '/credits' || route.path === '/worldcup'
 })
 
 const checkScreenSize = () => {
@@ -89,6 +89,13 @@ const closeMobileMenu = () => {
             :class="{ 'mobile-link': isMobile }"
           >
             历史记录
+          </RouterLink>
+          <RouterLink
+            to="/worldcup"
+            @click="closeMobileMenu"
+            :class="{ 'mobile-link': isMobile }"
+          >
+            世界杯
           </RouterLink>
           <!-- 已屏蔽：AI对话导航 -->
           <!-- <RouterLink
