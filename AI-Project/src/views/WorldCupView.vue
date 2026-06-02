@@ -958,10 +958,12 @@ const predictMatch = (quad: Quadrant, round: 'round16' | 'round8', index: number
     // 清除更深层
     const qfTarget = getAdvanceTarget(quad, 'round8', target.targetIndex)
     if (qfTarget && qfTarget.targetRound === 'qf') {
-      quarterFinals.value[qfTarget.targetIndex].winner = null
+      const qfMatch = quarterFinals.value[qfTarget.targetIndex]
+      if (qfMatch) qfMatch.winner = null
       const st = getQfToSemi(qfTarget.targetIndex)
       if (st) {
-        semiFinals.value[st.semiIndex].winner = null
+        const sm = semiFinals.value[st.semiIndex]
+        if (sm) sm.winner = null
         if (st.semiIndex === 0) { finalMatch.value.homeTeam = ''; finalMatch.value.winner = null }
         else { finalMatch.value.awayTeam = ''; finalMatch.value.winner = null }
       }
@@ -977,7 +979,8 @@ const predictMatch = (quad: Quadrant, round: 'round16' | 'round8', index: number
     // 清除更深层
     const st = getQfToSemi(target.targetIndex)
     if (st) {
-      semiFinals.value[st.semiIndex].winner = null
+      const sm = semiFinals.value[st.semiIndex]
+      if (sm) sm.winner = null
       if (st.semiIndex === 0) { finalMatch.value.homeTeam = ''; finalMatch.value.winner = null }
       else { finalMatch.value.awayTeam = ''; finalMatch.value.winner = null }
     }
