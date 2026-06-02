@@ -361,7 +361,6 @@
         </div>
 
         <div class="knockout-actions">
-          <el-button type="primary" plain @click="resetKnockout">重置预测</el-button>
           <el-button type="success" @click="submitPrediction">完成预测</el-button>
         </div>
       </div>
@@ -370,7 +369,7 @@
 
 <script setup lang="ts">
 import { ref, computed, h, defineComponent, onMounted, shallowRef } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { worldcupApi } from '@/api/worldcup'
 
@@ -1042,7 +1041,17 @@ const submitPrediction = () => {
     return
   }
   const champion = finalMatch.value.winner === 'home' ? finalMatch.value.homeTeam : finalMatch.value.awayTeam
-  ElMessage.success(`预测完成！您预测的冠军是：${getFlagEmoji(champion)} ${champion}`)
+  ElMessageBox({
+    title: '预测完成！',
+    message: h('div', { style: 'text-align: center' }, [
+      h('p', { style: 'margin-bottom: 12px; font-size: 15px; color: #e6edf3' }, `您预测的冠军是：${getFlagEmoji(champion)} ${champion}`),
+      h('img', { src: '/mini.jpg', style: 'width: 160px; height: 160px; border-radius: 8px; display: block; margin: 0 auto 8px' }),
+      h('p', { style: 'font-size: 13px; color: #8b949e' }, '微信扫码体验小程序，查看完整预测结果'),
+    ]),
+    confirmButtonText: '知道了',
+    customClass: 'prediction-dialog',
+    center: true,
+  })
 }
 
 
@@ -1582,7 +1591,7 @@ const submitPrediction = () => {
 
 /* ==================== 淘汰赛 - 树状布局 ==================== */
 .knockout-stage {
-  padding: 0 8px 24px;
+  padding: 0 4px 24px;
   position: relative;
   z-index: 1;
 }
@@ -1754,18 +1763,19 @@ const submitPrediction = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 10px;
+  gap: 4px;
+  padding: 8px;
   background: rgba(255, 217, 61, 0.03);
   border: 1px solid rgba(255, 217, 61, 0.12);
-  border-radius: 12px;
+  border-radius: 10px;
   margin: 0 auto;
-  max-width: 260px;
+  max-width: 220px;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .final-tree-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: #ffd93d;
   letter-spacing: 1px;
@@ -1774,7 +1784,7 @@ const submitPrediction = () => {
 .final-tree-match {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
 }
 
@@ -1783,16 +1793,17 @@ const submitPrediction = () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 8px 6px;
+  gap: 3px;
+  padding: 6px 4px;
   cursor: pointer;
   transition: background-color 0.15s;
-  font-size: 12px;
-  min-height: 50px;
+  font-size: 11px;
+  min-height: 44px;
   flex: 1;
+  min-width: 0;
   background: rgba(22, 27, 34, 0.8);
   border: 1px solid rgba(255, 217, 61, 0.2);
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .final-tree-team:hover {
@@ -1808,7 +1819,7 @@ const submitPrediction = () => {
 .final-tree-name {
   font-weight: 600;
   color: #e6edf3;
-  font-size: 12px;
+  font-size: 11px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1816,32 +1827,33 @@ const submitPrediction = () => {
 }
 
 .final-placeholder {
-  font-size: 16px;
+  font-size: 15px;
   color: #484f58;
   font-weight: 300;
 }
 
 .final-tree-vs {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   color: #ffd93d;
   text-shadow: 0 0 8px rgba(255, 217, 61, 0.4);
   flex-shrink: 0;
-  padding: 0 2px;
+  padding: 0 1px;
 }
 
 .champion-tree {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 8px 12px;
+  gap: 1px;
+  padding: 6px 10px;
   background: linear-gradient(135deg, rgba(255, 217, 61, 0.12), rgba(255, 107, 107, 0.08));
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid rgba(255, 217, 61, 0.25);
   animation: championGlow 3s ease-in-out infinite;
   will-change: box-shadow;
   width: 100%;
+  box-sizing: border-box;
 }
 
 @keyframes championGlow {
@@ -1850,7 +1862,7 @@ const submitPrediction = () => {
 }
 
 .champion-crown {
-  font-size: 20px;
+  font-size: 18px;
   filter: drop-shadow(0 0 6px rgba(255, 217, 61, 0.5));
   animation: crownBounce 2s ease-in-out infinite;
   will-change: transform;
@@ -1862,12 +1874,12 @@ const submitPrediction = () => {
 }
 
 .champion-flag {
-  font-size: 22px;
-  margin: 1px 0;
+  font-size: 18px;
+  margin: 0;
 }
 
 .champion-name {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   color: #ffd93d;
   text-shadow: 0 0 8px rgba(255, 217, 61, 0.4);
@@ -2420,7 +2432,7 @@ const submitPrediction = () => {
 
   /* 淘汰赛 - 移动端 */
   .knockout-stage {
-    padding: 0 2px 16px;
+    padding: 0 0 12px;
   }
 
   .knockout-hint {
@@ -2439,57 +2451,57 @@ const submitPrediction = () => {
   }
 
   .half-tree-body {
-    padding: 10px 4px;
-    min-height: 320px;
+    padding: 8px 2px;
+    min-height: 280px;
   }
 
   .tree-col {
-    gap: 4px;
+    gap: 3px;
   }
 
   .r16-col,
   .r8-col,
   .qf-col {
-    width: 90px;
+    width: 62px;
   }
 
   .semi-center {
-    flex: 0 0 100px;
+    flex: 0 0 70px;
   }
 
   .semi-match {
-    width: 90px;
+    width: 62px;
   }
 
   .tree-team {
-    font-size: 10px;
-    padding: 4px 6px;
-    gap: 3px;
-    min-height: 26px;
+    font-size: 9px;
+    padding: 3px 4px;
+    gap: 2px;
+    min-height: 24px;
   }
 
   .tree-team .team-flag {
-    font-size: 12px;
+    font-size: 10px;
   }
 
   .tree-team-name {
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .tree-placeholder {
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .tree-team .team-logo-small {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
   }
 
   /* 决赛 - 移动端 */
   .final-tree-block {
-    max-width: 220px;
-    padding: 8px;
-    gap: 4px;
+    max-width: 200px;
+    padding: 6px;
+    gap: 3px;
   }
 
   .final-tree-label {
@@ -2497,51 +2509,51 @@ const submitPrediction = () => {
   }
 
   .final-tree-match {
-    gap: 4px;
+    gap: 3px;
   }
 
   .final-tree-team {
-    font-size: 10px;
-    padding: 6px 4px;
+    font-size: 9px;
+    padding: 5px 3px;
     gap: 2px;
-    min-height: 42px;
-    border-radius: 6px;
+    min-height: 38px;
+    border-radius: 5px;
   }
 
   .final-tree-team .team-flag {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .final-tree-name {
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .final-placeholder {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .final-tree-vs {
-    font-size: 9px;
+    font-size: 8px;
     padding: 0 1px;
   }
 
   .champion-tree {
-    padding: 6px 8px;
+    padding: 5px 8px;
     gap: 1px;
-    border-radius: 6px;
+    border-radius: 5px;
   }
 
   .champion-crown {
-    font-size: 16px;
+    font-size: 15px;
   }
 
   .champion-flag {
-    font-size: 18px;
-    margin: 1px 0;
+    font-size: 16px;
+    margin: 0;
   }
 
   .champion-name {
-    font-size: 11px;
+    font-size: 10px;
   }
 
   .knockout-actions {
@@ -2686,8 +2698,8 @@ const submitPrediction = () => {
   }
 
   .half-tree-body {
-    padding: 6px 2px;
-    min-height: 260px;
+    padding: 4px 1px;
+    min-height: 220px;
   }
 
   .tree-col {
@@ -2697,61 +2709,61 @@ const submitPrediction = () => {
   .r16-col,
   .r8-col,
   .qf-col {
-    width: 70px;
+    width: 50px;
   }
 
   .semi-center {
-    flex: 0 0 80px;
+    flex: 0 0 56px;
   }
 
   .semi-match {
-    width: 70px;
+    width: 50px;
   }
 
   .tree-team {
-    font-size: 8px;
-    padding: 2px 4px;
-    gap: 2px;
-    min-height: 20px;
+    font-size: 7px;
+    padding: 2px 3px;
+    gap: 1px;
+    min-height: 18px;
   }
 
   .tree-team .team-flag {
-    font-size: 10px;
-  }
-
-  .tree-team-name {
-    font-size: 8px;
-    max-width: 40px;
-  }
-
-  .tree-placeholder {
-    font-size: 8px;
-  }
-
-  .tree-team .team-logo-small {
-    width: 10px;
-    height: 10px;
-  }
-
-  .final-tree-block {
-    max-width: 180px;
-    padding: 6px;
-    gap: 3px;
-  }
-
-  .final-tree-label {
     font-size: 9px;
   }
 
+  .tree-team-name {
+    font-size: 7px;
+    max-width: 30px;
+  }
+
+  .tree-placeholder {
+    font-size: 7px;
+  }
+
+  .tree-team .team-logo-small {
+    width: 9px;
+    height: 9px;
+  }
+
+  .final-tree-block {
+    max-width: 170px;
+    padding: 5px;
+    gap: 2px;
+  }
+
+  .final-tree-label {
+    font-size: 8px;
+  }
+
   .final-tree-match {
-    gap: 3px;
+    gap: 2px;
   }
 
   .final-tree-team {
     font-size: 8px;
-    padding: 4px 3px;
-    gap: 2px;
-    min-height: 36px;
+    padding: 4px 2px;
+    gap: 1px;
+    min-height: 32px;
     border-radius: 4px;
   }
 
@@ -2764,7 +2776,7 @@ const submitPrediction = () => {
   }
 
   .final-placeholder {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .final-tree-vs {
@@ -2773,21 +2785,44 @@ const submitPrediction = () => {
   }
 
   .champion-tree {
-    padding: 4px 6px;
-    gap: 1px;
+    padding: 3px 5px;
+    gap: 0;
     border-radius: 4px;
   }
 
   .champion-crown {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .champion-flag {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .champion-name {
-    font-size: 10px;
+    font-size: 9px;
   }
+}
+</style>
+
+<style>
+/* 预测完成弹窗样式 */
+.prediction-dialog {
+  background: #161b22 !important;
+  border: 1px solid rgba(255, 217, 61, 0.2) !important;
+  border-radius: 12px !important;
+}
+.prediction-dialog .el-message-box__title {
+  color: #ffd93d !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+.prediction-dialog .el-message-box__message {
+  color: #e6edf3 !important;
+}
+.prediction-dialog .el-button--primary {
+  background: linear-gradient(135deg, #ffd93d, #f0a500) !important;
+  border: none !important;
+  color: #0a0a14 !important;
+  font-weight: 600 !important;
 }
 </style>
