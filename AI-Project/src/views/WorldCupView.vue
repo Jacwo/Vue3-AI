@@ -1524,7 +1524,7 @@ const submitPrediction = () => {
 }
 
 .bracket-team .team-flag {
-  font-size: 13px;
+  font-size: 11px;
   line-height: 1;
 }
 
@@ -1591,7 +1591,7 @@ const submitPrediction = () => {
 }
 
 .final-team .team-flag {
-  font-size: 15px;
+  font-size: 13px;
 }
 
 .final-team .team-name {
@@ -2221,7 +2221,7 @@ const submitPrediction = () => {
 
   .knockout-container {
     flex-direction: row;
-    gap: 2px;
+    gap: 1px;
     padding: 2px 0;
     overflow-x: visible;
     flex-wrap: nowrap;
@@ -2236,10 +2236,10 @@ const submitPrediction = () => {
   }
 
   .half-title {
-    font-size: 9px;
-    padding: 3px;
-    margin-bottom: 2px;
-    border-radius: 4px;
+    font-size: 8px;
+    padding: 2px;
+    margin-bottom: 1px;
+    border-radius: 3px;
   }
 
   .bracket-side {
@@ -2256,57 +2256,59 @@ const submitPrediction = () => {
 
   .bracket-match {
     min-width: 0;
-    border-radius: 4px;
+    border-radius: 3px;
   }
 
   .bracket-team {
-    font-size: 7px;
-    padding: 2px 2px;
+    font-size: 6px;
+    padding: 1px 1px;
     gap: 1px;
-    min-height: 20px;
+    min-height: 16px;
   }
 
   .bracket-team .team-flag {
-    font-size: 8px;
+    font-size: 6px;
+    line-height: 1;
   }
 
   .bracket-team .team-name {
-    font-size: 7px;
-    max-width: 30px;
+    font-size: 6px;
+    max-width: 28px;
   }
 
   .bracket-team .placeholder {
-    font-size: 7px;
+    font-size: 6px;
   }
 
   /* 决赛区域 - 移动端 */
   .final-round {
     flex: 0 0 auto;
     min-width: 0;
-    max-width: 48px;
+    max-width: 44px;
     padding: 0;
     width: auto;
     margin: 0;
   }
 
   .final-match {
-    border-radius: 5px;
+    border-radius: 4px;
     border-width: 1px;
   }
 
   .final-team {
-    font-size: 7px;
-    padding: 3px 2px;
+    font-size: 6px;
+    padding: 2px 1px;
     gap: 1px;
-    min-height: 20px;
+    min-height: 18px;
   }
 
   .final-team .team-flag {
-    font-size: 8px;
+    font-size: 6px;
+    line-height: 1;
   }
 
   .final-team .team-name {
-    font-size: 7px;
+    font-size: 6px;
   }
 
   .final-vs {
@@ -2484,36 +2486,38 @@ const submitPrediction = () => {
   }
 
   .bracket-team {
-    font-size: 6px;
+    font-size: 5px;
     padding: 1px 1px;
-    min-height: 18px;
+    min-height: 16px;
   }
 
   .bracket-team .team-flag {
-    font-size: 7px;
+    font-size: 5px;
+    line-height: 1;
   }
 
   .bracket-team .team-name {
-    font-size: 6px;
-    max-width: 28px;
+    font-size: 5px;
+    max-width: 24px;
   }
 
   .final-round {
-    max-width: 42px;
+    max-width: 38px;
   }
 
   .final-team {
-    font-size: 6px;
+    font-size: 5px;
     padding: 2px 1px;
-    min-height: 18px;
+    min-height: 16px;
   }
 
   .final-team .team-flag {
-    font-size: 7px;
+    font-size: 5px;
+    line-height: 1;
   }
 
   .final-team .team-name {
-    font-size: 6px;
+    font-size: 5px;
   }
 
   .champion-name {
