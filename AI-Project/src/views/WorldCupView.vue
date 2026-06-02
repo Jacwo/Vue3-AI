@@ -14,11 +14,16 @@
     <!-- 页面头部 - AI足球智能体品牌 -->
     <div class="page-header">
       <div class="header-content">
+        <div class="header-qrcode">
+          <img alt="小程序二维码" class="qrcode-img" src="/mini.jpg" width="50" height="50" />
+          <span class="qrcode-label">扫码体验小程序</span>
+        </div>
+        <div class="header-divider"></div>
         <div class="header-brand">
           <img alt="AI足球智能体" class="brand-logo" src="@/assets/logo.svg" width="50" height="50" />
           <div class="brand-title">
             <span class="brand-name">AI足球智能体</span>
-            <span class="brand-subtitle">专业的足球比赛分析与预测</span>
+            <span class="brand-subtitle">微信搜一搜</span>
           </div>
         </div>
         <div class="header-divider"></div>
@@ -28,11 +33,6 @@
             <h1 class="page-title">2026美加墨世界杯</h1>
             <p class="page-subtitle">晋级之路</p>
           </div>
-        </div>
-        <div class="header-divider"></div>
-        <div class="header-qrcode">
-          <img alt="小程序二维码" class="qrcode-img" src="/mini.jpg" width="40" height="40" />
-          <span class="qrcode-label">扫码体验小程序</span>
         </div>
       </div>
     </div>
@@ -276,24 +276,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h, defineComponent } from 'vue'
+import { ref, computed, h, defineComponent, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
-// ==================== 2026世界杯分组（硬编码） ====================
-const WORLD_CUP_GROUPS: Record<string, string[]> = {
-  'A组': ['墨西哥', '加拿大', '伊朗', '新西兰'],
-  'B组': ['阿根廷', '厄瓜多尔', '乌拉圭', '海地'],
-  'C组': ['西班牙', '葡萄牙', '挪威', '波黑'],
-  'D组': ['法国', '荷兰', '捷克', '伊拉克'],
-  'E组': ['英格兰', '哥伦比亚', '土耳其', '佛得角'],
-  'F组': ['德国', '奥地利', '瑞士', '南非'],
-  'G组': ['巴西', '克罗地亚', '摩洛哥', '库拉索'],
-  'H组': ['比利时', '瑞典', '日本', '刚果金'],
-  'I组': ['意大利', '苏格兰', '埃及', '约旦'],
-  'J组': ['美国', '韩国', '突尼斯', '巴拿马'],
-  'K组': ['塞内加尔', '澳大利亚', '乌兹别克', '卡塔尔'],
-  'L组': ['科特迪瓦', '巴拉圭', '阿尔及利', '沙特'],
+import { worldcupApi } from '@/api/worldcup'
+
+// ==================== 2026世界杯分组（从接口获取） ====================
+const WORLD_CUP_GROUPS = ref<Record<string, string[]>>({})
+const groupsLoading = ref(false)
+
+const fetchGroups = async () => {
+  groupsLoading.value = true
+  try {
+    const data = await worldcupApi.getGroups()
+    WORLD_CUP_GROUPS.value = data || {}
+  } catch (error) {
+    console.error('获取世界杯分组失败:', error)
+    ElMessage.error('获取分组数据失败，请稍后重试')
+  } finally {
+    groupsLoading.value = false
+  }
 }
+
+onMounted(() => {
+  fetchGroups()
+})
 
 // ==================== 球队信息映射（来自竞彩夺冠赔率数据） ====================
 interface TeamInfo {
@@ -452,7 +459,7 @@ const selectedThirdPlaces = ref<Set<string>>(new Set())
 
 // 从硬编码分组数据中提取
 const allGroups = computed(() => {
-  return Object.entries(WORLD_CUP_GROUPS).map(([name, teams]) => ({
+  return Object.entries(WORLD_CUP_GROUPS.value).map(([name, teams]) => ({
     name,
     teams: teams.map(t => ({ name: t }))
   })).sort((a, b) => a.name.localeCompare(b.name))
@@ -1517,7 +1524,7 @@ const submitPrediction = () => {
 }
 
 .bracket-team .team-flag {
-  font-size: 16px;
+  font-size: 13px;
   line-height: 1;
 }
 
@@ -1584,7 +1591,7 @@ const submitPrediction = () => {
 }
 
 .final-team .team-flag {
-  font-size: 20px;
+  font-size: 15px;
 }
 
 .final-team .team-name {
@@ -2039,28 +2046,486 @@ const submitPrediction = () => {
   text-align: center;
 }
 
-/* 响应式 */
-@media (max-width: 640px) {
+/* ==================== 响应式 - 移动端兼容 ==================== */
+@media (max-width: 768px) {
+  /* 页面整体 */
+  .worldcup-page {
+    padding-bottom: 20px;
+  }
+
+  /* 头部 - 移动端适配 */
+  .page-header {
+    padding: 12px 12px;
+  }
+
+  .header-content {
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .brand-logo {
+    width: 36px;
+    height: 36px;
+  }
+
+  .brand-name {
+    font-size: 13px;
+  }
+
+  .brand-subtitle {
+    font-size: 10px;
+  }
+
+  .header-divider {
+    height: 28px;
+  }
+
+  .tournament-icon {
+    font-size: 22px;
+  }
+
+  .page-title {
+    font-size: 14px;
+  }
+
+  .page-subtitle {
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
+
+  .header-qrcode {
+    gap: 4px;
+  }
+
+  .qrcode-img {
+    width: 36px;
+    height: 36px;
+  }
+
+  .qrcode-label {
+    font-size: 10px;
+  }
+
+  /* 预测阶段Tab */
+  .phase-tabs {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .phase-tab {
+    padding: 8px 20px;
+    font-size: 13px;
+  }
+
+  /* 小组赛选择 */
+  .group-selection {
+    padding: 0 8px 16px;
+  }
+
+  .selection-hint {
+    font-size: 11px;
+    padding: 8px;
+    flex-wrap: wrap;
+  }
+
+  .progress-bar {
+    padding: 0 8px 12px;
+  }
+
+  .progress-text {
+    font-size: 11px;
+  }
+
   .groups-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 0;
+  }
+
+  .group-card {
+    border-radius: 10px;
+  }
+
+  .group-card-header {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .team-select-row {
+    padding: 6px 8px;
+    gap: 6px;
+  }
+
+  .team-select-row .team-name {
+    font-size: 12px;
+  }
+
+  .team-select-row .team-flag {
+    font-size: 16px;
+  }
+
+  .select-circle {
+    width: 16px;
+    height: 16px;
+  }
+
+  .rank-num {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+
+  .selection-actions {
+    padding: 16px 8px;
+  }
+
+  .selection-actions .el-button {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  /* 第三名选择 */
+  .third-place-selection {
+    padding: 0 8px 16px;
   }
 
   .third-place-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 4px 0;
+  }
+
+  .third-place-card {
+    padding: 10px 6px;
+    gap: 4px;
+  }
+
+  .tp-team-name {
+    font-size: 12px;
+  }
+
+  .tp-stats {
+    font-size: 10px;
+    gap: 4px;
+  }
+
+  /* 淘汰赛 - 移动端核心适配 */
+  .knockout-stage {
+    padding: 0 2px 16px;
+  }
+
+  .knockout-hint {
+    font-size: 10px;
+    padding: 6px;
+  }
+
+  .knockout-container {
+    flex-direction: row;
+    gap: 2px;
+    padding: 2px 0;
+    overflow-x: visible;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .knockout-half {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .half-title {
+    font-size: 9px;
+    padding: 3px;
+    margin-bottom: 2px;
+    border-radius: 4px;
+  }
+
+  .bracket-side {
+    gap: 1px;
+    overflow-x: visible;
+    padding-bottom: 0;
+  }
+
+  .round {
+    min-width: 0;
+    flex: 1;
+    gap: 1px;
+  }
+
+  .bracket-match {
+    min-width: 0;
+    border-radius: 4px;
   }
 
   .bracket-team {
-    font-size: 10px;
-    padding: 4px 6px;
+    font-size: 7px;
+    padding: 2px 2px;
+    gap: 1px;
+    min-height: 20px;
   }
 
   .bracket-team .team-flag {
-    font-size: 14px;
+    font-size: 8px;
+  }
+
+  .bracket-team .team-name {
+    font-size: 7px;
+    max-width: 30px;
+  }
+
+  .bracket-team .placeholder {
+    font-size: 7px;
+  }
+
+  /* 决赛区域 - 移动端 */
+  .final-round {
+    flex: 0 0 auto;
+    min-width: 0;
+    max-width: 48px;
+    padding: 0;
+    width: auto;
+    margin: 0;
+  }
+
+  .final-match {
+    border-radius: 5px;
+    border-width: 1px;
   }
 
   .final-team {
+    font-size: 7px;
+    padding: 3px 2px;
+    gap: 1px;
+    min-height: 20px;
+  }
+
+  .final-team .team-flag {
+    font-size: 8px;
+  }
+
+  .final-team .team-name {
+    font-size: 7px;
+  }
+
+  .final-vs {
+    font-size: 7px;
+    padding: 1px;
+    letter-spacing: 1px;
+  }
+
+  .champion-display {
+    padding: 6px 4px;
+    margin-top: 4px;
+  }
+
+  .champion-crown {
+    font-size: 16px;
+  }
+
+  .champion-flag {
+    font-size: 20px;
+    margin: 2px 0;
+  }
+
+  .champion-name {
+    font-size: 10px;
+  }
+
+  .champion-text {
+    font-size: 8px;
+    margin-top: 2px;
+  }
+
+  .knockout-actions {
+    padding: 16px 8px;
+    gap: 8px;
+  }
+
+  .knockout-actions .el-button {
+    flex: 1;
+    max-width: 140px;
+  }
+
+  /* 赛程数据 */
+  .tab-item {
+    font-size: 12px;
+    padding: 10px 8px;
+  }
+
+  .date-view,
+  .group-view {
+    padding: 8px 8px;
+  }
+
+  .date-header {
+    padding: 8px 10px;
+  }
+
+  .date-text {
+    font-size: 13px;
+  }
+
+  .match-row {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .match-time {
+    font-size: 12px;
+  }
+
+  .score {
+    font-size: 15px;
+  }
+
+  .team-name {
     font-size: 11px;
-    padding: 8px;
+    max-width: 60px;
+  }
+
+  .group-table {
+    font-size: 11px;
+  }
+
+  .group-table th,
+  .group-table td {
+    padding: 5px 4px;
+  }
+
+  /* 全局按钮触摸优化 */
+  .el-button {
+    min-height: 40px;
+    font-size: 13px;
+  }
+}
+
+/* 小屏手机 (<= 480px) 进一步优化 */
+@media (max-width: 480px) {
+  .header-content {
+    gap: 8px;
+  }
+
+  .header-brand {
+    gap: 6px;
+  }
+
+  .brand-logo {
+    width: 28px;
+    height: 28px;
+  }
+
+  .brand-name {
+    font-size: 11px;
+  }
+
+  .brand-subtitle {
+    font-size: 9px;
+    display: none;
+  }
+
+  .header-divider {
+    height: 22px;
+  }
+
+  .tournament-icon {
+    font-size: 18px;
+  }
+
+  .page-title {
+    font-size: 12px;
+  }
+
+  .page-subtitle {
+    font-size: 9px;
+  }
+
+  .qrcode-img {
+    width: 26px;
+    height: 26px;
+  }
+
+  .qrcode-label {
+    display: none;
+  }
+
+  .phase-tab {
+    padding: 6px 14px;
+    font-size: 12px;
+    border-radius: 20px;
+  }
+
+  .team-select-row .team-name {
+    font-size: 11px;
+  }
+
+  .team-select-row .team-flag {
+    font-size: 14px;
+  }
+
+  .third-place-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .bracket-side {
+    gap: 1px;
+  }
+
+  .round {
+    min-width: 0;
+    flex: 1;
+    gap: 1px;
+  }
+
+  .bracket-match {
+    min-width: 0;
+  }
+
+  .bracket-team {
+    font-size: 6px;
+    padding: 1px 1px;
+    min-height: 18px;
+  }
+
+  .bracket-team .team-flag {
+    font-size: 7px;
+  }
+
+  .bracket-team .team-name {
+    font-size: 6px;
+    max-width: 28px;
+  }
+
+  .final-round {
+    max-width: 42px;
+  }
+
+  .final-team {
+    font-size: 6px;
+    padding: 2px 1px;
+    min-height: 18px;
+  }
+
+  .final-team .team-flag {
+    font-size: 7px;
+  }
+
+  .final-team .team-name {
+    font-size: 6px;
+  }
+
+  .champion-name {
+    font-size: 9px;
+  }
+
+  .champion-crown {
+    font-size: 14px;
+  }
+
+  .champion-flag {
+    font-size: 16px;
   }
 }
 </style>
