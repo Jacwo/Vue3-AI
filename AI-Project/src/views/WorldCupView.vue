@@ -235,20 +235,19 @@
               <div class="final-tree-team" :class="{ 'has-team': finalMatch.homeTeam, winner: finalMatch.winner === 'home' }" @click="finalMatch.homeTeam && pickFinalWinner('home')">
                 <team-flag v-if="finalMatch.homeTeam" :name="finalMatch.homeTeam" size="medium" />
                 <span v-if="finalMatch.homeTeam" class="final-tree-name">{{ finalMatch.homeTeam }}</span>
-                <span v-else class="tree-placeholder">?</span>
+                <span v-else class="final-placeholder">?</span>
               </div>
               <div class="final-tree-vs">VS</div>
               <div class="final-tree-team" :class="{ 'has-team': finalMatch.awayTeam, winner: finalMatch.winner === 'away' }" @click="finalMatch.awayTeam && pickFinalWinner('away')">
                 <team-flag v-if="finalMatch.awayTeam" :name="finalMatch.awayTeam" size="medium" />
                 <span v-if="finalMatch.awayTeam" class="final-tree-name">{{ finalMatch.awayTeam }}</span>
-                <span v-else class="tree-placeholder">?</span>
+                <span v-else class="final-placeholder">?</span>
               </div>
             </div>
             <div v-if="finalMatch.winner && finalMatch.homeTeam && finalMatch.awayTeam" class="champion-tree">
               <div class="champion-crown">👑</div>
               <div class="champion-flag">{{ getFlagEmoji(finalMatch.winner === 'home' ? finalMatch.homeTeam : finalMatch.awayTeam) }}</div>
               <div class="champion-name">{{ finalMatch.winner === 'home' ? finalMatch.homeTeam : finalMatch.awayTeam }}</div>
-              <div class="champion-text">冠军预测</div>
             </div>
           </div>
 
@@ -1755,42 +1754,45 @@ const submitPrediction = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 16px;
+  gap: 6px;
+  padding: 10px;
   background: rgba(255, 217, 61, 0.03);
   border: 1px solid rgba(255, 217, 61, 0.12);
   border-radius: 12px;
   margin: 0 auto;
-  max-width: 320px;
+  max-width: 260px;
   width: 100%;
 }
 
 .final-tree-label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   color: #ffd93d;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
 }
 
 .final-tree-match {
-  background: rgba(22, 27, 34, 0.8);
-  border: 2px solid #ffd93d;
-  border-radius: 10px;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   width: 100%;
-  box-shadow: 0 0 20px rgba(255, 217, 61, 0.15), 0 0 40px rgba(255, 217, 61, 0.05);
 }
 
 .final-tree-team {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 10px 12px;
+  gap: 4px;
+  padding: 8px 6px;
   cursor: pointer;
   transition: background-color 0.15s;
-  font-size: 13px;
-  min-height: 40px;
+  font-size: 12px;
+  min-height: 50px;
+  flex: 1;
+  background: rgba(22, 27, 34, 0.8);
+  border: 1px solid rgba(255, 217, 61, 0.2);
+  border-radius: 8px;
 }
 
 .final-tree-team:hover {
@@ -1799,73 +1801,76 @@ const submitPrediction = () => {
 
 .final-tree-team.winner {
   background: linear-gradient(135deg, rgba(255, 217, 61, 0.3), rgba(255, 107, 107, 0.15));
-  box-shadow: inset 0 0 20px rgba(255, 217, 61, 0.2);
+  box-shadow: 0 0 12px rgba(255, 217, 61, 0.2);
+  border-color: #ffd93d;
 }
 
 .final-tree-name {
   font-weight: 600;
   color: #e6edf3;
-  font-size: 13px;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.final-placeholder {
+  font-size: 16px;
+  color: #484f58;
+  font-weight: 300;
 }
 
 .final-tree-vs {
-  text-align: center;
-  padding: 4px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   color: #ffd93d;
-  background: rgba(13, 17, 23, 0.9);
-  border-top: 1px solid rgba(255, 217, 61, 0.2);
-  border-bottom: 1px solid rgba(255, 217, 61, 0.2);
-  letter-spacing: 3px;
-  text-shadow: 0 0 10px rgba(255, 217, 61, 0.5);
+  text-shadow: 0 0 8px rgba(255, 217, 61, 0.4);
+  flex-shrink: 0;
+  padding: 0 2px;
 }
 
 .champion-tree {
-  margin-top: 8px;
-  text-align: center;
-  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 12px;
   background: linear-gradient(135deg, rgba(255, 217, 61, 0.12), rgba(255, 107, 107, 0.08));
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid rgba(255, 217, 61, 0.25);
   animation: championGlow 3s ease-in-out infinite;
   will-change: box-shadow;
+  width: 100%;
 }
 
 @keyframes championGlow {
-  0%, 100% { box-shadow: 0 0 20px rgba(255, 217, 61, 0.15); }
-  50% { box-shadow: 0 0 30px rgba(255, 217, 61, 0.25); }
+  0%, 100% { box-shadow: 0 0 12px rgba(255, 217, 61, 0.12); }
+  50% { box-shadow: 0 0 20px rgba(255, 217, 61, 0.2); }
 }
 
 .champion-crown {
-  font-size: 24px;
-  filter: drop-shadow(0 0 8px rgba(255, 217, 61, 0.5));
+  font-size: 20px;
+  filter: drop-shadow(0 0 6px rgba(255, 217, 61, 0.5));
   animation: crownBounce 2s ease-in-out infinite;
   will-change: transform;
 }
 
 @keyframes crownBounce {
   0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(0, -3px, 0); }
+  50% { transform: translate3d(0, -2px, 0); }
 }
 
 .champion-flag {
-  font-size: 28px;
-  margin: 4px 0;
+  font-size: 22px;
+  margin: 1px 0;
 }
 
 .champion-name {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   color: #ffd93d;
-  text-shadow: 0 0 10px rgba(255, 217, 61, 0.4);
-}
-
-.champion-text {
-  font-size: 11px;
-  color: #8b949e;
-  margin-top: 2px;
-  letter-spacing: 2px;
+  text-shadow: 0 0 8px rgba(255, 217, 61, 0.4);
 }
 
 /* ==================== 赛程数据 - 按日期 ==================== */
@@ -2482,60 +2487,61 @@ const submitPrediction = () => {
 
   /* 决赛 - 移动端 */
   .final-tree-block {
-    max-width: 260px;
-    padding: 12px;
+    max-width: 220px;
+    padding: 8px;
+    gap: 4px;
   }
 
   .final-tree-label {
-    font-size: 11px;
+    font-size: 10px;
   }
 
   .final-tree-match {
-    border-radius: 6px;
-    border-width: 1px;
+    gap: 4px;
   }
 
   .final-tree-team {
-    font-size: 11px;
-    padding: 6px 8px;
-    gap: 3px;
-    min-height: 32px;
+    font-size: 10px;
+    padding: 6px 4px;
+    gap: 2px;
+    min-height: 42px;
+    border-radius: 6px;
   }
 
   .final-tree-team .team-flag {
-    font-size: 14px;
-  }
-
-  .final-tree-name {
-    font-size: 11px;
-  }
-
-  .final-tree-vs {
-    font-size: 10px;
-    padding: 2px;
-    letter-spacing: 2px;
-  }
-
-  .champion-tree {
-    padding: 6px 4px;
-    margin-top: 6px;
-  }
-
-  .champion-crown {
-    font-size: 18px;
-  }
-
-  .champion-flag {
-    font-size: 22px;
-    margin: 2px 0;
-  }
-
-  .champion-name {
     font-size: 12px;
   }
 
-  .champion-text {
+  .final-tree-name {
+    font-size: 10px;
+  }
+
+  .final-placeholder {
+    font-size: 14px;
+  }
+
+  .final-tree-vs {
     font-size: 9px;
+    padding: 0 1px;
+  }
+
+  .champion-tree {
+    padding: 6px 8px;
+    gap: 1px;
+    border-radius: 6px;
+  }
+
+  .champion-crown {
+    font-size: 16px;
+  }
+
+  .champion-flag {
+    font-size: 18px;
+    margin: 1px 0;
+  }
+
+  .champion-name {
+    font-size: 11px;
   }
 
   .knockout-actions {
@@ -2728,8 +2734,9 @@ const submitPrediction = () => {
   }
 
   .final-tree-block {
-    max-width: 200px;
-    padding: 8px;
+    max-width: 180px;
+    padding: 6px;
+    gap: 3px;
   }
 
   .final-tree-label {
@@ -2737,42 +2744,38 @@ const submitPrediction = () => {
   }
 
   .final-tree-match {
-    border-radius: 4px;
+    gap: 3px;
   }
 
   .final-tree-team {
-    font-size: 9px;
-    padding: 4px 6px;
+    font-size: 8px;
+    padding: 4px 3px;
     gap: 2px;
-    min-height: 24px;
+    min-height: 36px;
+    border-radius: 4px;
   }
 
   .final-tree-team .team-flag {
-    font-size: 12px;
+    font-size: 10px;
   }
 
   .final-tree-name {
-    font-size: 9px;
+    font-size: 8px;
   }
 
-  .final-tree-team .team-logo-medium {
-    width: 12px;
-    height: 12px;
+  .final-placeholder {
+    font-size: 12px;
   }
 
   .final-tree-vs {
-    font-size: 8px;
-    padding: 1px;
-    letter-spacing: 1px;
+    font-size: 7px;
+    padding: 0 1px;
   }
 
   .champion-tree {
-    padding: 4px 2px;
-    margin-top: 4px;
-  }
-
-  .champion-name {
-    font-size: 10px;
+    padding: 4px 6px;
+    gap: 1px;
+    border-radius: 4px;
   }
 
   .champion-crown {
@@ -2781,6 +2784,10 @@ const submitPrediction = () => {
 
   .champion-flag {
     font-size: 16px;
+  }
+
+  .champion-name {
+    font-size: 10px;
   }
 }
 </style>
