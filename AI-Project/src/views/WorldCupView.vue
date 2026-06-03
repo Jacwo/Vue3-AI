@@ -455,7 +455,7 @@ const loadWechatSdk = (): Promise<void> => {
       return
     }
     const script = document.createElement('script')
-    script.src = 'https://res.wx.qq.com/open/js/jweixin-1.6.0.js'
+    script.src = '/jweixin-1.6.0.js'
     script.onload = () => resolve()
     script.onerror = () => resolve()
     document.head.appendChild(script)
