@@ -434,13 +434,13 @@ const setShareMeta = () => {
   }
   setMeta('og:title', PAGE_TITLE)
   setMeta('og:description', PAGE_DESC)
-  setMeta('og:image', window.location.origin + '/mini.jpg')
+  setMeta('og:image', 'https://ai-football.cn/mini.jpg')
   setMeta('og:url', window.location.href)
   setMeta('og:type', 'website')
   setMetaName('description', PAGE_DESC)
   // 微信分享专用meta
-  setMetaName('wechat:image', window.location.origin + '/mini.jpg')
-  setMeta('itemprop:image', window.location.origin + '/mini.jpg')
+  setMetaName('wechat:image', 'https://ai-football.cn/mini.jpg')
+  setMeta('itemprop:image', 'https://ai-football.cn/mini.jpg')
   setMeta('og:image:width', '300')
   setMeta('og:image:height', '300')
 }
