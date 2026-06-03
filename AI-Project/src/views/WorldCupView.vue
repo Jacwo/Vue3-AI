@@ -498,7 +498,7 @@ const initWechatShare = async () => {
 
     console.log('[wx分享] 6. 开始调用 wx.config...')
     window.wx.config({
-      debug: false,
+      debug: true,
       appId: signData.appId,
       timestamp: signData.timestamp,
       nonceStr: signData.nonceStr,
