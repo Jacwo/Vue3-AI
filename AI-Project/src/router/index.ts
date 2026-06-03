@@ -142,7 +142,7 @@ const router = createRouter({
       component: () => import('@/views/WorldCupView.vue'),
       meta: {
         requiresAuth: false,
-        title: '世界杯预测'
+        title: '美加墨冠军预测，生成你的专属冠军之路！'
       }
     }
   ]

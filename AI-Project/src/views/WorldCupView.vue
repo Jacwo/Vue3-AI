@@ -26,9 +26,14 @@
         <div class="header-tournament">
           <div class="tournament-icon">🏆</div>
           <div class="tournament-info">
-            <h1 class="page-title">2026美加墨世界杯</h1>
-            <p class="page-subtitle">晋级之路</p>
+            <h1 class="page-title">2026美加墨冠军预测</h1>
+            <p class="page-subtitle">生成你的专属冠军之路！</p>
           </div>
+        </div>
+        <div class="header-divider"></div>
+        <div class="header-share" @click="handleShare">
+          <span class="share-icon">📤</span>
+          <span class="share-label">分享</span>
         </div>
       </div>
     </div>
@@ -390,9 +395,76 @@ const fetchGroups = async () => {
   }
 }
 
+const PAGE_TITLE = '美加墨冠军预测，生成你的专属冠军之路！'
+const PAGE_DESC = '2026美加墨世界杯晋级之路预测，选出你的冠军球队'
+
 onMounted(() => {
+  // 设置页面标题
+  document.title = PAGE_TITLE
+  // 设置微信/QQ分享meta标签
+  setShareMeta()
   fetchGroups()
 })
+
+// 设置微信分享meta标签
+const setShareMeta = () => {
+  const setMeta = (property: string, content: string) => {
+    let meta = document.querySelector(`meta[property="${property}"]`)
+    if (!meta) {
+      meta = document.createElement('meta')
+      meta.setAttribute('property', property)
+      document.head.appendChild(meta)
+    }
+    meta.setAttribute('content', content)
+  }
+  const setMetaName = (name: string, content: string) => {
+    let meta = document.querySelector(`meta[name="${name}"]`)
+    if (!meta) {
+      meta = document.createElement('meta')
+      meta.setAttribute('name', name)
+      document.head.appendChild(meta)
+    }
+    meta.setAttribute('content', content)
+  }
+  setMeta('og:title', PAGE_TITLE)
+  setMeta('og:description', PAGE_DESC)
+  setMeta('og:image', window.location.origin + '/mini.jpg')
+  setMeta('og:url', window.location.href)
+  setMeta('og:type', 'website')
+  setMetaName('description', PAGE_DESC)
+}
+
+// 分享功能
+const handleShare = async () => {
+  const shareData = {
+    title: PAGE_TITLE,
+    text: PAGE_DESC,
+    url: window.location.href,
+  }
+  // 优先使用Web Share API（移动端原生分享）
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData)
+      return
+    } catch (e) {
+      // 用户取消或出错，降级到复制链接
+    }
+  }
+  // 降级方案：复制链接
+  try {
+    await navigator.clipboard.writeText(window.location.href)
+    ElMessage.success('链接已复制，快去分享给好友吧！')
+  } catch {
+    // 最后降级：手动选中复制
+    const input = document.createElement('input')
+    input.value = window.location.href
+    document.body.appendChild(input)
+    input.select()
+    document.execCommand('copy')
+    document.body.removeChild(input)
+    ElMessage.success('链接已复制，快去分享给好友吧！')
+  }
+}
 
 // ==================== 球队信息映射（来自竞彩夺冠赔率数据） ====================
 interface TeamInfo {
@@ -1249,6 +1321,39 @@ const submitPrediction = () => {
   white-space: nowrap;
 }
 
+.header-share {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(88, 166, 255, 0.1);
+  border: 1px solid rgba(88, 166, 255, 0.2);
+  transition: all 0.3s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.header-share:hover {
+  background: rgba(88, 166, 255, 0.2);
+  border-color: rgba(88, 166, 255, 0.4);
+}
+
+.header-share:active {
+  transform: scale(0.95);
+}
+
+.share-icon {
+  font-size: 16px;
+}
+
+.share-label {
+  font-size: 12px;
+  color: #58a6ff;
+  font-weight: 500;
+}
+
 /* ==================== 预测阶段Tab ==================== */
 .phase-tabs {
   display: flex;
@@ -1883,6 +1988,13 @@ const submitPrediction = () => {
   font-weight: 700;
   color: #ffd93d;
   text-shadow: 0 0 8px rgba(255, 217, 61, 0.4);
+}
+
+/* ==================== 淘汰赛操作按钮 ==================== */
+.knockout-actions {
+  display: flex;
+  justify-content: center;
+  padding: 16px 8px;
 }
 
 /* ==================== 赛程数据 - 按日期 ==================== */
@@ -2558,11 +2670,12 @@ const submitPrediction = () => {
 
   .knockout-actions {
     padding: 16px 8px;
+    display: flex;
+    justify-content: center;
     gap: 8px;
   }
 
   .knockout-actions .el-button {
-    flex: 1;
     max-width: 140px;
   }
 
