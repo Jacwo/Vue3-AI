@@ -438,6 +438,11 @@ const setShareMeta = () => {
   setMeta('og:url', window.location.href)
   setMeta('og:type', 'website')
   setMetaName('description', PAGE_DESC)
+  // 微信分享专用meta
+  setMetaName('wechat:image', window.location.origin + '/mini.jpg')
+  setMeta('itemprop:image', window.location.origin + '/mini.jpg')
+  setMeta('og:image:width', '300')
+  setMeta('og:image:height', '300')
 }
 
 // 检测是否在微信浏览器中
