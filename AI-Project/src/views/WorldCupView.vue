@@ -373,7 +373,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h, defineComponent, onMounted, shallowRef } from 'vue'
+import { ref, computed, h, defineComponent, onMounted, onUnmounted, shallowRef } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { worldcupApi } from '@/api/worldcup'
@@ -397,13 +397,19 @@ const fetchGroups = async () => {
 
 const PAGE_TITLE = '美加墨冠军预测，生成你的专属冠军之路！'
 const PAGE_DESC = '2026美加墨世界杯晋级之路预测，选出你的冠军球队'
+const DEFAULT_TITLE = '美加墨冠军预测'
 
 onMounted(() => {
-  // 设置页面标题
+  // 设置页面标题（微信分享时读取这个）
   document.title = PAGE_TITLE
   // 设置微信/QQ分享meta标签
   setShareMeta()
   fetchGroups()
+})
+
+onUnmounted(() => {
+  // 离开页面恢复默认标题
+  document.title = DEFAULT_TITLE
 })
 
 // 设置微信分享meta标签
@@ -434,30 +440,43 @@ const setShareMeta = () => {
   setMetaName('description', PAGE_DESC)
 }
 
+// 检测是否在微信浏览器中
+const isWechat = () => /MicroMessenger/i.test(navigator.userAgent)
+
 // 分享功能
 const handleShare = async () => {
-  const shareData = {
-    title: PAGE_TITLE,
-    text: PAGE_DESC,
-    url: window.location.href,
+  const shareUrl = window.location.href
+
+  // 微信内：引导用户点击右上角菜单分享
+  if (isWechat()) {
+    ElMessageBox({
+      title: '分享给好友',
+      message: h('div', { style: 'text-align: center' }, [
+        h('p', { style: 'margin-bottom: 12px; color: #e6edf3; font-size: 14px;' }, '点击右上角'),
+        h('p', { style: 'margin-bottom: 4px; font-size: 28px;' }, '···'),
+        h('p', { style: 'color: #8b949e; font-size: 13px;' }, '选择「发送给朋友」或「分享到朋友圈」'),
+      ]),
+      confirmButtonText: '知道了',
+      customClass: 'prediction-dialog',
+      center: true,
+    })
+    return
   }
-  // 优先使用Web Share API（移动端原生分享）
+
+  // 其他浏览器：优先原生分享，降级复制链接
   if (navigator.share) {
     try {
-      await navigator.share(shareData)
+      await navigator.share({ title: PAGE_TITLE, text: PAGE_DESC, url: shareUrl })
       return
-    } catch (e) {
-      // 用户取消或出错，降级到复制链接
-    }
+    } catch { /* 用户取消 */ }
   }
-  // 降级方案：复制链接
+  // 复制链接
   try {
-    await navigator.clipboard.writeText(window.location.href)
+    await navigator.clipboard.writeText(shareUrl)
     ElMessage.success('链接已复制，快去分享给好友吧！')
   } catch {
-    // 最后降级：手动选中复制
     const input = document.createElement('input')
-    input.value = window.location.href
+    input.value = shareUrl
     document.body.appendChild(input)
     input.select()
     document.execCommand('copy')
