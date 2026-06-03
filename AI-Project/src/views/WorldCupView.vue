@@ -463,77 +463,44 @@ const loadWechatSdk = (): Promise<void> => {
 }
 
 const initWechatShare = async () => {
-  console.log('[wx分享] 1. initWechatShare 开始执行')
-  console.log('[wx分享] 当前 UA:', navigator.userAgent)
-  console.log('[wx分享] isWechat 检测结果:', isWechat())
+  if (!isWechat()) return
 
-  if (!isWechat()) {
-    console.log('[wx分享] 非微信环境，跳过微信SDK初始化')
-    return
-  }
-
-  console.log('[wx分享] 2. 开始加载微信 SDK...')
   await loadWechatSdk()
-  console.log('[wx分享] 3. SDK 加载完成，window.wx 是否存在:', typeof window.wx !== 'undefined')
-
-  if (typeof window.wx === 'undefined') {
-    console.error('[wx分享] window.wx 不存在，SDK 加载失败')
-    return
-  }
+  if (typeof window.wx === 'undefined') return
 
   try {
-    const currentUrl = window.location.href.split('#')[0]
-    console.log('[wx分享] 4. 准备调用签名接口，url:', currentUrl)
-    console.log('[wx分享] 请求地址: /foot/api/wechat/jsapi-signature')
-
     const signData = await apiClient.get('/api/wechat/jsapi-signature', {
-      params: { url: currentUrl }
+      params: { url: window.location.href.split('#')[0] }
     }) as unknown as { appId: string; timestamp: number; nonceStr: string; signature: string }
 
-    console.log('[wx分享] 5. 签名接口返回:', JSON.stringify(signData))
-    console.log('[wx分享] appId:', signData.appId)
-    console.log('[wx分享] timestamp:', signData.timestamp, 'type:', typeof signData.timestamp)
-    console.log('[wx分享] nonceStr:', signData.nonceStr)
-    console.log('[wx分享] signature:', signData.signature)
-
-    console.log('[wx分享] 6. 开始调用 wx.config...')
     window.wx.config({
-      debug: true,
+      debug: false,
       appId: signData.appId,
       timestamp: signData.timestamp,
       nonceStr: signData.nonceStr,
       signature: signData.signature,
       jsApiList: ['updateAppMessageShareData', 'updateTimelineShareData']
     })
-    console.log('[wx分享] 7. wx.config 调用完成')
 
     window.wx.ready(() => {
-      console.log('[wx分享] 8. wx.ready 触发，开始设置分享数据...')
-      // 分享给朋友
       window.wx.updateAppMessageShareData({
         title: PAGE_TITLE,
         desc: PAGE_DESC,
         link: window.location.href,
         imgUrl: SHARE_IMG,
-        success: () => console.log('[wx分享] ✅ 分享给朋友配置成功'),
-        fail: (err: any) => console.error('[wx分享] ❌ 分享给朋友配置失败:', err),
       })
-      // 分享到朋友圈
       window.wx.updateTimelineShareData({
         title: PAGE_TITLE,
         link: window.location.href,
         imgUrl: SHARE_IMG,
-        success: () => console.log('[wx分享] ✅ 分享到朋友圈配置成功'),
-        fail: (err: any) => console.error('[wx分享] ❌ 分享到朋友圈配置失败:', err),
       })
     })
 
     window.wx.error((err: any) => {
-      console.error('[wx分享] ❌ wx.config error:', JSON.stringify(err))
+      console.error('wx.config error:', err)
     })
   } catch (err) {
-    console.error('[wx分享] ❌ 异常:', err)
-    console.error('[wx分享] ❌ 异常详情:', JSON.stringify(err, Object.getOwnPropertyNames(err)))
+    console.error('获取微信签名失败:', err)
   }
 }
 
