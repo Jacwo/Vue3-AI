@@ -377,6 +377,7 @@ import { ref, computed, h, defineComponent, onMounted, onUnmounted, shallowRef }
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { worldcupApi } from '@/api/worldcup'
+import apiClient from '@/api'
 
 // ==================== 2026世界杯分组（从接口获取） ====================
 const WORLD_CUP_GROUPS = ref<Record<string, string[]>>({})
@@ -398,17 +399,16 @@ const fetchGroups = async () => {
 const PAGE_TITLE = '美加墨冠军预测，生成你的专属冠军之路！'
 const PAGE_DESC = '2026美加墨世界杯晋级之路预测，选出你的冠军球队'
 const DEFAULT_TITLE = '美加墨冠军预测'
+const SHARE_IMG = 'https://ai-football.cn/mini.jpg'
 
 onMounted(() => {
-  // 设置页面标题（微信分享时读取这个）
   document.title = PAGE_TITLE
-  // 设置微信/QQ分享meta标签
   setShareMeta()
+  initWechatShare()
   fetchGroups()
 })
 
 onUnmounted(() => {
-  // 离开页面恢复默认标题
   document.title = DEFAULT_TITLE
 })
 
@@ -434,13 +434,12 @@ const setShareMeta = () => {
   }
   setMeta('og:title', PAGE_TITLE)
   setMeta('og:description', PAGE_DESC)
-  setMeta('og:image', 'https://ai-football.cn/mini.jpg')
+  setMeta('og:image', SHARE_IMG)
   setMeta('og:url', window.location.href)
   setMeta('og:type', 'website')
   setMetaName('description', PAGE_DESC)
-  // 微信分享专用meta
-  setMetaName('wechat:image', 'https://ai-football.cn/mini.jpg')
-  setMeta('itemprop:image', 'https://ai-football.cn/mini.jpg')
+  setMetaName('wechat:image', SHARE_IMG)
+  setMeta('itemprop:image', SHARE_IMG)
   setMeta('og:image:width', '300')
   setMeta('og:image:height', '300')
 }
@@ -448,11 +447,70 @@ const setShareMeta = () => {
 // 检测是否在微信浏览器中
 const isWechat = () => /MicroMessenger/i.test(navigator.userAgent)
 
-// 分享功能
-const handleShare = async () => {
-  const shareUrl = window.location.href
+// ==================== 微信 JS-SDK 分享卡片 ====================
+const loadWechatSdk = (): Promise<void> => {
+  return new Promise((resolve) => {
+    if (typeof window.wx !== 'undefined') {
+      resolve()
+      return
+    }
+    const script = document.createElement('script')
+    script.src = 'https://res.wx.qq.com/open/js/jweixin-1.6.0.js'
+    script.onload = () => resolve()
+    script.onerror = () => resolve()
+    document.head.appendChild(script)
+  })
+}
 
-  // 微信内：引导用户点击右上角菜单分享
+const initWechatShare = async () => {
+  if (!isWechat()) return
+
+  await loadWechatSdk()
+  if (typeof window.wx === 'undefined') return
+
+  try {
+    const signData = await apiClient.get('/api/wechat/jsapi-signature', {
+      params: { url: window.location.href.split('#')[0] }
+    }) as unknown as { appId: string; timestamp: number; nonceStr: string; signature: string }
+
+    window.wx.config({
+      debug: false,
+      appId: signData.appId,
+      timestamp: signData.timestamp,
+      nonceStr: signData.nonceStr,
+      signature: signData.signature,
+      jsApiList: ['updateAppMessageShareData', 'updateTimelineShareData']
+    })
+
+    window.wx.ready(() => {
+      // 分享给朋友
+      window.wx.updateAppMessageShareData({
+        title: PAGE_TITLE,
+        desc: PAGE_DESC,
+        link: window.location.href,
+        imgUrl: SHARE_IMG,
+        success: () => console.log('wx分享朋友配置成功'),
+      })
+      // 分享到朋友圈
+      window.wx.updateTimelineShareData({
+        title: PAGE_TITLE,
+        link: window.location.href,
+        imgUrl: SHARE_IMG,
+        success: () => console.log('wx分享朋友圈配置成功'),
+      })
+    })
+
+    window.wx.error((err: any) => {
+      console.error('wx.config error:', err)
+    })
+  } catch (err) {
+    console.error('获取微信签名失败:', err)
+  }
+}
+
+// 分享按钮点击
+const handleShare = async () => {
+  // 微信内：引导用户点击右上角分享
   if (isWechat()) {
     ElMessageBox({
       title: '分享给好友',
@@ -460,6 +518,7 @@ const handleShare = async () => {
         h('p', { style: 'margin-bottom: 12px; color: #e6edf3; font-size: 14px;' }, '点击右上角'),
         h('p', { style: 'margin-bottom: 4px; font-size: 28px;' }, '···'),
         h('p', { style: 'color: #8b949e; font-size: 13px;' }, '选择「发送给朋友」或「分享到朋友圈」'),
+        h('img', { src: SHARE_IMG, style: 'width: 120px; height: 120px; margin-top: 12px; border-radius: 8px;' }),
       ]),
       confirmButtonText: '知道了',
       customClass: 'prediction-dialog',
@@ -468,20 +527,19 @@ const handleShare = async () => {
     return
   }
 
-  // 其他浏览器：优先原生分享，降级复制链接
+  // 其他浏览器：原生分享或复制链接
   if (navigator.share) {
     try {
-      await navigator.share({ title: PAGE_TITLE, text: PAGE_DESC, url: shareUrl })
+      await navigator.share({ title: PAGE_TITLE, text: PAGE_DESC, url: window.location.href })
       return
     } catch { /* 用户取消 */ }
   }
-  // 复制链接
   try {
-    await navigator.clipboard.writeText(shareUrl)
+    await navigator.clipboard.writeText(window.location.href)
     ElMessage.success('链接已复制，快去分享给好友吧！')
   } catch {
     const input = document.createElement('input')
-    input.value = shareUrl
+    input.value = window.location.href
     document.body.appendChild(input)
     input.select()
     document.execCommand('copy')
