@@ -374,7 +374,7 @@
   <!-- 海报预览弹窗 -->
   <el-dialog
     v-model="posterVisible"
-    width="700px"
+    :width="isMobile ? '95%' : '700px'"
     :close-on-click-modal="true"
     align-center
     class="poster-dialog"
@@ -1231,6 +1231,7 @@ const bracketTreeRef = ref<HTMLElement | null>(null)
 const posterVisible = ref(false)
 const posterDataUrl = ref('')
 const posterGenerating = ref(false)
+const isMobile = ref(window.innerWidth < 768)
 
 const generatePoster = async () => {
   if (!bracketTreeRef.value || posterGenerating.value) return
@@ -3119,13 +3120,14 @@ const submitPrediction = () => {
 
 /* 海报预览弹窗 */
 .poster-dialog .el-dialog {
+  max-width: 95vw;
   background: #161b22;
   border: 1px solid rgba(88, 166, 255, 0.15);
   border-radius: 12px;
 }
 .poster-dialog .el-dialog__header {
   border-bottom: 1px solid rgba(88, 166, 255, 0.1);
-  padding: 16px 20px;
+  padding: 10px 14px;
   margin-right: 0;
 }
 .poster-dialog .el-dialog__title {
@@ -3134,11 +3136,11 @@ const submitPrediction = () => {
   font-weight: 700;
 }
 .poster-dialog .el-dialog__body {
-  padding: 16px;
+  padding: 10px 14px;
 }
 .poster-dialog .el-dialog__footer {
   border-top: 1px solid rgba(88, 166, 255, 0.1);
-  padding: 12px 20px;
+  padding: 10px 14px;
 }
 .poster-preview-wrap {
   display: flex;
@@ -3191,18 +3193,20 @@ const submitPrediction = () => {
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  gap: 8px;
 }
 .poster-dialog-title {
   color: #ffd93d;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
+  flex-shrink: 1;
+  white-space: nowrap;
 }
 .poster-header-qrcode {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 4px 8px;
-  border-radius: 8px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 .poster-header-qrcode-img {
   width: 44px;
