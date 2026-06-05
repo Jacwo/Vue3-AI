@@ -876,22 +876,22 @@ interface BracketMatch {
 }
 
 // 用 shallowRef 包装整个淘汰赛状态，只追踪顶层引用变化，大幅减少响应式开销
-// 上半区左侧：场次73-76 (4场)
+// 上半区左侧：场次73,74,75,77 (4场)
 const upperLeft = shallowRef({
   round16: [] as BracketMatch[],
   round8: [] as BracketMatch[],
 })
-// 上半区右侧：场次79-82 (4场)
+// 上半区右侧：场次76,78,79,80 (4场)
 const upperRight = shallowRef({
   round16: [] as BracketMatch[],
   round8: [] as BracketMatch[],
 })
-// 下半区左侧：场次77,78,83,84 (4场)
+// 下半区左侧：场次83,84,81,82 (4场)
 const lowerLeft = shallowRef({
   round16: [] as BracketMatch[],
   round8: [] as BracketMatch[],
 })
-// 下半区右侧：场次85-88 (4场)
+// 下半区右侧：场次85,87,86,88 (4场)
 const lowerRight = shallowRef({
   round16: [] as BracketMatch[],
   round8: [] as BracketMatch[],
@@ -934,10 +934,19 @@ const triggerBracketUpdate = () => {
 // ==================== 2026世界杯官方对阵规则 ====================
 // 48队赛制，12组 → 32队晋级淘汰赛（12组前2 + 8个最佳第三名）
 // 1/16决赛 16场(73-88) → 1/8决赛 8场 → 1/4决赛 4场 → 半决赛 2场 → 决赛
-// 上半区(左边显示): 73,74,75,76,79,80,81,82 (8场)
-// 下半区(右边显示): 77,78,83,84,85,86,87,88 (8场)
-// 1/8配对: 73v74,75v76,79v80,81v82(上半区) | 77v78,83v84,85v86,87v88(下半区)
-// 1/4: QF1(左R8[0]v左R8[1]) QF2(左R8[2]v右R8[0]) QF3(左R8[3]v右R8[1]) QF4(右R8[2]v右R8[3])
+//
+// 上半区(左半tree): 73,74,75,76,77,78,79,80 (8场)
+//   上半区左侧: 73(A2vB2), 74(E1v3rdA/B/C/D/F), 75(F1vC2), 77(I1v3rdC/D/F/G/H)
+//   上半区右侧: 76(C1vF2), 78(E2vI2), 79(A1v3rdC/E/F/H/I), 80(L1v3rdE/H/I/J/K)
+// 下半区(右半tree): 81,82,83,84,85,86,87,88 (8场)
+//   下半区左侧: 83(K2vL2), 84(H1vJ2), 81(D1v3rdB/E/F/I/J), 82(G1v3rdA/E/H/I/J)
+//   下半区右侧: 85(B1v3rdE/F/G/I/J), 87(K1v3rdD/E/I/J/L), 86(J1vH2), 88(D2vG2)
+//
+// 1/8晋级(round16→round8, 同象限内):
+//   上半区: (73,74→R8[0]), (75,77→R8[1]) | (76,78→R8[2]), (79,80→R8[3])
+//   下半区: (83,84→R8[0]), (81,82→R8[1]) | (85,87→R8[2]), (86,88→R8[3])
+// 1/4: QF1(upperLeft R8[0]vR8[1]), QF2(upperRight R8[0]vR8[1]),
+//       QF3(lowerLeft R8[0]vR8[1]), QF4(lowerRight R8[0]vR8[1])
 // 半决: Semi1(QF1vQF2) Semi2(QF3vQF4) → 决赛
 
 // 按成绩从 selectedThirdPlaces 中筛选指定组的第三名
@@ -987,50 +996,50 @@ const initKnockoutBracket = () => {
 
   // ============ 上半区左侧 1/16决赛 4场 ============
   // 场次73: A2 vs B2
-  // 场次74: E1 vs T(C/D/F/G/H)
+  // 场次74: E1 vs T(A/B/C/D/F)  (官方: E1 vs 3rd A/B/C/D/F)
   // 场次75: F1 vs C2
-  // 场次76: C1 vs F2
+  // 场次77: I1 vs T(C/D/F/G/H)  (官方: I1 vs 3rd C/D/F/G/H)
   upperLeft.value.round16 = [
     { homeTeam: G('A组', 'second'), awayTeam: G('B组', 'second'), winner: null },     // 73
-    { homeTeam: G('E组', 'first'),  awayTeam: T(['C组','D组','F组','G组','H组']), winner: null }, // 74
+    { homeTeam: G('E组', 'first'),  awayTeam: T(['A组','B组','C组','D组','F组']), winner: null }, // 74
     { homeTeam: G('F组', 'first'),  awayTeam: G('C组', 'second'), winner: null },     // 75
-    { homeTeam: G('C组', 'first'),  awayTeam: G('F组', 'second'), winner: null },     // 76
+    { homeTeam: G('I组', 'first'),  awayTeam: T(['C组','D组','F组','G组','H组']), winner: null }, // 77
   ]
 
   // ============ 上半区右侧 1/16决赛 4场 ============
-  // 场次79: A1 vs T(C/E/F/H/I)
-  // 场次80: D2 vs G2
-  // 场次81: B1 vs T(A/D/E/F/G)
-  // 场次82: H1 vs J2
+  // 场次76: C1 vs F2
+  // 场次78: E2 vs I2
+  // 场次79: A1 vs T(C/E/F/H/I)  (官方: A1 vs 3rd C/E/F/H/I)
+  // 场次80: L1 vs T(E/H/I/J/K)  (官方: L1 vs 3rd E/H/I/J/K)
   upperRight.value.round16 = [
+    { homeTeam: G('C组', 'first'),  awayTeam: G('F组', 'second'), winner: null },     // 76
+    { homeTeam: G('E组', 'second'), awayTeam: G('I组', 'second'), winner: null },     // 78
     { homeTeam: G('A组', 'first'),  awayTeam: T(['C组','E组','F组','H组','I组']), winner: null }, // 79
-    { homeTeam: G('D组', 'second'), awayTeam: G('G组', 'second'), winner: null },     // 80
-    { homeTeam: G('B组', 'first'),  awayTeam: T(['A组','D组','E组','F组','G组']), winner: null }, // 81
-    { homeTeam: G('H组', 'first'),  awayTeam: G('J组', 'second'), winner: null },     // 82
+    { homeTeam: G('L组', 'first'),  awayTeam: T(['E组','H组','I组','J组','K组']), winner: null }, // 80
   ]
 
   // ============ 下半区左侧 1/16决赛 4场 ============
-  // 场次77: I1 vs T(C/D/F/G/H)
-  // 场次78: E2 vs I2
-  // 场次83: G1 vs T(B/E/F/I/J)
-  // 场次84: F2 vs T(待定)
+  // 场次83: K2 vs L2
+  // 场次84: H1 vs J2
+  // 场次81: D1 vs T(B/E/F/I/J)  (官方: D1 vs 3rd B/E/F/I/J)
+  // 场次82: G1 vs T(A/E/H/I/J)  (官方: G1 vs 3rd A/E/H/I/J)
   lowerLeft.value.round16 = [
-    { homeTeam: G('I组', 'first'),  awayTeam: T(['C组','D组','F组','G组','H组']), winner: null }, // 77
-    { homeTeam: G('E组', 'second'), awayTeam: G('I组', 'second'), winner: null },     // 78
-    { homeTeam: G('G组', 'first'),  awayTeam: T(['B组','E组','F组','I组','J组']), winner: null }, // 83
-    { homeTeam: G('F组', 'second'), awayTeam: T(['A组','B组','C组','D组','E组','G组','H组','I组','J组','K组','L组']), winner: null }, // 84
+    { homeTeam: G('K组', 'second'), awayTeam: G('L组', 'second'), winner: null },    // 83
+    { homeTeam: G('H组', 'first'),  awayTeam: G('J组', 'second'), winner: null },    // 84
+    { homeTeam: G('D组', 'first'),  awayTeam: T(['B组','E组','F组','I组','J组']), winner: null }, // 81
+    { homeTeam: G('G组', 'first'),  awayTeam: T(['A组','E组','H组','I组','J组']), winner: null }, // 82
   ]
 
   // ============ 下半区右侧 1/16决赛 4场 ============
-  // 场次85: K2 vs L2
+  // 场次85: B1 vs T(E/F/G/I/J)  (官方: B1 vs 3rd E/F/G/I/J)
+  // 场次87: K1 vs T(D/E/I/J/L)  (官方: K1 vs 3rd D/E/I/J/L)
   // 场次86: J1 vs H2
-  // 场次87: D1 vs T(B/E/F/I/J)
-  // 场次88: L1 vs T(A/C/D/G/K)
+  // 场次88: D2 vs G2
   lowerRight.value.round16 = [
-    { homeTeam: G('K组', 'second'), awayTeam: G('L组', 'second'), winner: null },    // 85
+    { homeTeam: G('B组', 'first'),  awayTeam: T(['E组','F组','G组','I组','J组']), winner: null }, // 85
+    { homeTeam: G('K组', 'first'),  awayTeam: T(['D组','E组','I组','J组','L组']), winner: null }, // 87
     { homeTeam: G('J组', 'first'),  awayTeam: G('H组', 'second'), winner: null },    // 86
-    { homeTeam: G('D组', 'first'),  awayTeam: T(['B组','E组','F组','I组','J组']), winner: null }, // 87
-    { homeTeam: G('L组', 'first'),  awayTeam: T(['A组','C组','D组','G组','K组']), winner: null }, // 88
+    { homeTeam: G('D组', 'second'), awayTeam: G('G组', 'second'), winner: null },    // 88
   ]
 
   // 初始化后续轮次（每个子区2场round8）
@@ -1054,13 +1063,19 @@ const initKnockoutBracket = () => {
 }
 
 // 淘汰赛晋级逻辑
-// 四个象限各自独立：round16→round8（同象限内）, round8→QF（同象限内）
+// round16→round8 晋级配对（按官方规则，非简单顺序）:
+//   上半区左侧: (0,1→R8[0] 即73v74胜者), (2,3→R8[1] 即75v77胜者)
+//   上半区右侧: (0,1→R8[0] 即76v78胜者), (2,3→R8[1] 即79v80胜者)
+//   下半区左侧: (0,1→R8[0] 即83v84胜者), (2,3→R8[1] 即81v82胜者)
+//   下半区右侧: (0,1→R8[0] 即85v87胜者), (2,3→R8[1] 即86v88胜者)
+// round8→QF：每个象限内 (0,1→对应QF)
 // QF→Semi, Semi→Final
 type Quadrant = 'upperLeft' | 'upperRight' | 'lowerLeft' | 'lowerRight'
 
 const getAdvanceTarget = (quad: Quadrant, round: 'round16' | 'round8', index: number): { targetRound: 'round8' | 'qf'; targetIndex: number; isHome: boolean } | null => {
   if (round === 'round16') {
-    // round16 → round8：同象限内 (0,1→0), (2,3→1)
+    // round16 → round8：同象限内配对
+    // (0,1→0), (2,3→1) - 与之前相同，只是数组内元素位置已按官方规则排列
     return { targetRound: 'round8', targetIndex: Math.floor(index / 2), isHome: index % 2 === 0 }
   }
   if (round === 'round8') {
