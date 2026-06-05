@@ -369,15 +369,55 @@
           <el-button type="success" @click="submitPrediction">完成预测</el-button>
         </div>
       </div>
+
+    <!-- 海报生成区（隐藏，用于html2canvas截图） -->
+    <div v-if="posterChampion" ref="posterRef" class="poster-container">
+      <div class="poster-bg">
+        <div class="poster-stars"></div>
+        <div class="poster-glow poster-glow-1"></div>
+        <div class="poster-glow poster-glow-2"></div>
+      </div>
+      <div class="poster-content">
+        <div class="poster-header">
+          <div class="poster-logo">⚽</div>
+          <span class="poster-brand">AI足球智能体</span>
+        </div>
+        <div class="poster-title">🏆 2026美加墨世界杯</div>
+        <div class="poster-subtitle">我的冠军预测</div>
+        <div class="poster-champion">
+          <div class="poster-crown">👑</div>
+          <div class="poster-flag">{{ getFlagEmoji(posterChampion) }}</div>
+          <div class="poster-champion-name">{{ posterChampion }}</div>
+        </div>
+        <div class="poster-divider"></div>
+        <div class="poster-qrcode-area">
+          <img class="poster-qrcode-img" src="/mini.jpg" alt="小程序码" />
+          <p class="poster-qrcode-text">微信扫码体验小程序</p>
+          <p class="poster-qrcode-sub">查看更多世界杯预测</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 海报预览弹窗 -->
+    <div v-if="posterImageUrl" class="poster-preview-overlay" @click="posterImageUrl = ''">
+      <div class="poster-preview-box" @click.stop>
+        <img :src="posterImageUrl" class="poster-preview-img" alt="冠军预测海报" />
+        <div class="poster-preview-actions">
+          <el-button type="primary" @click="downloadPoster">保存海报</el-button>
+          <el-button @click="posterImageUrl = ''">关闭</el-button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h, defineComponent, onMounted, onUnmounted, shallowRef } from 'vue'
+import { ref, computed, h, defineComponent, onMounted, onUnmounted, shallowRef, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { worldcupApi } from '@/api/worldcup'
 import apiClient from '@/api'
+import html2canvas from 'html2canvas'
 
 // ==================== 2026世界杯分组（从接口获取） ====================
 const WORLD_CUP_GROUPS = ref<Record<string, string[]>>({})
@@ -1185,23 +1225,51 @@ const resetKnockout = () => {
   ElMessage.success('已重置淘汰赛预测')
 }
 
-const submitPrediction = () => {
+// 海报相关
+const posterRef = ref<HTMLElement | null>(null)
+const posterChampion = ref('')
+const posterImageUrl = ref('')
+const generatingPoster = ref(false)
+
+const submitPrediction = async () => {
   if (!finalMatch.value.winner) {
     ElMessage.warning('请先完成全部预测，选出冠军')
     return
   }
   const champion = finalMatch.value.winner === 'home' ? finalMatch.value.homeTeam : finalMatch.value.awayTeam
-  ElMessageBox({
-    title: '预测完成！',
-    message: h('div', { style: 'text-align: center' }, [
-      h('p', { style: 'margin-bottom: 12px; font-size: 15px; color: #e6edf3' }, `您预测的冠军是：${getFlagEmoji(champion)} ${champion}`),
-      h('img', { src: '/mini.jpg', style: 'width: 160px; height: 160px; border-radius: 8px; display: block; margin: 0 auto 8px' }),
-      h('p', { style: 'font-size: 13px; color: #8b949e' }, '微信扫码体验小程序，查看完整预测结果'),
-    ]),
-    confirmButtonText: '知道了',
-    customClass: 'prediction-dialog',
-    center: true,
-  })
+  posterChampion.value = champion
+  generatingPoster.value = true
+
+  await nextTick()
+  // 等海报DOM渲染
+  await new Promise(resolve => setTimeout(resolve, 300))
+
+  try {
+    if (posterRef.value) {
+      const canvas = await html2canvas(posterRef.value, {
+        useCORS: true,
+        scale: 2,
+        backgroundColor: null,
+        logging: false,
+      })
+      posterImageUrl.value = canvas.toDataURL('image/png')
+    }
+  } catch (err) {
+    console.error('生成海报失败:', err)
+    ElMessage.error('生成海报失败，请重试')
+  } finally {
+    generatingPoster.value = false
+  }
+}
+
+const downloadPoster = () => {
+  if (!posterImageUrl.value) return
+  const link = document.createElement('a')
+  link.download = '世界杯冠军预测.png'
+  link.href = posterImageUrl.value
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 }
 
 
@@ -2992,6 +3060,219 @@ const submitPrediction = () => {
   .champion-name {
     font-size: 9px;
   }
+}
+
+/* ==================== 海报样式 ==================== */
+.poster-container {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  width: 375px;
+  height: 600px;
+  overflow: hidden;
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+.poster-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, #0a0a1a 0%, #12183a 40%, #0d1128 100%);
+}
+
+.poster-stars {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,0.8), transparent),
+    radial-gradient(1px 1px at 80px 60px, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1.5px 1.5px at 150px 20px, rgba(255,255,255,0.7), transparent),
+    radial-gradient(1px 1px at 220px 80px, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 300px 40px, rgba(255,255,255,0.8), transparent),
+    radial-gradient(1.5px 1.5px at 50px 200px, rgba(255,217,61,0.5), transparent),
+    radial-gradient(1px 1px at 280px 180px, rgba(255,217,61,0.4), transparent),
+    radial-gradient(1px 1px at 100px 350px, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1.5px 1.5px at 320px 380px, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 180px 500px, rgba(255,217,61,0.4), transparent);
+}
+
+.poster-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.15;
+}
+
+.poster-glow-1 {
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, #ffd93d, transparent);
+  top: 30px;
+  right: -60px;
+}
+
+.poster-glow-2 {
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, #4a9eff, transparent);
+  bottom: 80px;
+  left: -60px;
+}
+
+.poster-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 28px 24px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.poster-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.poster-logo {
+  font-size: 24px;
+}
+
+.poster-brand {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.8);
+  letter-spacing: 1px;
+}
+
+.poster-title {
+  font-size: 22px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ffd93d, #f0a500);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+  letter-spacing: 2px;
+}
+
+.poster-subtitle {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 4px;
+  margin-bottom: 24px;
+}
+
+.poster-champion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 40px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,217,61,0.2);
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+
+.poster-crown {
+  font-size: 40px;
+  margin-bottom: 8px;
+  animation: posterCrownPulse 2s ease-in-out infinite;
+}
+
+@keyframes posterCrownPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.poster-flag {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+.poster-champion-name {
+  font-size: 26px;
+  font-weight: 800;
+  color: #ffd93d;
+  letter-spacing: 3px;
+}
+
+.poster-divider {
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,217,61,0.4), transparent);
+  margin-bottom: 20px;
+}
+
+.poster-qrcode-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 32px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.poster-qrcode-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.poster-qrcode-text {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  margin: 0 0 2px 0;
+}
+
+.poster-qrcode-sub {
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+  margin: 0;
+}
+
+/* ==================== 海报预览弹窗 ==================== */
+.poster-preview-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.poster-preview-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 90vw;
+  max-height: 90vh;
+}
+
+.poster-preview-img {
+  width: 100%;
+  max-width: 350px;
+  border-radius: 12px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,217,61,0.15);
+  margin-bottom: 16px;
+}
+
+.poster-preview-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.poster-preview-actions .el-button--primary {
+  background: linear-gradient(135deg, #ffd93d, #f0a500) !important;
+  border: none !important;
+  color: #0a0a14 !important;
+  font-weight: 600 !important;
 }
 </style>
 
