@@ -103,56 +103,63 @@ apiClient.interceptors.response.use(
     }
     
     // 错误处理
-    if (customConfig.showError !== false) {
-      let errorMessage = '请求失败'
-      
-      if (error.response) {
-        const responseData = error.response.data as BaseResponse
-        
-        // 优先使用后端返回的错误信息
-        if (responseData && responseData.message) {
-          errorMessage = responseData.message
-        } else {
-          switch (error.response.status) {
-            case 400:
-              errorMessage = '请求参数错误'
-              break
-            case 401:
-              errorMessage = '登录已过期，请重新登录'
-              localStorage.removeItem('token')
-              sessionStorage.removeItem('token')
-              window.location.href = '/login'
-              break
-            case 403:
-              errorMessage = '没有权限访问'
-              break
-            case 404:
-              errorMessage = '请求的资源不存在'
-              break
-            case 500:
-              errorMessage = '服务器内部错误'
-              break
-            case 502:
-              errorMessage = '网关错误'
-              break
-            case 503:
-              errorMessage = '服务不可用'
-              break
-            case 504:
-              errorMessage = '网关超时'
-              break
-            default:
-              errorMessage = `请求错误: ${error.response.status}`
-          }
-        }
-      } else if (error.code === 'ECONNABORTED') {
-        errorMessage = '请求超时，请检查网络连接'
-      } else if (error.message === 'Network Error') {
-        errorMessage = '网络错误，请检查网络连接'
+    if (error.response) {
+      const { status, data: responseData } = error.response
+
+      // 401 未授权 — 清除 token 并跳转登录页
+      if (status === 401) {
+        localStorage.removeItem('token')
+        sessionStorage.removeItem('token')
+        localStorage.removeItem('userInfo')
+        console.error('登录已过期，请重新登录')
+        window.location.href = '/login'
+        return Promise.reject(error)
       }
-      
-      // showErrorMessage(errorMessage)
-      console.error('API Error:', errorMessage)
+
+      let errorMessage = '请求失败'
+
+      // 优先使用后端返回的错误信息
+      if (responseData && (responseData as BaseResponse).message) {
+        errorMessage = (responseData as BaseResponse).message
+      } else {
+        switch (status) {
+          case 400:
+            errorMessage = '请求参数错误'
+            break
+          case 403:
+            errorMessage = '没有权限访问'
+            break
+          case 404:
+            errorMessage = '请求的资源不存在'
+            break
+          case 500:
+            errorMessage = '服务器内部错误'
+            break
+          case 502:
+            errorMessage = '网关错误'
+            break
+          case 503:
+            errorMessage = '服务不可用'
+            break
+          case 504:
+            errorMessage = '网关超时'
+            break
+          default:
+            errorMessage = `请求错误: ${status}`
+        }
+      }
+
+      if (customConfig.showError !== false) {
+        console.error('API Error:', errorMessage)
+      }
+    } else if (error.code === 'ECONNABORTED') {
+      if (customConfig.showError !== false) {
+        console.error('API Error:', '请求超时，请检查网络连接')
+      }
+    } else if (error.message === 'Network Error') {
+      if (customConfig.showError !== false) {
+        console.error('API Error:', '网络错误，请检查网络连接')
+      }
     }
     
     return Promise.reject(error)
