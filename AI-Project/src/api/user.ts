@@ -95,5 +95,17 @@ export const userApi = {
   // 开通会员
   openVip(data: { userId: string; vipType: number }, config?: CustomRequestConfig) {
     return apiClient.post('/api/vip/open', data, config) as Promise<any>
+  },
+
+  // 获取在线用户
+  getOnlineUsers(config?: CustomRequestConfig) {
+    return apiClient.get('/api/user/online', { ...config, rawResponse: true } as CustomRequestConfig) as Promise<{ code: number; data: Record<string, OnlineUser> }>
   }
+}
+
+export interface OnlineUser {
+  userId: string
+  userName: string
+  phone: string
+  lastAccessTime: string
 }
