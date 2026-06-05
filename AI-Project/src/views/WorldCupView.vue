@@ -124,7 +124,7 @@
         </div>
 
         <!-- ==================== 树状淘汰赛对阵图 ==================== -->
-        <div class="bracket-tree">
+        <div ref="bracketTreeRef" class="bracket-tree">
           <!-- 上半区 -->
           <div class="half-tree">
             <div class="half-tree-title">上半区</div>
@@ -370,14 +370,51 @@
         </div>
       </div>
   </div>
+
+  <!-- 海报预览弹窗 -->
+  <el-dialog
+    v-model="posterVisible"
+    width="700px"
+    :close-on-click-modal="true"
+    align-center
+    class="poster-dialog"
+  >
+    <template #header>
+      <div class="poster-dialog-header">
+        <span class="poster-dialog-title">🏆 我的冠军之路</span>
+        <div v-if="posterDataUrl && !posterGenerating" class="poster-header-qrcode">
+          <img src="/mini.jpg" class="poster-header-qrcode-img" alt="小程序码" />
+          <div class="poster-header-qrcode-text">
+            <span class="poster-header-qrcode-title">了解更多</span>
+            <span class="poster-header-qrcode-sub">长按识别小程序</span>
+          </div>
+        </div>
+      </div>
+    </template>
+    <div class="poster-preview-wrap">
+      <div v-if="posterGenerating" class="poster-loading">
+        <span class="loading-spinner"></span>
+        <span>海报生成中，请稍候...</span>
+      </div>
+      <img v-else-if="posterDataUrl" :src="posterDataUrl" class="poster-preview-img" />
+      <div v-else class="poster-loading">暂无海报</div>
+    </div>
+    <template #footer>
+      <div class="poster-footer">
+        <el-button @click="posterVisible = false">关闭</el-button>
+        <el-button type="primary" @click="downloadPoster">下载海报</el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h, defineComponent, onMounted, onUnmounted, shallowRef } from 'vue'
+import { ref, computed, h, defineComponent, onMounted, onUnmounted, shallowRef, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { worldcupApi } from '@/api/worldcup'
 import apiClient from '@/api'
+import html2canvas from 'html2canvas'
 
 // ==================== 2026世界杯分组（从接口获取） ====================
 const WORLD_CUP_GROUPS = ref<Record<string, string[]>>({})
@@ -1189,9 +1226,53 @@ const predictSemiFinal = (semiIndex: number, winner: 'home' | 'away') => {
   triggerBracketUpdate()
 }
 
+// ==================== 海报生成 ====================
+const bracketTreeRef = ref<HTMLElement | null>(null)
+const posterVisible = ref(false)
+const posterDataUrl = ref('')
+const posterGenerating = ref(false)
+
+const generatePoster = async () => {
+  if (!bracketTreeRef.value || posterGenerating.value) return
+  posterGenerating.value = true
+  try {
+    await nextTick()
+    const el = bracketTreeRef.value
+    const canvas = await html2canvas(el, {
+      backgroundColor: '#0a0a14',
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      width: el.scrollWidth,
+      height: el.scrollHeight,
+    })
+    posterDataUrl.value = canvas.toDataURL('image/png')
+    posterVisible.value = true
+  } catch (err) {
+    console.error('海报生成失败:', err)
+    ElMessage.error('海报生成失败，请重试')
+  } finally {
+    posterGenerating.value = false
+  }
+}
+
+const downloadPoster = () => {
+  if (!posterDataUrl.value) return
+  const link = document.createElement('a')
+  const champion = finalMatch.value.winner === 'home' ? finalMatch.value.homeTeam : finalMatch.value.awayTeam
+  link.download = `2026世界杯冠军预测-${champion}.png`
+  link.href = posterDataUrl.value
+  link.click()
+}
+
 const pickFinalWinner = (winner: 'home' | 'away') => {
   finalMatch.value.winner = winner
   triggerBracketUpdate()
+  // 冠军选出后自动生成海报
+  nextTick(() => {
+    generatePoster()
+  })
 }
 
 const resetKnockout = () => {
@@ -1211,7 +1292,7 @@ const submitPrediction = () => {
     message: h('div', { style: 'text-align: center' }, [
       h('p', { style: 'margin-bottom: 12px; font-size: 15px; color: #e6edf3' }, `您预测的冠军是：${getFlagEmoji(champion)} ${champion}`),
       h('img', { src: '/mini.jpg', style: 'width: 160px; height: 160px; border-radius: 8px; display: block; margin: 0 auto 8px' }),
-      h('p', { style: 'font-size: 13px; color: #8b949e' }, '微信扫码体验小程序，查看完整预测结果'),
+      h('p', { style: 'font-size: 13px; color: #8b949e' }, '微信扫码体验小程序'),
     ]),
     confirmButtonText: '知道了',
     customClass: 'prediction-dialog',
@@ -3030,5 +3111,115 @@ const submitPrediction = () => {
   border: none !important;
   color: #0a0a14 !important;
   font-weight: 600 !important;
+}
+
+/* 海报预览弹窗 */
+.poster-dialog .el-dialog {
+  background: #161b22;
+  border: 1px solid rgba(88, 166, 255, 0.15);
+  border-radius: 12px;
+}
+.poster-dialog .el-dialog__header {
+  border-bottom: 1px solid rgba(88, 166, 255, 0.1);
+  padding: 16px 20px;
+  margin-right: 0;
+}
+.poster-dialog .el-dialog__title {
+  color: #ffd93d;
+  font-size: 16px;
+  font-weight: 700;
+}
+.poster-dialog .el-dialog__body {
+  padding: 16px;
+}
+.poster-dialog .el-dialog__footer {
+  border-top: 1px solid rgba(88, 166, 255, 0.1);
+  padding: 12px 20px;
+}
+.poster-preview-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  background: #0a0a14;
+  border-radius: 8px;
+  overflow: auto;
+  max-height: 70vh;
+  padding: 16px;
+}
+.poster-preview-img {
+  max-width: 600px;
+  max-height: 65vh;
+  width: auto;
+  height: auto;
+  display: block;
+  border-radius: 4px;
+  object-fit: contain;
+}
+.poster-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #8b949e;
+  font-size: 14px;
+  padding: 60px 40px;
+}
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(88, 166, 255, 0.2);
+  border-top-color: #58a6ff;
+  border-radius: 50%;
+  animation: poster-spin 0.8s linear infinite;
+}
+@keyframes poster-spin {
+  to { transform: rotate(360deg); }
+}
+.poster-footer {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+/* 标题栏内小程序码 */
+.poster-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.poster-dialog-title {
+  color: #ffd93d;
+  font-size: 16px;
+  font-weight: 700;
+}
+.poster-header-qrcode {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+.poster-header-qrcode-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.poster-header-qrcode-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+.poster-header-qrcode-title {
+  color: #ffd93d;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.poster-header-qrcode-sub {
+  color: #a0b4cc;
+  font-size: 10px;
+  font-weight: 500;
 }
 </style>
