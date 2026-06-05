@@ -28,9 +28,25 @@
 
     <!-- 全部用户 - PC 表格 -->
     <div v-if="activeTab === 'all'" class="content-section">
+      <!-- 搜索栏 -->
+      <div class="search-bar">
+        <el-input
+          v-model="searchKeyword"
+          placeholder="搜索用户名 / 手机号"
+          clearable
+          :prefix-icon="Search"
+          class="search-input"
+          @input="handleSearch"
+        />
+        <el-checkbox v-model="todayOnly" @change="handleSearch" class="today-check">
+          仅看今日注册
+        </el-checkbox>
+        <span class="filter-count">找到 {{ filteredUserList.length }} 个用户</span>
+      </div>
+
       <!-- PC 端表格 -->
       <div class="table-section pc-only">
-        <el-table :data="userList" stripe style="width: 100%" v-loading="loading" empty-text="暂无用户数据">
+        <el-table :data="filteredUserList" stripe style="width: 100%" v-loading="loading" empty-text="暂无匹配用户">
           <el-table-column prop="phone" label="手机号" min-width="120" />
           <el-table-column prop="userName" label="用户名" min-width="100" />
           <el-table-column prop="point" label="积分" width="90" align="center" :formatter="pointFormatter" />
@@ -64,8 +80,8 @@
 
       <!-- 移动端卡片 -->
       <div class="mobile-cards mobile-only" v-loading="loading">
-        <div v-if="userList.length === 0" class="empty-state">暂无用户数据</div>
-        <div v-for="user in userList" :key="user.id" class="user-card">
+        <div v-if="filteredUserList.length === 0" class="empty-state">暂无匹配用户</div>
+        <div v-for="user in filteredUserList" :key="user.id" class="user-card">
           <div class="card-header">
             <div class="card-avatar">{{ (user.userName || user.phone).charAt(0) }}</div>
             <div class="card-user-info">
@@ -192,7 +208,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { User, Connection } from '@element-plus/icons-vue'
+import { User, Connection, Search } from '@element-plus/icons-vue'
 import { userApi, type UserListItem, type OnlineUser } from '@/api/user'
 
 // 响应式判断
@@ -202,9 +218,45 @@ const isMobile = computed(() => window.innerWidth < 768)
 const activeTab = ref('all')
 
 // 全部用户数据
-const userList = ref<UserListItem[]>([])
+const allUserList = ref<UserListItem[]>([])
 const loading = ref(false)
 const total = ref(0)
+
+// 搜索相关
+const searchKeyword = ref('')
+const todayOnly = ref(false)
+
+// 今日日期字符串
+const getTodayStr = () => {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+}
+
+// 过滤后的用户列表
+const filteredUserList = computed(() => {
+  let list = allUserList.value
+
+  // 仅看今日注册
+  if (todayOnly.value) {
+    const today = getTodayStr()
+    list = list.filter(u => {
+      const d = new Date(u.createTime)
+      const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      return ds === today
+    })
+  }
+
+  // 关键词搜索（用户名 / 手机号）
+  const kw = searchKeyword.value.trim().toLowerCase()
+  if (kw) {
+    list = list.filter(u =>
+      (u.userName || '').toLowerCase().includes(kw) ||
+      (u.phone || '').includes(kw)
+    )
+  }
+
+  return list
+})
 
 // 在线用户数据
 const onlineUserList = ref<OnlineUser[]>([])
@@ -257,11 +309,11 @@ const fetchUserList = async () => {
   loading.value = true
   try {
     const response = await userApi.getUserList({})
-    userList.value = response || []
+    allUserList.value = response || []
     total.value = response?.length || 0
   } catch (error: any) {
     ElMessage.error(error.message || '获取用户列表失败')
-    userList.value = []
+    allUserList.value = []
   } finally {
     loading.value = false
   }
@@ -271,14 +323,9 @@ const fetchUserList = async () => {
 const fetchOnlineUsers = async () => {
   onlineLoading.value = true
   try {
-    const res = await userApi.getOnlineUsers()
-    if (res.code === 200 && res.data) {
-      onlineUserList.value = Object.values(res.data)
-      onlineCount.value = onlineUserList.value.length
-    } else {
-      onlineUserList.value = []
-      onlineCount.value = 0
-    }
+    const res: any = await userApi.getOnlineUsers()
+    onlineUserList.value = Object.values(res || {})
+    onlineCount.value = onlineUserList.value.length
   } catch (error: any) {
     ElMessage.error(error.message || '获取在线用户失败')
     onlineUserList.value = []
@@ -294,6 +341,9 @@ const handleTabChange = (tabName: string | number) => {
     fetchOnlineUsers()
   }
 }
+
+// 搜索处理（空函数，computed 自动响应）
+const handleSearch = () => {}
 
 // 打开发放积分对话框 (全部用户)
 const handleAddPoint = (row: UserListItem) => {
@@ -434,6 +484,31 @@ onMounted(() => {
   height: 18px;
   line-height: 18px;
   padding: 0 6px;
+}
+
+/* ========== 搜索栏 ========== */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  width: 260px;
+  flex-shrink: 0;
+}
+
+.today-check {
+  flex-shrink: 0;
+  margin-right: 0;
+}
+
+.filter-count {
+  font-size: 13px;
+  color: #909399;
+  white-space: nowrap;
 }
 
 /* ========== 内容区域 ========== */
@@ -632,6 +707,19 @@ onMounted(() => {
 
   .page-header h1 {
     font-size: 18px;
+  }
+
+  .search-bar {
+    gap: 8px;
+  }
+
+  .search-input {
+    width: 100%;
+    flex-basis: 100%;
+  }
+
+  .filter-count {
+    font-size: 12px;
   }
 
   .table-section {

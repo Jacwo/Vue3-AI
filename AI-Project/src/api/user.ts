@@ -101,7 +101,7 @@ export const userApi = {
 
   // 获取在线用户
   getOnlineUsers(config?: CustomRequestConfig) {
-    return apiClient.get('/api/user/online', { ...config, rawResponse: true } as CustomRequestConfig) as Promise<{ code: number; data: Record<string, OnlineUser> }>
+    return apiClient.get('/api/user/online', config) as Promise<Record<string, OnlineUser>>
   }
 }
 
