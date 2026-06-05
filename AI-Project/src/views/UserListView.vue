@@ -50,7 +50,8 @@
           <el-table-column prop="phone" label="手机号" min-width="120" />
           <el-table-column prop="userName" label="用户名" min-width="100" />
           <el-table-column prop="point" label="积分" width="90" align="center" :formatter="pointFormatter" />
-          <el-table-column prop="createTime" label="注册时间" min-width="160" :formatter="timeFormatter" />
+          <el-table-column prop="createTime" label="注册时间" min-width="150" :formatter="timeFormatter" />
+          <el-table-column prop="lastLoginTime" label="最后登录" min-width="150" :formatter="lastLoginTimeFormatter" />
           <el-table-column prop="signToday" label="签到" width="90" align="center">
             <template #default="scope">
               <el-tag v-if="scope.row.signToday" type="success" size="small" effect="plain">已签到</el-tag>
@@ -105,6 +106,10 @@
               <div class="meta-item">
                 <span class="meta-label">注册时间</span>
                 <span class="meta-value">{{ formatTime(user.createTime) }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">最后登录</span>
+                <span class="meta-value">{{ formatTime(user.lastLoginTime) }}</span>
               </div>
               <div class="meta-item" v-if="user.isVip">
                 <span class="meta-label">VIP到期</span>
@@ -255,6 +260,13 @@ const filteredUserList = computed(() => {
     )
   }
 
+  // 按最后登录时间倒排
+  list = [...list].sort((a, b) => {
+    const ta = a.lastLoginTime ? new Date(a.lastLoginTime).getTime() : 0
+    const tb = b.lastLoginTime ? new Date(b.lastLoginTime).getTime() : 0
+    return tb - ta
+  })
+
   return list
 })
 
@@ -291,6 +303,12 @@ const pointFormatter = (row: UserListItem) => {
 // 格式化时间
 const timeFormatter = (row: UserListItem) => {
   return new Date(row.createTime).toLocaleString('zh-CN')
+}
+
+// 格式化最后登录时间
+const lastLoginTimeFormatter = (row: UserListItem) => {
+  if (!row.lastLoginTime) return '-'
+  return new Date(row.lastLoginTime).toLocaleString('zh-CN')
 }
 
 // 格式化在线用户时间

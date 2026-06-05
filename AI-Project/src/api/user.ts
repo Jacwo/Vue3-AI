@@ -35,6 +35,7 @@ export interface UserListItem {
   isAdmin: boolean
   isVip: boolean
   vipExpireTime: string
+  lastLoginTime: string
 }
 
 export interface UserListResponse {
