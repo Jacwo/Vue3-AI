@@ -33,6 +33,8 @@ export interface UserListItem {
   status: string
   signToday: boolean
   isAdmin: boolean
+  isVip: boolean
+  vipExpireTime: string
 }
 
 export interface UserListResponse {
