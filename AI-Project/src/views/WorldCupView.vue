@@ -1238,14 +1238,19 @@ const generatePoster = async () => {
   try {
     await nextTick()
     const el = bracketTreeRef.value
+    // 移动端兼容：使用 offsetWidth/offsetHeight 或 scrollWidth/scrollHeight
+    const w = el.scrollWidth || el.offsetWidth || el.clientWidth
+    const h = el.scrollHeight || el.offsetHeight || el.clientHeight
     const canvas = await html2canvas(el, {
       backgroundColor: '#0a0a14',
       scale: 2,
       useCORS: true,
       allowTaint: true,
       logging: false,
-      width: el.scrollWidth,
-      height: el.scrollHeight,
+      width: w,
+      height: h,
+      windowWidth: w,
+      windowHeight: h,
     })
     posterDataUrl.value = canvas.toDataURL('image/png')
     posterVisible.value = true
@@ -1892,7 +1897,6 @@ const submitPrediction = () => {
   flex-direction: column;
   gap: 16px;
   padding: 8px 4px;
-  contain: layout style;
 }
 
 /* 半区 */
