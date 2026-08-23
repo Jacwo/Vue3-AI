@@ -171,20 +171,11 @@
               <span class="score-text">{{ scope.row.aiScore || '-' }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="AI预测" width="130" align="center">
+          <el-table-column label="AI预测" width="110" align="center">
             <template #default="scope">
-              <div class="pred-cell">
-                <el-tag size="small" :type="getResultTagType(scope.row.aiResult)" round>
-                  预测·{{ scope.row.aiResult || '-' }}
-                </el-tag>
-                <span
-                  v-if="scope.row.aiHit !== null"
-                  class="hr-hit"
-                  :class="scope.row.aiHit ? 'hr-hit-true' : 'hr-hit-false'"
-                >
-                  {{ scope.row.aiHit ? '✓命中' : '✗未中' }}
-                </span>
-              </div>
+              <el-tag size="small" :type="getResultTagType(scope.row.aiResult)" round>
+                预测·{{ scope.row.aiResult || '-' }}
+              </el-tag>
             </template>
           </el-table-column>
           <el-table-column label="让球" width="120" align="center">
@@ -223,8 +214,11 @@
               >
                 {{ item.homeTeam }}
               </span>
-              <span v-if="item.resultInfo" class="hr-score" :class="'hr-score-' + item.resultInfo.winner">
-                {{ item.resultInfo.homeScore }}:{{ item.resultInfo.awayScore }}
+              <span v-if="item.resultInfo" class="hr-result">
+                <span class="hr-result-label">最终结果</span>
+                <span class="hr-score" :class="'hr-score-' + item.resultInfo.winner">
+                  {{ item.resultInfo.homeScore }}:{{ item.resultInfo.awayScore }}
+                </span>
               </span>
               <span v-else class="hr-score hr-score-none">vs</span>
               <span
@@ -236,17 +230,11 @@
               </span>
             </span>
             <span class="hr-ai">
+              <span class="hr-ai-label">AI预测</span>
               <span class="hr-ai-score">{{ item.aiScore || '-' }}</span>
               <el-tag size="small" :type="getResultTagType(item.aiResult)" round effect="light">
                 {{ item.aiResult || '-' }}
               </el-tag>
-              <span
-                v-if="item.aiHit !== null"
-                class="hr-hit"
-                :class="item.aiHit ? 'hr-hit-true' : 'hr-hit-false'"
-              >
-                {{ item.aiHit ? '✓中' : '✗错' }}
-              </span>
             </span>
           </div>
           <div class="hr-sub">
@@ -402,27 +390,12 @@ const getResultTagTypeByWinner = (winner: 'home' | 'away' | 'draw'): string => {
   return 'warning'
 }
 
-// 解析 AI 预测的胜平负方向（返回 'home' | 'away' | 'draw'，无法判断返回 null）
-const parseAiPrediction = (result: string): 'home' | 'away' | 'draw' | null => {
-  if (!result) return null
-  if (result.includes('主')) return 'home'
-  if (result.includes('客')) return 'away'
-  if (result.includes('平')) return 'draw'
-  return null
-}
-
-// 历史记录行（附带解析后的比赛结果与 AI 预测命中判定）
-// aiHit：null=比赛未结束/无法判断；true=AI 预测命中；false=预测未中
+// 历史记录行（附带解析后的比赛结果）
 const historyRows = computed(() => {
-  return historyList.value.map((item) => {
-    const resultInfo = parseMatchResult(item.matchResult)
-    let aiHit: boolean | null = null
-    if (resultInfo) {
-      const pred = parseAiPrediction(item.aiResult)
-      aiHit = pred ? pred === resultInfo.winner : null
-    }
-    return { ...item, resultInfo, aiHit }
-  })
+  return historyList.value.map((item) => ({
+    ...item,
+    resultInfo: parseMatchResult(item.matchResult)
+  }))
 })
 
 // 格式化时间
@@ -838,32 +811,28 @@ onMounted(() => {
   font-family: 'SF Mono', Menlo, Consolas, monospace;
 }
 
-/* AI 预测命中标记 */
-.hr-hit {
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1;
-  padding: 2px 4px;
-  border-radius: 4px;
-  flex-shrink: 0;
-}
-
-.hr-hit-true {
-  color: #67c23a;
-  background: rgba(103, 194, 58, 0.12);
-}
-
-.hr-hit-false {
-  color: #f56c6c;
-  background: rgba(245, 108, 108, 0.12);
-}
-
-/* PC 表格 AI 预测单元格 */
-.pred-cell {
+/* 最终结果（移动端历史行：比分上方标注） */
+.hr-result {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.hr-result-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #909399;
+  line-height: 1;
+}
+
+/* AI 预测标注（移动端历史行） */
+.hr-ai-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #909399;
+  line-height: 1;
 }
 
 .hr-sub {
