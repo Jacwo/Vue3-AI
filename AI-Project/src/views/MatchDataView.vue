@@ -142,14 +142,14 @@
               {{ formatDateTime(scope.row.matchTime) }}
             </template>
           </el-table-column>
-          <el-table-column label="历史比分" width="130" align="center">
+          <el-table-column label="最终结果" width="130" align="center">
             <template #default="scope">
               <div v-if="scope.row.resultInfo" class="history-result">
                 <span class="history-score">
                   {{ scope.row.resultInfo.homeScore }}:{{ scope.row.resultInfo.awayScore }}
                 </span>
                 <el-tag size="small" :type="getResultTagTypeByWinner(scope.row.resultInfo.winner)" round>
-                  {{ scope.row.resultInfo.resultText }}
+                  结果·{{ scope.row.resultInfo.resultText }}
                 </el-tag>
               </div>
               <span v-else class="history-not-finished">未结束</span>
@@ -171,11 +171,20 @@
               <span class="score-text">{{ scope.row.aiScore || '-' }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="胜平负" width="110" align="center">
+          <el-table-column label="AI预测" width="130" align="center">
             <template #default="scope">
-              <el-tag size="small" :type="getResultTagType(scope.row.aiResult)" round>
-                {{ scope.row.aiResult || '-' }}
-              </el-tag>
+              <div class="pred-cell">
+                <el-tag size="small" :type="getResultTagType(scope.row.aiResult)" round>
+                  预测·{{ scope.row.aiResult || '-' }}
+                </el-tag>
+                <span
+                  v-if="scope.row.aiHit !== null"
+                  class="hr-hit"
+                  :class="scope.row.aiHit ? 'hr-hit-true' : 'hr-hit-false'"
+                >
+                  {{ scope.row.aiHit ? '✓命中' : '✗未中' }}
+                </span>
+              </div>
             </template>
           </el-table-column>
           <el-table-column label="让球" width="120" align="center">
@@ -231,6 +240,13 @@
               <el-tag size="small" :type="getResultTagType(item.aiResult)" round effect="light">
                 {{ item.aiResult || '-' }}
               </el-tag>
+              <span
+                v-if="item.aiHit !== null"
+                class="hr-hit"
+                :class="item.aiHit ? 'hr-hit-true' : 'hr-hit-false'"
+              >
+                {{ item.aiHit ? '✓中' : '✗错' }}
+              </span>
             </span>
           </div>
           <div class="hr-sub">
@@ -386,12 +402,27 @@ const getResultTagTypeByWinner = (winner: 'home' | 'away' | 'draw'): string => {
   return 'warning'
 }
 
-// 历史记录行（附带解析后的比赛结果）
+// 解析 AI 预测的胜平负方向（返回 'home' | 'away' | 'draw'，无法判断返回 null）
+const parseAiPrediction = (result: string): 'home' | 'away' | 'draw' | null => {
+  if (!result) return null
+  if (result.includes('主')) return 'home'
+  if (result.includes('客')) return 'away'
+  if (result.includes('平')) return 'draw'
+  return null
+}
+
+// 历史记录行（附带解析后的比赛结果与 AI 预测命中判定）
+// aiHit：null=比赛未结束/无法判断；true=AI 预测命中；false=预测未中
 const historyRows = computed(() => {
-  return historyList.value.map((item) => ({
-    ...item,
-    resultInfo: parseMatchResult(item.matchResult)
-  }))
+  return historyList.value.map((item) => {
+    const resultInfo = parseMatchResult(item.matchResult)
+    let aiHit: boolean | null = null
+    if (resultInfo) {
+      const pred = parseAiPrediction(item.aiResult)
+      aiHit = pred ? pred === resultInfo.winner : null
+    }
+    return { ...item, resultInfo, aiHit }
+  })
 })
 
 // 格式化时间
@@ -805,6 +836,34 @@ onMounted(() => {
   font-weight: 700;
   color: #409eff;
   font-family: 'SF Mono', Menlo, Consolas, monospace;
+}
+
+/* AI 预测命中标记 */
+.hr-hit {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.hr-hit-true {
+  color: #67c23a;
+  background: rgba(103, 194, 58, 0.12);
+}
+
+.hr-hit-false {
+  color: #f56c6c;
+  background: rgba(245, 108, 108, 0.12);
+}
+
+/* PC 表格 AI 预测单元格 */
+.pred-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
 }
 
 .hr-sub {
