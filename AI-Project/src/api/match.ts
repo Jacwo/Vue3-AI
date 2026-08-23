@@ -116,8 +116,8 @@ const transformMatch = (raw: RawMatch): Match => {
   return {
     id: raw.matchId,
     league: raw.leagueAllName || raw.leagueAbbName,
-    homeTeam: raw.homeTeamAllName || raw.homeTeamAbbName,
-    awayTeam: raw.awayTeamAllName || raw.awayTeamAbbName,
+    homeTeam: raw.homeTeamAbbName,
+    awayTeam: raw.awayTeamAbbName,
     odds: {
       home: raw.homeWin ? parseFloat(raw.homeWin) : null,
       draw: raw.draw ? parseFloat(raw.draw) : null,
