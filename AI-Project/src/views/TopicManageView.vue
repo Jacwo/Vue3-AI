@@ -4,7 +4,7 @@
       <h1>专题配置</h1>
       <div class="header-actions">
         <el-button v-if="activeTab === 'MAJOR_EVENT'" type="primary" @click="handleAdd">新增专题</el-button>
-        <el-button v-if="activeTab === 'HOT_LEAGUE'" type="success" @click="handleOpenBatchAdd">
+        <el-button v-if="activeTab === 'HOT_MATCH'" type="success" @click="handleOpenBatchAdd">
           批量添加热门比赛
         </el-button>
       </div>
@@ -19,7 +19,7 @@
     </div>
 
     <!-- 热门比赛列表（HOT_LEAGUE Tab）-->
-    <div v-if="activeTab === 'HOT_MATCH'" class="table-section">
+    <div v-if="activeTab === 'HOT_MATCH'" class="table-section pc-only">
       <el-table
         :data="hotMatchList"
         stripe
@@ -60,8 +60,45 @@
       </el-table>
     </div>
 
+    <!-- 热门比赛移动端卡片 -->
+    <div v-if="activeTab === 'HOT_MATCH'" class="mobile-cards mobile-only" v-loading="loading">
+      <div v-if="hotMatchList.length === 0" class="empty-state">暂无热门比赛</div>
+      <div v-for="match in hotMatchList" :key="match.id" class="match-card">
+        <div class="card-header">
+          <div class="card-league">{{ match.league }}</div>
+          <el-tag :type="getMatchStatusType(match.status)" size="small" round>
+            {{ match.matchStatusName || match.status }}
+          </el-tag>
+        </div>
+        <div class="card-teams">
+          <span class="team-name">{{ match.homeTeam }}</span>
+          <span class="vs">vs</span>
+          <span class="team-name">{{ match.awayTeam }}</span>
+        </div>
+        <div class="card-meta">
+          <div class="meta-item">
+            <span class="meta-label">比赛时间</span>
+            <span class="meta-value">{{ match.matchTime }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">主队排名</span>
+            <span class="meta-value">{{ match.homeTeamRank || '-' }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">客队排名</span>
+            <span class="meta-value">{{ match.awayTeamRank || '-' }}</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <el-button type="danger" size="small" plain round @click="handleRemoveHotMatch(match)">
+            移除
+          </el-button>
+        </div>
+      </div>
+    </div>
+
     <!-- 专题列表（MAJOR_EVENT Tab）-->
-    <div v-if="activeTab === 'MAJOR_EVENT'" class="table-section">
+    <div v-if="activeTab === 'MAJOR_EVENT'" class="table-section pc-only">
       <el-table
         :data="topicList"
         stripe
@@ -128,14 +165,68 @@
       </el-table>
     </div>
 
+    <!-- 专题列表移动端卡片 -->
+    <div v-if="activeTab === 'MAJOR_EVENT'" class="mobile-cards mobile-only" v-loading="loading">
+      <div v-if="topicList.length === 0" class="empty-state">暂无专题</div>
+      <div v-for="topic in topicList" :key="topic.id" class="topic-card">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="topic-name">{{ topic.topicName }}</span>
+            <el-tag :type="topic.status === 1 ? 'success' : 'info'" size="small" round>
+              {{ topic.status === 1 ? '启用' : '禁用' }}
+            </el-tag>
+          </div>
+        </div>
+        <div class="card-images" v-if="topic.imageUrl || topic.carouselImageUrl">
+          <img
+            v-if="topic.imageUrl"
+            :src="topic.imageUrl"
+            :alt="topic.topicName"
+            class="card-image"
+            @error="handleImageError"
+          />
+          <img
+            v-if="topic.carouselImageUrl"
+            :src="topic.carouselImageUrl"
+            :alt="'轮播-' + topic.topicName"
+            class="card-image"
+            @error="handleImageError"
+          />
+        </div>
+        <div class="card-desc" :title="topic.topicDesc">
+          {{ topic.topicDesc }}
+        </div>
+        <div class="card-meta">
+          <div class="meta-item">
+            <span class="meta-label">开始时间</span>
+            <span class="meta-value">{{ topic.startDate ? formatTime(topic.startDate) : '-' }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">结束时间</span>
+            <span class="meta-value">{{ topic.endDate ? formatTime(topic.endDate) : '-' }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">排序</span>
+            <span class="meta-value">{{ topic.displaySort }}</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <el-button type="primary" size="small" plain round @click="handleEdit(topic)">
+            编辑
+          </el-button>
+        </div>
+      </div>
+    </div>
+
     <!-- 专题表单对话框 -->
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" :width="isMobile ? '95%' : '600px'" :close-on-click-modal="false">
       <el-scrollbar>
         <el-form
           :model="topicForm"
           :rules="formRules"
           ref="topicFormRef"
           label-width="120px"
+          class="topic-form"
         >
           <el-form-item label="专题类型" prop="topicType">
             <el-select v-model="topicForm.topicType">
@@ -220,7 +311,7 @@
     </el-dialog>
 
     <!-- 批量添加热门比赛对话框 -->
-    <el-dialog v-model="batchAddDialogVisible" title="批量添加热门比赛" width="700px">
+    <el-dialog v-model="batchAddDialogVisible" title="批量添加热门比赛" :width="isMobile ? '95%' : '700px'" :close-on-click-modal="false">
       <div v-loading="batchAddLoading" class="batch-add-container">
         <div v-if="todayMatches.length === 0" class="empty-state">
           <p>今天暂无比赛</p>
@@ -262,8 +353,11 @@ import type { FormInstance } from 'element-plus'
 import { topicApi, type Topic, type TopicFormData, type TopicType } from '@/api/topic'
 import { matchApi, type Match } from '@/api/match'
 
+// 响应式判断（移动端）
+const isMobile = computed(() => window.innerWidth < 768)
+
 // 状态管理
-const activeTab = ref<TopicType>('HOT_LEAGUE')
+const activeTab = ref<TopicType>('HOT_MATCH')
 const topicList = ref<Topic[]>([])
 const hotMatchList = ref<Match[]>([])
 const loading = ref(false)
@@ -315,20 +409,6 @@ const batchAddLoading = ref(false)
 const batchConfirmLoading = ref(false)
 const todayMatches = ref<Match[]>([])
 const selectedMatchIds = ref<number[]>([])
-
-// 获取专题列表
-const fetchTopicList = async () => {
-  loading.value = true
-  try {
-    const response: any = await topicApi.getTopicList(activeTab.value)
-    topicList.value = (response?.data || response) || []
-  } catch (error: any) {
-    ElMessage.error(error.message || '获取专题列表失败')
-    topicList.value = []
-  } finally {
-    loading.value = false
-  }
-}
 
 // 获取重大赛事列表（合并 MAJOR_EVENT + HOT_LEAGUE）
 const fetchMajorEventList = async () => {
@@ -445,7 +525,7 @@ const handleSubmit = async () => {
       const message = topicForm.value.id ? '编辑成功' : '新增成功'
       ElMessage.success(message)
       dialogVisible.value = false
-      fetchTopicList()
+      fetchMajorEventList()
     } catch (error: any) {
       ElMessage.error(error.message || '保存失败')
     } finally {
@@ -690,8 +770,171 @@ onMounted(() => {
   white-space: nowrap;
 }
 
+/* ========== 显示控制 ========== */
+.pc-only {
+  display: block;
+}
+
+.mobile-only {
+  display: none;
+}
+
+/* ========== 移动端卡片 ========== */
+.mobile-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.match-card,
+.topic-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s;
+}
+
+.match-card:active,
+.topic-card:active {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.card-league {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a2e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.topic-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a2e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-teams {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background: #f7f8fa;
+  border-radius: 8px;
+}
+
+.team-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vs {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #c0c4cc;
+  font-weight: 600;
+}
+
+.card-images {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.card-image {
+  width: 90px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #f0f0f0;
+}
+
+.card-desc {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 10px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin-bottom: 10px;
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.meta-label {
+  font-size: 11px;
+  color: #aaa;
+}
+
+.meta-value {
+  font-size: 13px;
+  color: #555;
+}
+
+.card-actions {
+  display: flex;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.card-actions .el-button {
+  flex: 1;
+  font-size: 13px;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
+  .pc-only {
+    display: none;
+  }
+
+  .mobile-only {
+    display: flex;
+  }
+
   .topic-manage-container {
     padding: 10px;
   }
@@ -715,16 +958,7 @@ onMounted(() => {
     min-width: 120px;
   }
 
-  .table-section :deep(.el-table) {
-    min-width: 800px;
-    font-size: 12px;
-  }
-
-  .table-section :deep(.el-table__cell) {
-    padding: 8px 4px;
-  }
-
-  .table-section :deep(.el-button--link) {
+  .tab-section {
     padding: 0;
   }
 
@@ -742,6 +976,42 @@ onMounted(() => {
   .time {
     margin-left: 0;
   }
+
+  /* 移动端表单：label 置顶 */
+  .topic-form :deep(.el-form-item) {
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .topic-form :deep(.el-form-item__label) {
+    display: block;
+    text-align: left;
+    width: 100% !important;
+    padding: 0 0 4px;
+    line-height: 1.4;
+  }
+
+  .topic-form :deep(.el-form-item__content) {
+    margin-left: 0 !important;
+    width: 100%;
+  }
+
+  .topic-form :deep(.el-input),
+  .topic-form :deep(.el-select),
+  .topic-form :deep(.el-input-number),
+  .topic-form :deep(.el-date-editor) {
+    width: 100% !important;
+  }
+
+  /* 批量添加对话框比赛卡片适配 */
+  .match-list {
+    max-height: 50vh;
+  }
+
+  .match-info {
+    flex-direction: row;
+    align-items: center;
+  }
 }
 
 @media (max-width: 480px) {
@@ -757,18 +1027,18 @@ onMounted(() => {
     width: 100%;
   }
 
-  .table-section :deep(.el-table) {
-    min-width: 600px;
-    font-size: 11px;
-  }
-
-  .table-section :deep(.el-table__cell) {
-    padding: 6px 2px;
-  }
-
   .image-preview {
     width: 45px;
     height: 30px;
+  }
+
+  .card-images {
+    flex-direction: column;
+  }
+
+  .card-image {
+    width: 100%;
+    height: 120px;
   }
 }
 </style>

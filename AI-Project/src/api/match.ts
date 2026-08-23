@@ -64,6 +64,23 @@ export interface Match {
   isSingleMatch:boolean
 }
 
+// 球队历史预测信息（/api/analysis/teams）
+export interface TeamAnalysisHistory {
+  homeTeam: string
+  awayTeam: string
+  matchTime: string
+  homeWin: string
+  draw: string
+  awayWin: string
+  aiAnalysis: string
+  aiScore: string
+  aiResult: string
+  aiLetResult: string
+  aiHalfFull: string
+  aiTotalGoals: string
+  matchResult: string // 历史比赛实际结果，如 "2-1" 或 "2:1"（主队:客队）
+}
+
 // 列表参数
 export interface MatchListParams {
   league?: string
@@ -208,6 +225,17 @@ export const matchApi = {
       ...config,
     }).then((data) => {
       return transformMatches(data as any)
+    })
+  },
+
+  // 按球队查询历史预测信息（homeTeam / awayTeam 二选一）
+  getTeamAnalysisHistory(homeTeam?: string, awayTeam?: string, config?: CustomRequestConfig) {
+    const params: { homeTeam?: string; awayTeam?: string } = {}
+    if (homeTeam) params.homeTeam = homeTeam
+    if (awayTeam) params.awayTeam = awayTeam
+    return apiClient.get<TeamAnalysisHistory[]>('/api/analysis/teams', {
+      params,
+      ...config,
     })
   },
 }

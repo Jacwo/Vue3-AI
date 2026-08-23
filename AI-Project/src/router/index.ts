@@ -97,6 +97,16 @@ const router = createRouter({
       }
     },
     {
+      path: '/matches',
+      name: 'MatchData',
+      component: () => import('@/views/MatchDataView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: '比赛数据',
+        requiresAdmin: true
+      }
+    },
+    {
       path: '/users',
       name: 'Users',
       component: () => import('@/views/UserListView.vue'),

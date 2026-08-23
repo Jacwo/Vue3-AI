@@ -115,6 +115,14 @@ const closeMobileMenu = () => {
           </RouterLink> -->
           <RouterLink
             v-if="userStore.userInfo?.isAdmin"
+            to="/matches"
+            @click="closeMobileMenu"
+            :class="{ 'mobile-link': isMobile }"
+          >
+            比赛数据
+          </RouterLink>
+          <RouterLink
+            v-if="userStore.userInfo?.isAdmin"
             to="/users"
             @click="closeMobileMenu"
             :class="{ 'mobile-link': isMobile }"
