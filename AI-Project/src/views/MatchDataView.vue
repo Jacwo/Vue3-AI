@@ -115,6 +115,21 @@
       class="history-drawer"
       @close="clearHistory"
     >
+      <!-- 历史预测搜索栏：搜主队传 homeTeam，搜客队传 awayTeam -->
+      <div class="history-search">
+        <el-radio-group v-model="searchSide" size="small">
+          <el-radio-button value="home">主队</el-radio-button>
+          <el-radio-button value="away">客队</el-radio-button>
+        </el-radio-group>
+        <el-input
+          v-model="searchTeamName"
+          :placeholder="searchSide === 'home' ? '输入主队名称' : '输入客队名称'"
+          clearable
+          @keyup.enter="handleSearch"
+        />
+        <el-button type="primary" size="small" @click="handleSearch">搜索</el-button>
+      </div>
+
       <el-empty
         v-if="historyList.length === 0 && !historyLoading"
         description="未查询到相关历史预测"
@@ -267,6 +282,18 @@ const currentQueryTeam = ref('')
 const historyList = ref<TeamAnalysisHistory[]>([])
 const historyLoading = ref(false)
 const historySearched = ref(false)
+
+// 历史预测搜索（搜主队传 homeTeam，搜客队传 awayTeam）
+const searchSide = ref<'home' | 'away'>('home')
+const searchTeamName = ref('')
+const handleSearch = () => {
+  const name = searchTeamName.value.trim()
+  if (!name) {
+    ElMessage.warning('请输入球队名称')
+    return
+  }
+  queryHistoryByTeam(name, undefined, searchSide.value)
+}
 
 // 历史预测抽屉
 const drawerVisible = ref(false)
@@ -506,6 +533,30 @@ onMounted(() => {
   padding: 16px;
   background: #f7f9fc;
   overflow-y: auto;
+}
+
+/* 历史预测搜索栏 */
+.history-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 12px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #f0f2f5;
+}
+
+.history-search .el-input {
+  flex: 1;
+}
+
+.history-search .el-radio-group {
+  flex-shrink: 0;
+}
+
+.history-search .el-button {
+  flex-shrink: 0;
 }
 
 .section-header {
@@ -944,6 +995,34 @@ onMounted(() => {
   .mr-team {
     max-width: 90px;
     font-size: 13px;
+  }
+
+  /* 搜索栏窄屏适配：类型切换独占一行，输入框+按钮下一行 */
+  .history-search {
+    flex-wrap: wrap;
+    padding: 10px;
+  }
+
+  .history-search .el-radio-group {
+    width: 100%;
+  }
+
+  .history-search .el-radio-group .el-radio-button {
+    width: 50%;
+    margin-right: 0;
+  }
+
+  .history-search .el-radio-group .el-radio-button:first-child {
+    border-radius: 4px 0 0 4px;
+  }
+
+  .history-search .el-radio-group .el-radio-button:last-child {
+    border-radius: 0 4px 4px 0;
+  }
+
+  .history-search .el-input {
+    flex: 1;
+    min-width: 0;
   }
 }
 </style>
