@@ -48,6 +48,13 @@ export const useUserStore = defineStore('user', () => {
         localStorage.setItem('token', token.value)
         localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
 
+        // 如果登录响应里没有 vipExpireTime/isVip,主动拉一次完整用户信息(iOS Safari 等场景下避免断章)
+        const baseInfo: any = response.userInfo || {}
+        if (baseInfo.vipExpireTime === undefined || baseInfo.isVip === undefined) {
+            // 异步刷新,不阻塞登录返回
+            fetchUserInfo().catch(() => { /* 静默失败 */ })
+        }
+
         ElMessage.success('登录成功')
         return true
 
@@ -73,10 +80,20 @@ export const useUserStore = defineStore('user', () => {
     // 获取用户信息
     const fetchUserInfo = async (): Promise<boolean> => {
         try {
-            const response = await userApi.getUserInfo()
-            userInfo.value = response.data
-            localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
-            return true
+            const response = await userApi.getUserInfo() as any
+            // 兼容两种响应结构:
+            //   1) 拦截器已 unwrap -> 直接是 UserInfo
+            //   2) 后端直接返回 UserInfo -> 同上
+            //   3) 旧结构 { data: UserInfo } -> 兜底取 .data
+            const data = response?.data && typeof response.data === 'object' && !('token' in response.data)
+                ? response.data
+                : response
+            if (data && typeof data === 'object' && (data as any).id !== undefined) {
+                userInfo.value = data
+                localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
+                return true
+            }
+            return false
         } catch (error) {
             return false
         }

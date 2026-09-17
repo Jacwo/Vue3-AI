@@ -17,13 +17,22 @@ const loadUserInfo = async () => {
     return
   }
 
+  // 优先用本地缓存,渲染不阻塞
   let info = userStore.userInfo
-  if (!info) {
-    await userStore.fetchUserInfo()
-    info = userStore.userInfo
-  }
-
   userInfo.value = info
+
+  // 进入页面后主动拉一次完整用户信息(含 vipExpireTime/isVip 等字段)
+  // - 防止 iOS Safari 因日期解析或登录响应不完整导致会员信息缺失
+  // - 兼容 localStorage 缓存为旧版本字段不全的情况
+  try {
+    const ok = await userStore.fetchUserInfo()
+    if (ok && userStore.userInfo) {
+      userInfo.value = userStore.userInfo
+    }
+  } catch (e) {
+    // 静默失败,本地缓存继续展示
+    console.warn('获取最新用户信息失败,使用本地缓存:', e)
+  }
 }
 
 // 退出登录
@@ -43,11 +52,59 @@ const formatPhone = (phone: string) => {
   return phone.slice(0, 3) + '****' + phone.slice(7)
 }
 
+// 兼容 iOS Safari 的日期解析（iOS Safari 严格遵循 ISO 8601，不支持 'YYYY-MM-DD HH:mm:ss' 这种空格分隔的格式）
+// 支持：ISO 字符串 / 时间戳(毫秒/秒) / 数字 / 'YYYY-MM-DD HH:mm:ss' / 'YYYY/MM/DD HH:mm:ss' / 中文格式等
+const parseDateSafe = (input: string | number | null | undefined): Date | null => {
+  if (input === null || input === undefined || input === '') return null
+
+  // 数字时间戳
+  if (typeof input === 'number') {
+    const ts = input < 1e12 ? input * 1000 : input
+    const d = new Date(ts)
+    return isNaN(d.getTime()) ? null : d
+  }
+
+  const str = String(input).trim()
+  if (!str) return null
+
+  // 纯数字字符串(时间戳)
+  if (/^\d+$/.test(str)) {
+    const n = Number(str)
+    const ts = n < 1e12 ? n * 1000 : n
+    const d = new Date(ts)
+    return isNaN(d.getTime()) ? null : d
+  }
+
+  // 1) 把斜杠和空格统一替换成短横线+T, 然后交给 Date
+  const isoLike = str.replace(/\//g, '-').replace(' ', 'T')
+  let d = new Date(isoLike)
+  if (!isNaN(d.getTime())) return d
+
+  // 2) 兜底: 手动解析常见 'YYYY-MM-DD HH:mm:ss' / 'YYYY-MM-DDTHH:mm:ss' 格式
+  //    iOS Safari 严格模式下对某些写法仍会 NaN,手动构造可确保兼容
+  const m = str.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})(?:[ T](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/)
+  if (m) {
+    const parsed = new Date(
+      Number(m[1]),
+      Number(m[2]) - 1,
+      Number(m[3]),
+      Number(m[4] || 0),
+      Number(m[5] || 0),
+      Number(m[6] || 0)
+    )
+    if (!isNaN(parsed.getTime())) return parsed
+  }
+
+  // 3) 最后尝试原始字符串
+  d = new Date(str)
+  return isNaN(d.getTime()) ? null : d
+}
+
 // 格式化 VIP 到期时间
 const formatVipExpire = (time: string) => {
   if (!time) return ''
-  const d = new Date(time)
-  if (isNaN(d.getTime())) return ''
+  const d = parseDateSafe(time)
+  if (!d) return ''
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
@@ -57,9 +114,10 @@ const formatVipExpire = (time: string) => {
 // VIP 剩余天数
 const vipDaysLeft = (time: string) => {
   if (!time) return 0
-  const target = new Date(time).getTime()
+  const target = parseDateSafe(time)
+  if (!target) return 0
   const now = Date.now()
-  const diff = target - now
+  const diff = target.getTime() - now
   if (diff <= 0) return 0
   return Math.ceil(diff / (1000 * 60 * 60 * 24))
 }
@@ -68,7 +126,20 @@ const vipDaysLeft = (time: string) => {
 const isVipActive = (info: any) => {
   if (!info?.isVip) return false
   if (!info?.vipExpireTime) return false
-  return new Date(info.vipExpireTime).getTime() > Date.now()
+  const t = parseDateSafe(info.vipExpireTime)
+  if (!t) return false
+  return t.getTime() > Date.now()
+}
+
+// 格式化注册时间(容错:iOS Safari + 各种后端格式)
+const formatCreateTime = (time: string | undefined | null) => {
+  if (!time) return '未知'
+  const d = parseDateSafe(time)
+  if (!d) return '未知'
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 onMounted(() => {
@@ -206,7 +277,7 @@ onMounted(() => {
             </span>
             <span class="info-label">注册时间</span>
           </div>
-          <span class="info-value">{{ userInfo?.createTime ? new Date(userInfo.createTime).toLocaleDateString() : '未知' }}</span>
+          <span class="info-value">{{ formatCreateTime(userInfo?.createTime) }}</span>
         </div>
       </div>
     </div>
