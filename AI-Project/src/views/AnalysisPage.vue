@@ -1074,16 +1074,37 @@ const getSimilarMatchClass = (match: SimilarMatch) => {
 // 标签页切换
 const switchTab = async (tabId: string) => {
   if (activeTab.value === tabId) return
-  
+
   activeTab.value = tabId
   await nextTick()
-  
+
   // 滚动到顶部
   const contentEl = document.querySelector('.tab-content')
   if (contentEl) {
     contentEl.scrollTop = 0
   }
-  
+
+  // 移动端 tab-header 是横向滚动的:把激活项自动滚到可视区域中央,
+  // 避免出现"激活态在边缘被截断"或"看不到激活的是哪个"
+  try {
+    const activeEl = document.querySelector(
+      `.analysis-tabs .tabs-header .tab-item.active`
+    ) as HTMLElement | null
+    const headerEl = document.querySelector(
+      '.analysis-tabs .tabs-header'
+    ) as HTMLElement | null
+    if (activeEl && headerEl && headerEl.scrollWidth > headerEl.clientWidth) {
+      const targetLeft =
+        activeEl.offsetLeft - headerEl.clientWidth / 2 + activeEl.clientWidth / 2
+      headerEl.scrollTo({
+        left: Math.max(0, targetLeft),
+        behavior: 'smooth'
+      })
+    }
+  } catch (e) {
+    /* 静默:即便失败也不影响 tab 切换 */
+  }
+
   // 加载数据
   loadTabData(tabId)
 }
@@ -1732,6 +1753,15 @@ const handleResize = () => {
   top: 73px;
   z-index: 10;
   backdrop-filter: blur(10px);
+  /* 移动端：横向滑动 + 隐藏滚动条 */
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.analysis-tabs .tabs-header::-webkit-scrollbar {
+  display: none;
 }
 
 .analysis-tabs .tabs-header .tab-item {
@@ -1744,6 +1774,7 @@ const handleResize = () => {
   transition: all 0.3s ease;
   position: relative;
   user-select: none;
+  white-space: nowrap;
 }
 
 .analysis-tabs .tabs-header .tab-item:hover {
@@ -2456,16 +2487,57 @@ const handleResize = () => {
   .analysis-tabs {
     margin: 0 12px 12px;
   }
-  
-  .analysis-tabs .tabs-header .tab-item {
-    padding: 12px 4px;
-    font-size: 13px;
+
+  /* 移动端：改为胶囊分段控件 + 横向滑动 */
+  .analysis-tabs .tabs-header {
+    background: transparent;
+    border-bottom: none;
+    padding: 4px;
+    border-radius: 14px;
+    background: #f1f5f9;
+    gap: 4px;
+    margin: 0 4px;
+    /* 横向滑动支持 */
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
-  
+  .analysis-tabs .tabs-header::-webkit-scrollbar {
+    display: none;
+  }
+
+  .analysis-tabs .tabs-header .tab-item {
+    flex: 0 0 auto;          /* 不要 flex:1,改为按内容自动宽度 */
+    min-width: 72px;
+    padding: 9px 14px;
+    font-size: 13px;
+    border-radius: 10px;
+    color: #6c757d;
+    transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* 移动端 tab：圆角胶囊高亮(用 active 自身做背景,不再用底部下划线) */
+  .analysis-tabs .tabs-header .tab-item.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(102, 126, 234, 0.28);
+  }
+  .analysis-tabs .tabs-header .tab-item.active::after {
+    display: none;
+  }
+
+  .analysis-tabs .tabs-header .tab-item:active {
+    transform: scale(0.96);
+  }
+
+  /* 移动端取消 text-align:center + max-width:50 限制 */
   .analysis-tabs .tabs-header .tab-item .tab-label {
-    display: block;
-    max-width: 60px;
-    margin: 0 auto;
+    display: inline-block;
+    max-width: none;
+    margin: 0;
   }
   
   .tab-content {
@@ -2526,7 +2598,8 @@ const handleResize = () => {
   
   .analysis-tabs .tabs-header .tab-item {
     font-size: 12px;
-    padding: 10px 2px;
+    padding: 8px 12px;
+    min-width: 64px;
   }
   
   .recent-match-item .match-result .score {
@@ -2592,13 +2665,28 @@ const handleResize = () => {
     background: #1a202c;
     border-bottom-color: #4a5568;
   }
-  
+
+  /* 暗色模式：移动端胶囊分段容器要更深一点的底色 */
+  @media (max-width: 768px) {
+    .analysis-tabs .tabs-header {
+      background: #1a202c;
+      border-bottom: none;
+    }
+  }
+
   .analysis-tabs .tabs-header .tab-item {
     color: #a0aec0;
   }
-  
+
   .analysis-tabs .tabs-header .tab-item.active {
     color: #667eea;
+  }
+
+  /* 暗色模式移动端 active 文字应为白色 */
+  @media (max-width: 768px) {
+    .analysis-tabs .tabs-header .tab-item.active {
+      color: #ffffff;
+    }
   }
   
   .tab-pane .pane-header h3 {

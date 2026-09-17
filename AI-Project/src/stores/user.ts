@@ -80,8 +80,11 @@ export const useUserStore = defineStore('user', () => {
     // 获取用户信息
     const fetchUserInfo = async (): Promise<boolean> => {
         try {
-            const response = await userApi.getUserInfo() as any
-            // 兼容两种响应结构:
+            // 后端接口需要当前用户 id,优先从缓存读,没有则尝试解析 token 或回退到空 id(后端通常从 session 取)
+            const cached = userInfo.value
+            const id = cached?.id || ''
+            const response = await userApi.getUserInfo({ id }) as any
+            // 兼容三种响应结构:
             //   1) 拦截器已 unwrap -> 直接是 UserInfo
             //   2) 后端直接返回 UserInfo -> 同上
             //   3) 旧结构 { data: UserInfo } -> 兜底取 .data

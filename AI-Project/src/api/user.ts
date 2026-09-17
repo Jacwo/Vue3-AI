@@ -12,18 +12,22 @@ export interface LoginResponse {
   userInfo: UserInfo
 }
 
+// 后端 UserInfoDto 返回字段(Jackson 序列化 LocalDateTime 为 'YYYY-MM-DDTHH:mm:ss')
 export interface UserInfo {
   id: string
   phone: string
   userName: string
-  avatar: string
+  avatar?: string
   gender: number
   status: string
   createTime: string
   point?: number
+  signToday?: boolean
   isAdmin?: boolean
   isVip?: boolean
   vipExpireTime?: string
+  lastLoginTime?: string
+  hasRenamed?: boolean
 }
 
 export interface UserListItem {
@@ -78,9 +82,11 @@ export const userApi = {
     return apiClient.post<LogoutResponse>('/api/user/logout', config)
   },
 
-  // 获取用户信息
-  getUserInfo(config?: CustomRequestConfig) {
-    return apiClient.get<UserInfo>('/api/user/info', config)
+  // 获取用户信息(POST /api/user/info,body: { id: string })
+  // 注意：后端 UserInfoDto 中 vipExpireTime / lastLoginTime 为 LocalDateTime,
+  //       Jackson 默认序列化为 'YYYY-MM-DDTHH:mm:ss',前端 parseDateSafe 已兼容
+  getUserInfo(data: { id: string }, config?: CustomRequestConfig) {
+    return apiClient.post<UserInfo>('/api/user/info', data, config)
   },
 
   // 更新用户信息
