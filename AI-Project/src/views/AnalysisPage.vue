@@ -61,7 +61,7 @@
               </svg>
             </button>
           </div>
-          
+
           <div class="recent-teams">
             <div class="team-section">
               <div class="match-list">
@@ -73,9 +73,9 @@
                   <span>暂无数据</span>
                 </div>
                 <div v-else>
-                  <div 
-                    v-for="match in recentMatches" 
-                    :key="match.id" 
+                  <div
+                    v-for="match in recentMatches"
+                    :key="match.id"
                     class="recent-match-item"
                     :class="getMatchItemClass(match)"
                   >
@@ -107,12 +107,12 @@
           <div class="pane-header">
             <h3>预期进球(xG)分析</h3>
           </div>
-          
+
           <div v-if="loading.xg" class="loading-state">
             <div class="loading-spinner"></div>
             <span>加载中...</span>
           </div>
-          
+
           <div v-else-if="!xgData.home && !xgData.away" class="empty-state">
             <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <circle cx="12" cy="12" r="10" />
@@ -121,7 +121,7 @@
             <span class="empty-text">暂无 xG 数据</span>
             <button class="retry-btn" @click="fetchXgData">重新加载</button>
           </div>
-          
+
           <div v-else class="xg-content">
             <!-- xG对比图 -->
             <div class="xg-comparison">
@@ -131,8 +131,8 @@
                   <div class="xg-value">{{ (xgData.home?.xg || 0).toFixed(2) }}</div>
                 </div>
                 <div class="xg-bar-container">
-                  <div 
-                    class="xg-bar" 
+                  <div
+                    class="xg-bar"
                     :style="{ width: homeXgPercent + '%' }"
                     :title="`xG: ${(xgData.home?.xg || 0).toFixed(2)}`"
                   >
@@ -140,17 +140,17 @@
                   </div>
                 </div>
               </div>
-              
+
               <div class="xg-vs">VS</div>
-              
+
               <div class="xg-team away">
                 <div class="team-header">
                   <div class="team-name">{{ xgData.away?.teamName || matchData.awayTeam }}</div>
                   <div class="xg-value">{{ (xgData.away?.xg || 0).toFixed(2) }}</div>
                 </div>
                 <div class="xg-bar-container">
-                  <div 
-                    class="xg-bar" 
+                  <div
+                    class="xg-bar"
                     :style="{ width: awayXgPercent + '%' }"
                     :title="`xG: ${(xgData.away?.xg || 0).toFixed(2)}`"
                   >
@@ -246,7 +246,8 @@
                       <span class="value away">{{ (xgData.away?.ppda || 0) }}</span>
                     </div>
                   </div>
-                  
+
+
                    <div class="detail-item">
                     <span class="label">ppdaAllowed 本方半场每防守动作允许的传球次数，反映对手的压迫强度</span>
                     <div class="values">
@@ -254,7 +255,7 @@
                       <span class="value away">{{ (xgData.away?.ppdaAllowed || 0) }}</span>
                     </div>
                   </div>
-                  
+
 
                    <div class="detail-item">
                     <span class="label">deep 进入对方禁区30米区域的传球次数</span>
@@ -263,7 +264,7 @@
                       <span class="value away">{{ (xgData.away?.deep || 0) }}</span>
                     </div>
                   </div>
-                  
+
                    <div class="detail-item">
                     <span class="label">deepAllowed 被对手传入本方禁区30米区域的次数</span>
                     <div class="values">
@@ -289,20 +290,20 @@
               </svg>
             </button>
           </div>
-          
+
           <div v-if="loading.similar" class="loading-state">
             <div class="loading-spinner"></div>
             <span>加载中...</span>
           </div>
-          
+
           <div v-else-if="similarMatches.length === 0" class="empty-state">
             <span>暂无相似比赛数据</span>
           </div>
-          
+
           <div v-else class="similar-list">
-            <div 
-              v-for="match in similarMatches" 
-              :key="match.id" 
+            <div
+              v-for="match in similarMatches"
+              :key="match.id"
               class="similar-match-item"
               :class="getSimilarMatchClass(match)"
             >
@@ -333,12 +334,12 @@
           </div>
         </div>
 
-        <!-- 战绩 tab -->
+        <!-- ===================== 战绩 tab ===================== -->
         <div v-if="activeTab === 'history'" class="tab-pane">
           <div class="card history-tab">
             <div class="pane-header">
               <h3>近期战绩</h3>
-              <button v-if="(matchHistoryData.home?.matchList?.length || matchHistoryData.away?.matchList?.length) && !loading.history" class="refresh-btn" @click="fetchMatchHistory" aria-label="刷新">
+              <button v-if="historyHasData && !loading.history" class="refresh-btn" @click="fetchMatchHistory" aria-label="刷新">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M23 4v6h-6M1 20v-6h6"/>
                   <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
@@ -351,7 +352,7 @@
               <span>战绩加载中…</span>
             </div>
 
-            <div v-else-if="!matchHistoryData.home?.matchList?.length && !matchHistoryData.away?.matchList?.length" class="empty-state">
+            <div v-else-if="!historyHasData" class="empty-state">
               <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round" />
               </svg>
@@ -361,121 +362,137 @@
 
             <template v-else>
               <!-- 主队战绩 -->
-              <section v-if="matchHistoryData.home?.matchList?.length" class="team-history-block">
+              <section v-if="matchHistoryData?.home?.matchList?.length" class="team-history-block">
                 <h4 class="team-title">
-                  <span class="team-badge home">{{ matchInfo.homeName?.slice(0, 1) || '主' }}</span>
-                  <span>{{ matchInfo.homeName || '主队' }} 近期战绩</span>
+                  <span class="team-badge home">主</span>
+                  <span>{{ matchHistoryData.home.statistics?.teamShortName || matchInfo.homeName }} 近期战绩</span>
                 </h4>
 
-                <div v-if="matchHistoryData.home?.statistics && Object.keys(matchHistoryData.home.statistics).length" class="stats-summary">
+                <div class="stats-summary">
                   <div class="stat-item">
-                    <div class="stat-num">{{ matchHistoryData.home.statistics.matchCnt ?? '-' }}</div>
+                    <div class="stat-num">{{ matchHistoryData.home.statistics?.totalLegCnt ?? '-' }}</div>
                     <div class="stat-label">场次</div>
                   </div>
                   <div class="stat-item win">
-                    <div class="stat-num">{{ matchHistoryData.home.statistics.winMatchCnt ?? '-' }}</div>
+                    <div class="stat-num">{{ matchHistoryData.home.statistics?.winGoalMatchCnt ?? '-' }}</div>
                     <div class="stat-label">胜</div>
                   </div>
                   <div class="stat-item draw">
-                    <div class="stat-num">{{ matchHistoryData.home.statistics.drawMatchCnt ?? '-' }}</div>
+                    <div class="stat-num">{{ matchHistoryData.home.statistics?.drawMatchCnt ?? '-' }}</div>
                     <div class="stat-label">平</div>
                   </div>
                   <div class="stat-item loss">
-                    <div class="stat-num">{{ matchHistoryData.home.statistics.lossMatchCnt ?? '-' }}</div>
+                    <div class="stat-num">{{ matchHistoryData.home.statistics?.lossGoalMatchCnt ?? '-' }}</div>
                     <div class="stat-label">负</div>
                   </div>
-                  <div v-if="matchHistoryData.home.statistics.goalsForWin !== undefined" class="stat-item">
-                    <div class="stat-num">{{ matchHistoryData.home.statistics.goalsForWin }}</div>
+                  <div class="stat-item">
+                    <div class="stat-num">{{ matchHistoryData.home.statistics?.goalCnt ?? '-' }}</div>
                     <div class="stat-label">进球</div>
                   </div>
-                  <div v-if="matchHistoryData.home.statistics.goalsAgainst !== undefined" class="stat-item">
-                    <div class="stat-num">{{ matchHistoryData.home.statistics.goalsAgainst }}</div>
+                  <div class="stat-item">
+                    <div class="stat-num">{{ matchHistoryData.home.statistics?.lossGoalCnt ?? '-' }}</div>
                     <div class="stat-label">失球</div>
                   </div>
-                  <div v-if="matchHistoryData.home.statistics.points !== undefined" class="stat-item">
-                    <div class="stat-num">{{ matchHistoryData.home.statistics.points }}</div>
-                    <div class="stat-label">积分</div>
+                  <div class="stat-item highlight-stat">
+                    <div class="stat-num">{{ matchHistoryData.home.statistics?.netGoal ?? '-' }}</div>
+                    <div class="stat-label">净胜球</div>
                   </div>
                 </div>
 
                 <ul class="history-list">
-                  <li v-for="(m, i) in matchHistoryData.home.matchList" :key="m.matchId || m.id || i" class="history-item">
+                  <li
+                    v-for="(m, i) in matchHistoryData.home.matchList"
+                    :key="`home-${m.matchId}-${i}`"
+                    class="history-item"
+                    :class="getHistoryItemClass(m)"
+                  >
                     <div class="history-meta">
-                      <span class="history-league">{{ m.league || m.competitionName || '-' }}</span>
-                      <span class="history-date">{{ formatHistoryTime(m) }}</span>
+                      <span class="history-league">{{ m.tournamentShortName }}</span>
+                      <span class="history-date">{{ m.matchDate }}</span>
                     </div>
                     <div class="history-body">
                       <div class="history-team home">
-                        <span class="team-name">{{ m.homeTeam || m.homeName || '-' }}</span>
+                        <span class="team-name">{{ m.homeTeamShortName }}</span>
                       </div>
                       <div class="history-score">
-                        {{ getHistoryScoreText(m) }}
+                        <span class="score-full">{{ m.fullCourtGoal }}</span>
+                        <span class="score-half">半场 {{ m.halfTimeGoal }}</span>
                       </div>
                       <div class="history-team away">
-                        <span class="team-name">{{ m.awayTeam || m.awayName || '-' }}</span>
+                        <span class="team-name">{{ m.awayTeamShortName }}</span>
                       </div>
                     </div>
-                    <div v-if="m.result" class="history-result" :class="getResultClass(m.result)">{{ m.result }}</div>
+                    <div class="history-result" :class="getHistoryResultClass(m.teamMatchResult)">
+                      {{ teamResultText(m.teamMatchResult) }}
+                    </div>
                   </li>
                 </ul>
               </section>
 
               <!-- 客队战绩 -->
-              <section v-if="matchHistoryData.away?.matchList?.length" class="team-history-block">
+              <section v-if="matchHistoryData?.away?.matchList?.length" class="team-history-block">
                 <h4 class="team-title">
-                  <span class="team-badge away">{{ matchInfo.awayName?.slice(0, 1) || '客' }}</span>
-                  <span>{{ matchInfo.awayName || '客队' }} 近期战绩</span>
+                  <span class="team-badge away">客</span>
+                  <span>{{ matchHistoryData.away.statistics?.teamShortName || matchInfo.awayName }} 近期战绩</span>
                 </h4>
 
-                <div v-if="matchHistoryData.away?.statistics && Object.keys(matchHistoryData.away.statistics).length" class="stats-summary">
+                <div class="stats-summary">
                   <div class="stat-item">
-                    <div class="stat-num">{{ matchHistoryData.away.statistics.matchCnt ?? '-' }}</div>
+                    <div class="stat-num">{{ matchHistoryData.away.statistics?.totalLegCnt ?? '-' }}</div>
                     <div class="stat-label">场次</div>
                   </div>
                   <div class="stat-item win">
-                    <div class="stat-num">{{ matchHistoryData.away.statistics.winMatchCnt ?? '-' }}</div>
+                    <div class="stat-num">{{ matchHistoryData.away.statistics?.winGoalMatchCnt ?? '-' }}</div>
                     <div class="stat-label">胜</div>
                   </div>
                   <div class="stat-item draw">
-                    <div class="stat-num">{{ matchHistoryData.away.statistics.drawMatchCnt ?? '-' }}</div>
+                    <div class="stat-num">{{ matchHistoryData.away.statistics?.drawMatchCnt ?? '-' }}</div>
                     <div class="stat-label">平</div>
                   </div>
                   <div class="stat-item loss">
-                    <div class="stat-num">{{ matchHistoryData.away.statistics.lossMatchCnt ?? '-' }}</div>
+                    <div class="stat-num">{{ matchHistoryData.away.statistics?.lossGoalMatchCnt ?? '-' }}</div>
                     <div class="stat-label">负</div>
                   </div>
-                  <div v-if="matchHistoryData.away.statistics.goalsForWin !== undefined" class="stat-item">
-                    <div class="stat-num">{{ matchHistoryData.away.statistics.goalsForWin }}</div>
+                  <div class="stat-item">
+                    <div class="stat-num">{{ matchHistoryData.away.statistics?.goalCnt ?? '-' }}</div>
                     <div class="stat-label">进球</div>
                   </div>
-                  <div v-if="matchHistoryData.away.statistics.goalsAgainst !== undefined" class="stat-item">
-                    <div class="stat-num">{{ matchHistoryData.away.statistics.goalsAgainst }}</div>
+                  <div class="stat-item">
+                    <div class="stat-num">{{ matchHistoryData.away.statistics?.lossGoalCnt ?? '-' }}</div>
                     <div class="stat-label">失球</div>
                   </div>
-                  <div v-if="matchHistoryData.away.statistics.points !== undefined" class="stat-item">
-                    <div class="stat-num">{{ matchHistoryData.away.statistics.points }}</div>
-                    <div class="stat-label">积分</div>
+                  <div class="stat-item highlight-stat">
+                    <div class="stat-num">{{ matchHistoryData.away.statistics?.netGoal ?? '-' }}</div>
+                    <div class="stat-label">净胜球</div>
                   </div>
                 </div>
 
                 <ul class="history-list">
-                  <li v-for="(m, i) in matchHistoryData.away.matchList" :key="m.matchId || m.id || i" class="history-item">
+                  <li
+                    v-for="(m, i) in matchHistoryData.away.matchList"
+                    :key="`away-${m.matchId}-${i}`"
+                    class="history-item"
+                    :class="getHistoryItemClass(m)"
+                  >
                     <div class="history-meta">
-                      <span class="history-league">{{ m.league || m.competitionName || '-' }}</span>
-                      <span class="history-date">{{ formatHistoryTime(m) }}</span>
+                      <span class="history-league">{{ m.tournamentShortName }}</span>
+                      <span class="history-date">{{ m.matchDate }}</span>
                     </div>
                     <div class="history-body">
                       <div class="history-team home">
-                        <span class="team-name">{{ m.homeTeam || m.homeName || '-' }}</span>
+                        <span class="team-name">{{ m.homeTeamShortName }}</span>
                       </div>
                       <div class="history-score">
-                        {{ getHistoryScoreText(m) }}
+                        <span class="score-full">{{ m.fullCourtGoal }}</span>
+                        <span class="score-half">半场 {{ m.halfTimeGoal }}</span>
                       </div>
                       <div class="history-team away">
-                        <span class="team-name">{{ m.awayTeam || m.awayName || '-' }}</span>
+                        <span class="team-name">{{ m.awayTeamShortName }}</span>
                       </div>
                     </div>
-                    <div v-if="m.result" class="history-result" :class="getResultClass(m.result)">{{ m.result }}</div>
+                    <div class="history-result" :class="getHistoryResultClass(m.teamMatchResult)">
+                      {{ teamResultText(m.teamMatchResult) }}
+                    </div>
                   </li>
                 </ul>
               </section>
@@ -483,7 +500,7 @@
           </div>
         </div>
 
-        <!-- 排名 tab -->
+        <!-- ===================== 排名 tab ===================== -->
         <div v-if="activeTab === 'table'" class="tab-pane">
           <div class="card table-tab">
             <div class="pane-header">
@@ -522,44 +539,48 @@
                     <tr>
                       <th class="col-rank">排名</th>
                       <th class="col-team">球队</th>
-                      <th>场</th>
-                      <th>胜</th>
-                      <th>平</th>
-                      <th>负</th>
-                      <th>进</th>
-                      <th>失</th>
-                      <th>净</th>
+                      <th class="col-num">场</th>
+                      <th class="col-num">胜</th>
+                      <th class="col-num hide-on-mobile">平</th>
+                      <th class="col-num hide-on-mobile">负</th>
+                      <th class="col-num hide-on-mobile">进</th>
+                      <th class="col-num hide-on-mobile">失</th>
+                      <th class="col-num">净</th>
                       <th class="col-points">积分</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="(row, idx) in filteredRanking" :key="idx" :class="{ 'highlight': isHighlightTeam(row) }">
-                      <td class="col-rank">{{ row.ranking }}</td>
+                    <tr v-for="row in filteredRanking" :key="row.id" :class="{ 'highlight': isHighlightTeam(row) }">
+                      <td class="col-rank">
+                        <span class="rank-num" :class="getRankClass(row.ranking)">{{ row.ranking }}</span>
+                      </td>
                       <td class="col-team">
-                        <div class="team-cell">
-                          <img v-if="row.teamLogoUrl" :src="row.teamLogoUrl" :alt="row.teamAbbrCnName" class="team-logo-sm" @error="onImgError" />
-                          <span>{{ row.teamAbbrCnName || row.teamAbbrEnName || '-' }}</span>
-                        </div>
+                        <span class="team-name-cell" :title="row.teamAbbrCnName">{{ row.teamAbbrCnName }}</span>
                       </td>
-                      <td>{{ row.totalLegCnt ?? '-' }}</td>
-                      <td>{{ row.winCnt ?? '-' }}</td>
-                      <td>{{ row.drawCnt ?? '-' }}</td>
-                      <td>{{ row.lossCnt ?? '-' }}</td>
-                      <td>{{ row.goalsForWin ?? '-' }}</td>
-                      <td>{{ row.goalsAgainst ?? '-' }}</td>
-                      <td :class="{ 'diff-positive': (row.goalDifference ?? 0) > 0, 'diff-negative': (row.goalDifference ?? 0) < 0 }">
-                        {{ formatGoalDiff(row.goalDifference) }}
+                      <td class="col-num">{{ row.totalLegCnt }}</td>
+                      <td class="col-num col-win">{{ row.winGoalMatchCnt }}</td>
+                      <td class="col-num hide-on-mobile">{{ row.drawMatchCnt }}</td>
+                      <td class="col-num hide-on-mobile">{{ row.lossGoalMatchCnt }}</td>
+                      <td class="col-num hide-on-mobile">{{ row.goalCnt }}</td>
+                      <td class="col-num hide-on-mobile">{{ row.lossGoalCnt }}</td>
+                      <td class="col-num" :class="{ 'diff-positive': row.netGoal > 0, 'diff-negative': row.netGoal < 0 }">
+                        {{ formatGoalDiff(row.netGoal) }}
                       </td>
-                      <td class="col-points points">{{ row.points ?? '-' }}</td>
+                      <td class="col-points points">{{ row.points }}</td>
                     </tr>
                   </tbody>
                 </table>
+              </div>
+              <div class="ranking-meta">
+                <span>胜率: {{ winProbabilityText }}</span>
+                <span class="meta-divider">·</span>
+                <span>{{ filteredRanking.length }} 支球队</span>
               </div>
             </template>
           </div>
         </div>
 
-        <!-- 必发 tab -->
+        <!-- ===================== 必发 tab ===================== -->
         <div v-if="activeTab === 'bifa'" class="tab-pane">
           <div class="card bifa-tab">
             <div class="pane-header">
@@ -592,20 +613,39 @@
                   <div class="bifa-total-label">总交易额</div>
                   <div class="bifa-total-value">{{ formatBifaAmount(totalBifaAmount) }}</div>
                 </div>
+                <div class="bifa-stat-card">
+                  <div class="bifa-stat-label">交易笔数</div>
+                  <div class="bifa-stat-value">{{ bifaData.length }}</div>
+                </div>
+                <div class="bifa-stat-card">
+                  <div class="bifa-stat-label">最后时间</div>
+                  <div class="bifa-stat-value">{{ lastBifaTimeText }}</div>
+                </div>
               </div>
 
               <div class="bifa-bar-wrap">
                 <div class="bifa-bar">
                   <div
-                    v-for="(seg, idx) in bifaSegments"
-                    :key="idx"
+                    v-for="seg in bifaSegments"
+                    :key="seg.side"
                     class="bifa-seg"
                     :class="['seg-' + seg.side]"
-                    :style="{ flex: seg.amount, background: seg.color }"
+                    :style="{ flex: seg.amount }"
                   >
                     <span v-if="(seg.proportion || 0) > 8" class="bifa-seg-label">
                       {{ seg.sideLabel }} {{ seg.proportion?.toFixed(1) }}%
                     </span>
+                  </div>
+                </div>
+                <div class="bifa-bar-legend">
+                  <div
+                    v-for="seg in bifaSegments"
+                    :key="'lg-' + seg.side"
+                    class="bifa-legend-item"
+                  >
+                    <span class="bifa-legend-dot" :style="{ background: seg.color }"></span>
+                    <span class="bifa-legend-label">{{ seg.sideLabel }}</span>
+                    <span class="bifa-legend-value">{{ seg.proportion?.toFixed(1) }}%</span>
                   </div>
                 </div>
               </div>
@@ -613,7 +653,7 @@
               <ul class="bifa-list">
                 <li
                   v-for="(item, idx) in bifaData"
-                  :key="idx"
+                  :key="item.id || idx"
                   class="bifa-item"
                   :class="['side-' + normalizeSide(item.side)]"
                 >
@@ -634,7 +674,7 @@
           </div>
         </div>
 
-        <!-- 情报 tab -->
+        <!-- ===================== 情报 tab ===================== -->
         <div v-if="activeTab === 'intelligence'" class="tab-pane">
           <div class="card intelligence-tab">
             <div class="pane-header">
@@ -756,12 +796,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted,watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { formatDisplayTime } from '@/utils/dateUtils'
 import { matchApi } from '@/api/analisis'
-import type { RecentMatch, XgData, SimilarMatch, OddsRecord, TeamXgStats } from '@/api/analisis'
+import type {
+  RecentMatch,
+  XgData,
+  SimilarMatch,
+  OddsRecord,
+  TeamXgStats,
+  HistoryMatch,
+  HistoryStatistics,
+  MatchHistoryResponse,
+  RankingItem,
+  BifaTrendItem,
+  RankingTableType
+} from '@/api/analisis'
 
 const route = useRoute()
 const router = useRouter()
@@ -778,8 +830,7 @@ const tabs = [
   { id: 'intelligence', label: '情报' }
 ]
 
-// 进行中的请求控制器（用于组件卸载时统一 abort，避免 tab 切换时叠加旧请求）
-// 每项 [AbortController, timeoutHandle]
+// 进行中的请求控制器
 const pendingControllers: Array<[AbortController, ReturnType<typeof setTimeout>]> = []
 
 const newAbortSignal = (timeoutMs = 30000) => {
@@ -810,12 +861,10 @@ const isAborted = (err: unknown) => {
 }
 
 const activeTab = ref('recent')
-const loadedTabs = ref(new Set<string>()) // 记录已加载的标签页
+const loadedTabs = ref(new Set<string>())
 
-// 从路由获取比赛ID
 const matchId = computed(() => route.params.matchId as string)
 
-// 加载状态
 const loading = ref({
   recent: false,
   xg: false,
@@ -827,7 +876,6 @@ const loading = ref({
   bifa: false
 })
 
-// 数据状态
 const recentMatches = ref<RecentMatch[]>([])
 const xgData = ref<XgData>({
   home: null,
@@ -838,35 +886,50 @@ const similarMatches = ref<SimilarMatch[]>([])
 const oddsHistory = ref<OddsRecord[]>([])
 const oddsAnalysis = ref('赔率变化分析...')
 
-// 战绩数据(主队/客队近期战绩 + 统计)
-const matchHistoryData = ref<import('@/api/analisis').MatchHistoryResponse>({
-  home: { matchList: [], statistics: {} },
-  away: { matchList: [], statistics: {} }
+// 战绩数据 - 类型与后端完全一致
+const matchHistoryData = ref<MatchHistoryResponse>({
+  home: { matchList: [], statistics: {} as HistoryStatistics },
+  away: { matchList: [], statistics: {} as HistoryStatistics }
 })
 
-// 排名数据(数组,按 tableType 过滤)
-const rankingData = ref<import('@/api/analisis').RankingItem[]>([])
-const activeRankingType = ref<'total' | 'home' | 'away'>('total')
+// 排名数据 - 后端直接返回数组
+const rankingData = ref<RankingItem[]>([])
+const activeRankingType = ref<RankingTableType>('total')
 
 // 必发数据
-const bifaData = ref<import('@/api/analisis').BifaTrendItem[]>([])
+const bifaData = ref<BifaTrendItem[]>([])
 
-// 情报数据(纯字符串)
+// 情报(纯字符串)
 const intelligenceContent = ref('')
 
-// 计算属性
-// 队伍基础信息(供战绩/排名等 tab 使用)
+// 队伍基础信息
 const matchInfo = computed(() => ({
   homeName: matchData.value?.homeTeam || '',
   awayName: matchData.value?.awayTeam || ''
 }))
 
-// 排名数据按 tableType 过滤
+// 战绩是否有可展示数据
+const historyHasData = computed(() => {
+  return !!(
+    matchHistoryData.value?.home?.matchList?.length ||
+    matchHistoryData.value?.away?.matchList?.length
+  )
+})
+
+// 排名按 tableType 过滤 + 排序
 const filteredRanking = computed(() => {
   if (!Array.isArray(rankingData.value)) return []
-  const list = rankingData.value.filter((r) => r && r.tableType === activeRankingType.value)
-  // 按 ranking 字段升序排序
-  return list.slice().sort((a, b) => (a.ranking ?? 0) - (b.ranking ?? 0))
+  return rankingData.value
+    .filter((r) => r && r.tableType === activeRankingType.value)
+    .slice()
+    .sort((a, b) => (a.ranking ?? 0) - (b.ranking ?? 0))
+})
+
+// 当前榜首球队的胜率(用作 rangk-meta 展示)
+const winProbabilityText = computed(() => {
+  if (filteredRanking.value.length === 0) return '-'
+  const top = filteredRanking.value[0]
+  return top.winProbability || '-'
 })
 
 // 必发总交易额
@@ -875,10 +938,9 @@ const totalBifaAmount = computed(() => {
   return bifaData.value.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
 })
 
-// 必发三方占比(主/和/客)
+// 必发三项占比
 const bifaSegments = computed(() => {
   const total = totalBifaAmount.value
-  // 由于后端可能返回多条不同时间的相同 side 数据,这里按 side 汇总
   const map = new Map<string, number>()
   if (Array.isArray(bifaData.value)) {
     bifaData.value.forEach((item) => {
@@ -892,11 +954,20 @@ const bifaSegments = computed(() => {
     return {
       side: s,
       sideLabel: s === 'home' ? '主' : s === 'draw' ? '和' : '客',
-      amount: amount > 0 ? amount : 0.0001, // 防止 flex: 0 出现 NaN
+      amount: amount > 0 ? amount : 0.0001,
       proportion: total > 0 ? (amount / total) * 100 : 0,
       color: getSideColor(s)
     }
   })
+})
+
+// 必发最后一条的时间
+const lastBifaTimeText = computed(() => {
+  if (bifaData.value.length === 0) return '-'
+  const last = bifaData.value.reduce((acc, cur) =>
+    Number(cur.dataTime) > Number(acc.dataTime) ? cur : acc
+  )
+  return formatBifaTime(last.dataTime)
 })
 
 const latestOdds = computed(() => {
@@ -917,7 +988,6 @@ const awayXgPercent = computed(() => {
   const total = homeXg + awayXg
   return total > 0 ? (awayXg / total) * 100 : 50
 })
-
 
 const matchData = computed(() => {
   const league = route.query.league as string || '未知联赛'
@@ -959,14 +1029,14 @@ const formatDate = (dateString: string) => {
   if (!dateString) return ''
   try {
     const date = new Date(dateString)
-    return date.toLocaleDateString('zh-CN', { 
-      month: '2-digit', 
+    return date.toLocaleDateString('zh-CN', {
+      month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
       hour12: false
     }).replace(',', '')
-  } catch (e) {
+  } catch {
     return dateString
   }
 }
@@ -975,11 +1045,11 @@ const formatOddsDate = (dateString: string) => {
   if (!dateString) return ''
   try {
     const date = new Date(dateString)
-    return date.toLocaleDateString('zh-CN', { 
-      month: '2-digit', 
+    return date.toLocaleDateString('zh-CN', {
+      month: '2-digit',
       day: '2-digit'
     })
-  } catch (e) {
+  } catch {
     return dateString
   }
 }
@@ -997,12 +1067,11 @@ const truncateText = (text: string, maxLength: number) => {
   return text.length > maxLength ? text.substring(0, maxLength) + '...' : text
 }
 
-// 比赛相关方法
 const getMatchOutcome = (match: RecentMatch) => {
   const score = parseScore(match.score)
-  const isHomeTeam = match.homeTeam === matchData.value.homeTeam || 
+  const isHomeTeam = match.homeTeam === matchData.value.homeTeam ||
                      match.awayTeam === matchData.value.homeTeam
-  
+
   if (isHomeTeam) {
     if (score.home > score.away && match.homeTeam.includes(matchData.value.homeTeam)) return '胜'
     if (score.home < score.away && match.awayTeam.includes(matchData.value.homeTeam)) return '胜'
@@ -1071,21 +1140,18 @@ const getSimilarMatchClass = (match: SimilarMatch) => {
   }
 }
 
-// 标签页切换
+// 标签切换
 const switchTab = async (tabId: string) => {
   if (activeTab.value === tabId) return
 
   activeTab.value = tabId
   await nextTick()
 
-  // 滚动到顶部
   const contentEl = document.querySelector('.tab-content')
   if (contentEl) {
     contentEl.scrollTop = 0
   }
 
-  // 移动端 tab-header 是横向滚动的:把激活项自动滚到可视区域中央,
-  // 避免出现"激活态在边缘被截断"或"看不到激活的是哪个"
   try {
     const activeEl = document.querySelector(
       `.analysis-tabs .tabs-header .tab-item.active`
@@ -1101,19 +1167,16 @@ const switchTab = async (tabId: string) => {
         behavior: 'smooth'
       })
     }
-  } catch (e) {
-    /* 静默:即便失败也不影响 tab 切换 */
+  } catch {
+    /* noop */
   }
 
-  // 加载数据
   loadTabData(tabId)
 }
 
-// 数据加载
 const loadTabData = async (tabId: string) => {
-  // 如果已经加载过，不再重复加载
   if (loadedTabs.value.has(tabId)) return
-  
+
   switch (tabId) {
     case 'recent':
       await fetchRecentMatches()
@@ -1150,18 +1213,17 @@ const loadTabData = async (tabId: string) => {
   }
 }
 
-// API 调用方法
+// ===== API 调用 =====
+
 const fetchRecentMatches = async () => {
   const signal = newAbortSignal()
   try {
     loading.value.recent = true
     const response = await matchApi.getRecentMatches(matchId.value, { signal: signal.signal })
-    // apiClient 拦截器已 unwrap,response 直接是 RecentMatch[];用 unknown 转换以保留兜底分支
     const r = response as unknown
     if (Array.isArray(r)) {
       recentMatches.value = r as RecentMatch[]
     } else if (Array.isArray((r as { data?: unknown })?.data)) {
-      // 兜底：兼容部分接口返回 { data: [...] }
       recentMatches.value = (r as { data: RecentMatch[] }).data
     } else if (Array.isArray((r as { list?: unknown })?.list)) {
       recentMatches.value = (r as { list: RecentMatch[] }).list
@@ -1184,14 +1246,18 @@ const fetchXgData = async () => {
   const signal = newAbortSignal()
   try {
     loading.value.xg = true
-    // 关键修复：apiClient 拦截器在 code === 0 时直接返回 data 字段本体，
-    // 之前误读为 response.data（导致 xG 整页白屏）。
     const response = await matchApi.getXgData(matchId.value, { signal: signal.signal })
 
-    // 兜底：兼容不同后端返回结构（XgData / { data: XgData } / [] 等）
-    let payload: any = response
-    if (payload && typeof payload === 'object' && !Array.isArray(payload) && payload.data && typeof payload.data === 'object') {
-      payload = payload.data
+    let payload: unknown = response
+    if (
+      payload &&
+      typeof payload === 'object' &&
+      !Array.isArray(payload) &&
+      'data' in payload &&
+      (payload as Record<string, unknown>).data &&
+      typeof (payload as Record<string, unknown>).data === 'object'
+    ) {
+      payload = (payload as Record<string, unknown>).data
     }
 
     const safeTeam = (team: unknown): TeamXgStats | null => {
@@ -1201,10 +1267,11 @@ const fetchXgData = async () => {
       return null
     }
 
+    const p = (payload as Record<string, unknown>) || {}
     xgData.value = {
-      home: safeTeam(payload?.home),
-      away: safeTeam(payload?.away),
-      all: safeTeam(payload?.all)
+      home: safeTeam(p.home),
+      away: safeTeam(p.away),
+      all: safeTeam(p.all)
     }
   } catch (error) {
     if (!isAborted(error)) {
@@ -1251,7 +1318,6 @@ const fetchOddsHistory = async () => {
     loading.value.odds = true
     const response = await matchApi.getOddsHistory(matchId.value, { signal: signal.signal })
 
-    // 兜底：兼容 { history: [] } / 直接返回数组 / 其它形态，避免历史接口白屏
     let list: OddsRecord[] = []
     const r = response as unknown
     if (r) {
@@ -1279,47 +1345,55 @@ const fetchOddsHistory = async () => {
   }
 }
 
-// ============ 新增 4 个 tab 的 fetch 函数 ============
-
-// 1. 战绩 tab
+// 1. 战绩 tab - POST /api/match/history/{matchId}
 const fetchMatchHistory = async () => {
   const signal = newAbortSignal()
   try {
     loading.value.history = true
     const response = await matchApi.getMatchHistory(matchId.value, { signal: signal.signal })
 
-    // 兜底：兼容 { home: {...}, away: {...} } / { data: {...} } / null
-    const emptyTeam = { matchList: [], statistics: {} }
-    const r = response as unknown
-    let payload: any = null
-    if (r && typeof r === 'object' && !Array.isArray(r)) {
-      if ('home' in r || 'away' in r) {
-        payload = r
-      } else if ((r as { data?: unknown }).data && typeof (r as { data?: unknown }).data === 'object') {
-        payload = (r as { data: any }).data
+    // apiClient 拦截器已 unwrap,response 形如 { home: {...}, away: {...} }
+    // 仍保留对 { data: { ... } } 形态的兜底
+    let payload: unknown = response
+    if (
+      payload &&
+      typeof payload === 'object' &&
+      'data' in payload
+    ) {
+      const inner = (payload as Record<string, unknown>).data
+      if (
+        inner &&
+        typeof inner === 'object' &&
+        ('home' in inner || 'away' in inner)
+      ) {
+        payload = inner
       }
     }
 
-    if (payload) {
-      const home = payload.home && typeof payload.home === 'object' ? payload.home : emptyTeam
-      const away = payload.away && typeof payload.away === 'object' ? payload.away : emptyTeam
+    const emptyTeam = () => ({
+      matchList: [] as HistoryMatch[],
+      statistics: {} as HistoryStatistics
+    })
+
+    if (payload && typeof payload === 'object' && ('home' in payload || 'away' in payload)) {
+      const p = payload as Partial<MatchHistoryResponse>
       matchHistoryData.value = {
-        home: {
-          matchList: Array.isArray(home.matchList) ? home.matchList : [],
-          statistics: home.statistics && typeof home.statistics === 'object' ? home.statistics : {}
-        },
-        away: {
-          matchList: Array.isArray(away.matchList) ? away.matchList : [],
-          statistics: away.statistics && typeof away.statistics === 'object' ? away.statistics : {}
-        }
+        home: p.home || emptyTeam(),
+        away: p.away || emptyTeam()
       }
     } else {
-      matchHistoryData.value = { home: emptyTeam, away: emptyTeam }
+      matchHistoryData.value = {
+        home: emptyTeam(),
+        away: emptyTeam()
+      }
     }
   } catch (error) {
     if (!isAborted(error)) {
       console.error('获取战绩失败:', error)
-      matchHistoryData.value = { home: { matchList: [], statistics: {} }, away: { matchList: [], statistics: {} } }
+      matchHistoryData.value = {
+        home: { matchList: [], statistics: {} as HistoryStatistics },
+        away: { matchList: [], statistics: {} as HistoryStatistics }
+      }
       ElMessage.error('获取战绩失败，请稍后重试')
     }
   } finally {
@@ -1328,26 +1402,43 @@ const fetchMatchHistory = async () => {
   }
 }
 
-// 2. 排名 tab
+// 战绩 - 比赛结果文本(基于 teamMatchResult: home/draw/away)
+const teamResultText = (r: string) => {
+  if (r === 'home') return '胜'
+  if (r === 'draw') return '平'
+  if (r === 'away') return '负'
+  return '-'
+}
+
+// 战绩 - 给列表项附加结果样式
+const getHistoryItemClass = (m: HistoryMatch) => {
+  const r = m.teamMatchResult
+  if (r === 'home') return 'win'
+  if (r === 'draw') return 'draw'
+  if (r === 'away') return 'loss'
+  return ''
+}
+
+const getHistoryResultClass = (r: string) => {
+  if (r === 'home') return 'result-win'
+  if (r === 'draw') return 'result-draw'
+  if (r === 'away') return 'result-loss'
+  return ''
+}
+
+// 2. 排名 tab - GET /api/match/table/{matchId}
 const fetchMatchTable = async () => {
   const signal = newAbortSignal()
   try {
     loading.value.table = true
     const response = await matchApi.getMatchTable(matchId.value, { signal: signal.signal })
 
-    // 兜底：兼容数组 / { data: [...] } / { tableList: [...] } / { list: [...] }
-    let list: any[] = []
-    const r = response as unknown
-    if (r) {
-      if (Array.isArray(r)) {
-        list = r
-      } else if (Array.isArray((r as { data?: unknown }).data)) {
-        list = (r as { data: any[] }).data
-      } else if (Array.isArray((r as { tableList?: unknown }).tableList)) {
-        list = (r as { tableList: any[] }).tableList
-      } else if (Array.isArray((r as { list?: unknown }).list)) {
-        list = (r as { list: any[] }).list
-      }
+    // 后端直接返回数组
+    let list: RankingItem[] = []
+    if (Array.isArray(response)) {
+      list = response
+    } else if (Array.isArray((response as { data?: unknown })?.data)) {
+      list = (response as { data: RankingItem[] }).data
     }
     rankingData.value = list.filter(Boolean)
   } catch (error) {
@@ -1362,26 +1453,43 @@ const fetchMatchTable = async () => {
   }
 }
 
-// 3. 必发 tab
+// 排名 - 格式化净胜球
+const formatGoalDiff = (v: number | undefined | null) => {
+  if (v === undefined || v === null) return '-'
+  if (v > 0) return `+${v}`
+  return String(v)
+}
+
+// 排名 - 高亮当前比赛的两支队伍
+const isHighlightTeam = (row: RankingItem) => {
+  const name = (row?.teamAbbrCnName || '').trim()
+  if (!name) return false
+  const homeName = (matchInfo.value.homeName || '').trim()
+  const awayName = (matchInfo.value.awayName || '').trim()
+  if (!homeName && !awayName) return false
+  return name === homeName || name === awayName
+}
+
+// 排名 - 名次显示样式
+const getRankClass = (rank: number) => {
+  if (rank === 1) return 'rank-1'
+  if (rank === 2) return 'rank-2'
+  if (rank === 3) return 'rank-3'
+  return ''
+}
+
+// 3. 必发 tab - POST /api/bifa/trend/latest/{matchId}
 const fetchBifaTrend = async () => {
   const signal = newAbortSignal()
   try {
     loading.value.bifa = true
     const response = await matchApi.getBifaTrendLatest(matchId.value, { signal: signal.signal })
 
-    // 兜底：兼容数组 / { data: [...] } / { list: [...] } / { trend: [...] }
-    let list: any[] = []
-    const r = response as unknown
-    if (r) {
-      if (Array.isArray(r)) {
-        list = r
-      } else if (Array.isArray((r as { data?: unknown }).data)) {
-        list = (r as { data: any[] }).data
-      } else if (Array.isArray((r as { list?: unknown }).list)) {
-        list = (r as { list: any[] }).list
-      } else if (Array.isArray((r as { trend?: unknown }).trend)) {
-        list = (r as { trend: any[] }).trend
-      }
+    let list: BifaTrendItem[] = []
+    if (Array.isArray(response)) {
+      list = response
+    } else if (Array.isArray((response as { data?: unknown })?.data)) {
+      list = (response as { data: BifaTrendItem[] }).data
     }
     bifaData.value = list.filter(Boolean)
   } catch (error) {
@@ -1394,101 +1502,6 @@ const fetchBifaTrend = async () => {
     loading.value.bifa = false
     releaseSignal(signal)
   }
-}
-
-// 4. 情报 tab
-const fetchIntelligence = async () => {
-  const signal = newAbortSignal()
-  try {
-    loading.value.intelligence = true
-    const response = await matchApi.getIntelligenceData(matchId.value, { signal: signal.signal })
-
-    // 后端可能返回 string / { data: string } / 其它
-    let text = ''
-    const r = response as unknown
-    if (typeof r === 'string') {
-      text = r
-    } else if (r && typeof r === 'object') {
-      const obj = r as { data?: unknown; content?: unknown; text?: unknown }
-      if (typeof obj.data === 'string') {
-        text = obj.data
-      } else if (typeof obj.content === 'string') {
-        text = obj.content
-      } else if (typeof obj.text === 'string') {
-        text = obj.text
-      }
-    }
-    intelligenceContent.value = text || ''
-  } catch (error) {
-    if (!isAborted(error)) {
-      console.error('获取情报失败:', error)
-      intelligenceContent.value = ''
-      ElMessage.error('获取情报失败，请稍后重试')
-    }
-  } finally {
-    loading.value.intelligence = false
-    releaseSignal(signal)
-  }
-}
-
-// ============ 新增 4 个 tab 的辅助函数 ============
-
-// 战绩 - 比赛时间展示(m.matchDate 优先,否则 m.matchTime)
-const formatHistoryTime = (m: any) => {
-  if (!m) return '-'
-  const raw = m.matchDate || m.matchTime || ''
-  // 优先尝试将完整时间拆成 date + time 两段;否则整体作为 date
-  const parts = String(raw).split(' ')
-  if (parts.length >= 2) {
-    return formatDisplayTime(parts[0] || '', parts[1] || '')
-  }
-  return formatDisplayTime(String(raw), '')
-}
-
-// 战绩 - 格式化比分(支持 score 字符串 / homeScore+awayScore / scoreDetail)
-const getHistoryScoreText = (m: any) => {
-  if (!m) return '-'
-  if (typeof m.score === 'string' && m.score.trim()) return m.score
-  if (typeof m.homeScore === 'number' && typeof m.awayScore === 'number') {
-    return `${m.homeScore}-${m.awayScore}`
-  }
-  if (typeof m.homeScoreHalf === 'number' && typeof m.awayScoreHalf === 'number' && typeof m.homeScore === 'number') {
-    return `${m.homeScore}-${m.awayScore}`
-  }
-  return '-'
-}
-
-// 战绩 - 比赛结果分类(胜/平/负)
-const getResultClass = (result: string) => {
-  if (!result) return ''
-  const r = result.toLowerCase()
-  if (r.includes('胜') || r.includes('win') || r === 'w') return 'result-win'
-  if (r.includes('平') || r.includes('draw') || r === 'd') return 'result-draw'
-  if (r.includes('负') || r.includes('loss') || r.includes('lose') || r === 'l') return 'result-loss'
-  return ''
-}
-
-// 排名 - 格式化净胜球(添加 +/-)
-const formatGoalDiff = (v: any) => {
-  if (v === undefined || v === null || v === '') return '-'
-  const n = Number(v)
-  if (isNaN(n)) return String(v)
-  if (n > 0) return `+${n}`
-  return String(n)
-}
-
-// 排名 - 高亮当前比赛的两支队伍
-const isHighlightTeam = (row: any) => {
-  if (!row) return false
-  const names = [
-    row.teamAbbrCnName,
-    row.teamAbbrEnName,
-    row.teamName,
-    row.teamAbbr
-  ].filter(Boolean)
-  const homeName = (matchInfo.value.homeName || '').trim()
-  const awayName = (matchInfo.value.awayName || '').trim()
-  return names.some((n) => n && (n === homeName || n === awayName))
 }
 
 // 必发 - 归一化 side(主/和/客 -> home/draw/away)
@@ -1509,8 +1522,8 @@ const getSideColor = (side: 'home' | 'draw' | 'away') => {
   return '#94a3b8'
 }
 
-// 必发 - 格式化金额(支持科学计数 / 字符串数字)
-const formatBifaAmount = (v: any) => {
+// 必发 - 格式化金额
+const formatBifaAmount = (v: number | string | undefined | null) => {
   if (v === undefined || v === null || v === '') return '0'
   const n = Number(v)
   if (isNaN(n)) return String(v)
@@ -1519,15 +1532,12 @@ const formatBifaAmount = (v: any) => {
   return n.toFixed(0)
 }
 
-// 必发 - 格式化时间(毫秒字符串 -> yyyy-MM-dd HH:mm)
-const formatBifaTime = (v: any) => {
+// 必发 - 毫秒时间戳字符串 -> yyyy-MM-dd HH:mm
+const formatBifaTime = (v: string | number | undefined | null) => {
   if (!v) return '-'
   let ts = Number(v)
-  if (isNaN(ts)) {
-    ts = Date.parse(String(v))
-  }
   if (isNaN(ts) || ts <= 0) return String(v)
-  // 如果时间戳在秒级,转为毫秒
+  // 自动判断毫秒/秒:毫秒戳约 1e12 以上
   if (ts < 1e12) ts = ts * 1000
   const d = new Date(ts)
   if (isNaN(d.getTime())) return String(v)
@@ -1536,38 +1546,51 @@ const formatBifaTime = (v: any) => {
 }
 
 // 必发 - 单项占比
-const getBifaProportion = (item: any) => {
+const getBifaProportion = (item: BifaTrendItem) => {
   const total = totalBifaAmount.value
   if (!total) return 0
-  const amt = Number(item?.amount) || 0
+  const amt = Number(item.amount) || 0
   return Number(((amt / total) * 100).toFixed(1))
 }
 
-// tab 是否处于 loading 状态(模板中无法用 as 类型断言,通过方法封装)
+// 4. 情报 tab - POST /api/match/information/data/{matchId}
+const fetchIntelligence = async () => {
+  const signal = newAbortSignal()
+  try {
+    loading.value.intelligence = true
+    const response = await matchApi.getIntelligenceData(matchId.value, { signal: signal.signal })
+
+    const r = response as unknown
+    if (typeof r === 'string') {
+      intelligenceContent.value = r
+    } else {
+      intelligenceContent.value = ''
+    }
+  } catch (error) {
+    if (!isAborted(error)) {
+      console.error('获取情报失败:', error)
+      intelligenceContent.value = ''
+      ElMessage.error('获取情报失败，请稍后重试')
+    }
+  } finally {
+    loading.value.intelligence = false
+    releaseSignal(signal)
+  }
+}
+
+// tab 是否处于 loading 状态
 const isTabLoading = (tabId: string) => {
   const l = loading.value as unknown as Record<string, unknown>
   return Boolean(l?.[tabId])
 }
 
-// img 加载失败时隐藏(模板中无法写 as 类型断言,通过方法封装)
-const onImgError = (event: Event) => {
-  const target = event?.target as HTMLImageElement | null
-  if (target) target.style.display = 'none'
-}
-
-// 生命周期
 onMounted(() => {
-  // 初始加载第一个标签页的数据
   loadTabData(activeTab.value)
-
-  // 监听窗口大小变化，优化移动端体验
   window.addEventListener('resize', handleResize)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
-  // 组件卸载时统一 abort 所有进行中的请求
-  // 拷贝一份再清空，避免边遍历边删除导致的索引问题
   const list = pendingControllers.slice()
   pendingControllers.length = 0
   list.forEach(([c]) => {
@@ -1577,12 +1600,12 @@ onUnmounted(() => {
 })
 
 const handleResize = () => {
-  // 可以在这里处理响应式布局的调整
+  /* noop */
 }
+
 </script>
 
 <style scoped>
-/* 将所有的 SCSS 语法转换为纯 CSS */
 .analysis-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -1601,7 +1624,6 @@ const handleResize = () => {
   z-index: 0;
 }
 
-/* 卡片通用样式 */
 .card {
   background: white;
   border-radius: 16px;
@@ -1611,7 +1633,6 @@ const handleResize = () => {
   overflow: hidden;
 }
 
-/* 页面头部 */
 .page-header {
   position: sticky;
   top: 0;
@@ -1641,21 +1662,10 @@ const handleResize = () => {
   transition: all 0.3s ease;
 }
 
-.back-btn svg {
-  transition: transform 0.3s ease;
-}
-
-.back-btn:hover {
-  transform: translateX(-2px);
-}
-
-.back-btn:hover svg {
-  transform: translateX(-2px);
-}
-
-.back-btn:active {
-  transform: translateX(0);
-}
+.back-btn svg { transition: transform 0.3s ease; }
+.back-btn:hover { transform: translateX(-2px); }
+.back-btn:hover svg { transform: translateX(-2px); }
+.back-btn:active { transform: translateX(0); }
 
 .page-title {
   flex: 1;
@@ -1666,7 +1676,6 @@ const handleResize = () => {
   text-align: center;
 }
 
-/* 比赛基本信息 */
 .match-basic-info {
   margin: 0 16px 16px;
   padding: 20px;
@@ -1689,13 +1698,8 @@ const handleResize = () => {
   align-items: center;
 }
 
-.match-basic-info .team.home-team {
-  text-align: right;
-}
-
-.match-basic-info .team.away-team {
-  text-align: left;
-}
+.match-basic-info .team.home-team { text-align: right; }
+.match-basic-info .team.away-team { text-align: left; }
 
 .match-basic-info .team-info {
   display: flex;
@@ -1738,7 +1742,6 @@ const handleResize = () => {
   border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* 标签页 */
 .analysis-tabs {
   margin: 0 16px 16px;
   min-height: 400px;
@@ -1749,20 +1752,16 @@ const handleResize = () => {
   display: flex;
   background: #f8f9fa;
   border-bottom: 1px solid #e9ecef;
-  /* position: sticky; */
   top: 73px;
   z-index: 10;
   backdrop-filter: blur(10px);
-  /* 移动端：横向滑动 + 隐藏滚动条 */
   overflow-x: auto;
   overflow-y: hidden;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
-.analysis-tabs .tabs-header::-webkit-scrollbar {
-  display: none;
-}
+.analysis-tabs .tabs-header::-webkit-scrollbar { display: none; }
 
 .analysis-tabs .tabs-header .tab-item {
   flex: 1;
@@ -1777,9 +1776,7 @@ const handleResize = () => {
   white-space: nowrap;
 }
 
-.analysis-tabs .tabs-header .tab-item:hover {
-  background: rgba(0, 0, 0, 0.02);
-}
+.analysis-tabs .tabs-header .tab-item:hover { background: rgba(0, 0, 0, 0.02); }
 
 .analysis-tabs .tabs-header .tab-item.active {
   color: #667eea;
@@ -1797,9 +1794,7 @@ const handleResize = () => {
   border-radius: 2px 2px 0 0;
 }
 
-.analysis-tabs .tabs-header .tab-item.loading .tab-label {
-  opacity: 0.7;
-}
+.analysis-tabs .tabs-header .tab-item.loading .tab-label { opacity: 0.7; }
 
 .analysis-tabs .tabs-header .tab-item.loading .tab-loading-indicator {
   position: absolute;
@@ -1821,7 +1816,6 @@ const handleResize = () => {
   -webkit-overflow-scrolling: touch;
 }
 
-/* 通用面板样式 */
 .tab-pane .pane-header {
   display: flex;
   justify-content: space-between;
@@ -1850,11 +1844,8 @@ const handleResize = () => {
   transform: rotate(180deg);
 }
 
-.tab-pane .pane-header .refresh-btn svg {
-  display: block;
-}
+.tab-pane .pane-header .refresh-btn svg { display: block; }
 
-/* 加载状态 */
 .loading-state {
   display: flex;
   flex-direction: column;
@@ -1874,11 +1865,8 @@ const handleResize = () => {
   margin-bottom: 12px;
 }
 
-.loading-state span {
-  font-size: 14px;
-}
+.loading-state span { font-size: 14px; }
 
-/* 空状态 */
 .empty-state {
   text-align: center;
   padding: 40px 20px;
@@ -1890,15 +1878,8 @@ const handleResize = () => {
   gap: 12px;
 }
 
-.empty-state .empty-icon {
-  color: #cbd5e1;
-  opacity: 0.85;
-}
-
-.empty-state .empty-text {
-  font-size: 14px;
-  color: #94a3b8;
-}
+.empty-state .empty-icon { color: #cbd5e1; opacity: 0.85; }
+.empty-state .empty-text { font-size: 14px; color: #94a3b8; }
 
 .retry-btn {
   margin-top: 8px;
@@ -1920,9 +1901,7 @@ const handleResize = () => {
   box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
 }
 
-.retry-btn:active {
-  transform: translateY(0);
-}
+.retry-btn:active { transform: translateY(0); }
 
 .muted {
   color: #94a3b8;
@@ -1931,15 +1910,8 @@ const handleResize = () => {
   margin-left: 6px;
 }
 
-/* 最近比赛样式 */
-.recent-teams .team-section {
-  margin-bottom: 24px;
-}
-
-.recent-teams .team-section:last-child {
-  margin-bottom: 0;
-}
-
+.recent-teams .team-section { margin-bottom: 24px; }
+.recent-teams .team-section:last-child { margin-bottom: 0; }
 .recent-teams .team-section-title {
   font-size: 16px;
   font-weight: 500;
@@ -2002,15 +1974,8 @@ const handleResize = () => {
   white-space: nowrap;
 }
 
-.recent-match-item .match-result .team.home {
-  text-align: left;
-  padding-right: 8px;
-}
-
-.recent-match-item .match-result .team.away {
-  text-align: right;
-  padding-left: 8px;
-}
+.recent-match-item .match-result .team.home { text-align: left; padding-right: 8px; }
+.recent-match-item .match-result .team.away { text-align: right; padding-left: 8px; }
 
 .recent-match-item .match-result .score {
   flex-shrink: 0;
@@ -2021,21 +1986,11 @@ const handleResize = () => {
   text-align: center;
 }
 
-.recent-match-item .match-result .score.score-win {
-  color: #52c41a;
-}
+.recent-match-item .match-result .score.score-win { color: #52c41a; }
+.recent-match-item .match-result .score.score-draw { color: #faad14; }
+.recent-match-item .match-result .score.score-lose { color: #ff4d4f; }
 
-.recent-match-item .match-result .score.score-draw {
-  color: #faad14;
-}
-
-.recent-match-item .match-result .score.score-lose {
-  color: #ff4d4f;
-}
-
-.recent-match-item .match-outcome {
-  text-align: center;
-}
+.recent-match-item .match-outcome { text-align: center; }
 
 .recent-match-item .match-outcome .outcome {
   display: inline-block;
@@ -2045,26 +2000,12 @@ const handleResize = () => {
   font-weight: 500;
 }
 
-.recent-match-item .match-outcome .outcome.outcome-win {
-  background: #52c41a;
-  color: white;
-}
+.recent-match-item .match-outcome .outcome.outcome-win { background: #52c41a; color: white; }
+.recent-match-item .match-outcome .outcome.outcome-draw { background: #faad14; color: white; }
+.recent-match-item .match-outcome .outcome.outcome-lose { background: #ff4d4f; color: white; }
 
-.recent-match-item .match-outcome .outcome.outcome-draw {
-  background: #faad14;
-  color: white;
-}
-
-.recent-match-item .match-outcome .outcome.outcome-lose {
-  background: #ff4d4f;
-  color: white;
-}
-
-/* xG数据样式 */
-.xg-content .xg-comparison {
-  margin-bottom: 24px;
-}
-
+/* xG styles */
+.xg-content .xg-comparison { margin-bottom: 24px; }
 .xg-content .xg-comparison .xg-team .team-header {
   display: flex;
   justify-content: space-between;
@@ -2084,9 +2025,7 @@ const handleResize = () => {
   color: #667eea;
 }
 
-.xg-content .xg-comparison .xg-team.home .xg-bar-container {
-  direction: rtl;
-}
+.xg-content .xg-comparison .xg-team.home .xg-bar-container { direction: rtl; }
 
 .xg-content .xg-comparison .xg-bar-container {
   height: 24px;
@@ -2113,13 +2052,8 @@ const handleResize = () => {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-.xg-content .xg-comparison .xg-team.home .xg-bar .xg-label {
-  right: 8px;
-}
-
-.xg-content .xg-comparison .xg-team.away .xg-bar .xg-label {
-  left: 8px;
-}
+.xg-content .xg-comparison .xg-team.home .xg-bar .xg-label { right: 8px; }
+.xg-content .xg-comparison .xg-team.away .xg-bar .xg-label { left: 8px; }
 
 .xg-content .xg-comparison .xg-vs {
   text-align: center;
@@ -2129,13 +2063,8 @@ const handleResize = () => {
   font-size: 14px;
 }
 
-.xg-content .xg-details .detail-category {
-  margin-bottom: 20px;
-}
-
-.xg-content .xg-details .detail-category:last-child {
-  margin-bottom: 0;
-}
+.xg-content .xg-details .detail-category { margin-bottom: 20px; }
+.xg-content .xg-details .detail-category:last-child { margin-bottom: 0; }
 
 .xg-content .xg-details .detail-category .category-title {
   font-size: 15px;
@@ -2176,15 +2105,10 @@ const handleResize = () => {
   color: #495057;
 }
 
-.xg-content .xg-details .detail-item .values .value.home {
-  color: #667eea;
-}
+.xg-content .xg-details .detail-item .values .value.home { color: #667eea; }
+.xg-content .xg-details .detail-item .values .value.away { color: #764ba2; }
 
-.xg-content .xg-details .detail-item .values .value.away {
-  color: #764ba2;
-}
-
-/* 相似比赛样式 */
+/* similar styles */
 .similar-list {
   display: flex;
   flex-direction: column;
@@ -2238,15 +2162,8 @@ const handleResize = () => {
   white-space: nowrap;
 }
 
-.similar-match-item .match-content .teams .team.home {
-  text-align: left;
-  padding-right: 8px;
-}
-
-.similar-match-item .match-content .teams .team.away {
-  text-align: right;
-  padding-left: 8px;
-}
+.similar-match-item .match-content .teams .team.home { text-align: left; padding-right: 8px; }
+.similar-match-item .match-content .teams .team.away { text-align: right; padding-left: 8px; }
 
 .similar-match-item .match-content .teams .score {
   flex-shrink: 0;
@@ -2286,20 +2203,9 @@ const handleResize = () => {
   font-weight: 500;
 }
 
-.similar-match-item .match-content .odds-info .match-result .result.result-home {
-  background: #52c41a;
-  color: white;
-}
-
-.similar-match-item .match-content .odds-info .match-result .result.result-draw {
-  background: #faad14;
-  color: white;
-}
-
-.similar-match-item .match-content .odds-info .match-result .result.result-away {
-  background: #ff4d4f;
-  color: white;
-}
+.similar-match-item .match-content .odds-info .match-result .result.result-home { background: #52c41a; color: white; }
+.similar-match-item .match-content .odds-info .match-result .result.result-draw { background: #faad14; color: white; }
+.similar-match-item .match-content .odds-info .match-result .result.result-away { background: #ff4d4f; color: white; }
 
 /* 赔率样式 */
 .current-odds {
@@ -2353,17 +2259,9 @@ const handleResize = () => {
   font-weight: 600;
 }
 
-.current-odds .odds-display .odds-type.home .odds-value {
-  color: #667eea;
-}
-
-.current-odds .odds-display .odds-type.draw .odds-value {
-  color: #faad14;
-}
-
-.current-odds .odds-display .odds-type.away .odds-value {
-  color: #764ba2;
-}
+.current-odds .odds-display .odds-type.home .odds-value { color: #667eea; }
+.current-odds .odds-display .odds-type.draw .odds-value { color: #faad14; }
+.current-odds .odds-display .odds-type.away .odds-value { color: #764ba2; }
 
 .odds-history .scrollable-table {
   overflow-x: auto;
@@ -2432,303 +2330,19 @@ const handleResize = () => {
   color: #adb5bd;
 }
 
-.odds-history .odds-table tr:hover {
-  background: #f8f9fa;
-}
+.odds-history .odds-table tr:hover { background: #f8f9fa; }
 
-/* 动画 */
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-/* 响应式调整 - 768px */
-@media (max-width: 768px) {
-  .analysis-page::before {
-    height: 200px;
-  }
-  
-  .page-header {
-    padding: 12px 16px;
-  }
-  
-  .back-btn {
-    padding: 6px 12px;
-    font-size: 13px;
-  }
-  
-  .back-btn svg {
-    width: 14px;
-    height: 14px;
-  }
-  
-  .page-title {
-    font-size: 16px;
-  }
-  
-  .match-basic-info {
-    margin: 0 12px 12px;
-    padding: 16px;
-  }
+/* ===================== 战绩 tab 样式(紧凑布局) ===================== */
+.history-tab { padding: 16px; }
 
-  .match-basic-info .team-name {
-    font-size: 16px;
-    max-width: 100px;
-  }
-  
-  .match-basic-info .vs {
-    font-size: 12px;
-  }
-  
-  .match-basic-info .match-meta {
-    font-size: 12px;
-  }
-  
-  .analysis-tabs {
-    margin: 0 12px 12px;
-  }
+.team-history-block { margin-bottom: 22px; }
+.team-history-block:last-child { margin-bottom: 0; }
 
-  /* 移动端：改为胶囊分段控件 + 横向滑动 */
-  .analysis-tabs .tabs-header {
-    background: transparent;
-    border-bottom: none;
-    padding: 4px;
-    border-radius: 14px;
-    background: #f1f5f9;
-    gap: 4px;
-    margin: 0 4px;
-    /* 横向滑动支持 */
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-  .analysis-tabs .tabs-header::-webkit-scrollbar {
-    display: none;
-  }
-
-  .analysis-tabs .tabs-header .tab-item {
-    flex: 0 0 auto;          /* 不要 flex:1,改为按内容自动宽度 */
-    min-width: 72px;
-    padding: 9px 14px;
-    font-size: 13px;
-    border-radius: 10px;
-    color: #6c757d;
-    transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  /* 移动端 tab：圆角胶囊高亮(用 active 自身做背景,不再用底部下划线) */
-  .analysis-tabs .tabs-header .tab-item.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #ffffff;
-    font-weight: 600;
-    box-shadow: 0 4px 10px rgba(102, 126, 234, 0.28);
-  }
-  .analysis-tabs .tabs-header .tab-item.active::after {
-    display: none;
-  }
-
-  .analysis-tabs .tabs-header .tab-item:active {
-    transform: scale(0.96);
-  }
-
-  /* 移动端取消 text-align:center + max-width:50 限制 */
-  .analysis-tabs .tabs-header .tab-item .tab-label {
-    display: inline-block;
-    max-width: none;
-    margin: 0;
-  }
-  
-  .tab-content {
-    padding: 16px;
-    max-height: calc(100vh - 220px);
-  }
-  
-  .tab-pane .pane-header {
-    margin-bottom: 16px;
-  }
-  
-  .tab-pane .pane-header h3 {
-    font-size: 16px;
-  }
-  
-  .recent-match-item,
-  .similar-match-item {
-    padding: 10px;
-  }
-  
-  .current-odds .odds-display {
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .current-odds .odds-display .odds-type {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 12px;
-  }
-  
-  .current-odds .odds-display .odds-type .odds-label {
-    margin-bottom: 0;
-  }
-  
-  .odds-history .odds-table {
-    min-width: 400px;
-  }
-  
-  .odds-history .odds-table th,
-  .odds-history .odds-table td {
-    padding: 10px 6px;
-    font-size: 12px;
-  }
-}
-
-/* 响应式调整 - 480px */
-@media (max-width: 480px) {
-  .match-basic-info .team-name {
-    font-size: 14px;
-    max-width: 80px;
-  }
-  
-  .match-basic-info .team-rank {
-    font-size: 10px;
-  }
-  
-  .analysis-tabs .tabs-header .tab-item {
-    font-size: 12px;
-    padding: 8px 12px;
-    min-width: 64px;
-  }
-  
-  .recent-match-item .match-result .score {
-    font-size: 14px;
-    min-width: 50px;
-  }
-  
-  .similar-match-item .match-content .teams .score {
-    font-size: 16px;
-    min-width: 50px;
-  }
-  
-  .xg-content .detail-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* 触摸设备优化 */
-@media (hover: none) and (pointer: coarse) {
-  .back-btn,
-  .tab-item,
-  .refresh-btn,
-  .recent-match-item,
-  .similar-match-item {
-    min-height: 44px;
-  }
-  
-  .back-btn,
-  .tab-item {
-    touch-action: manipulation;
-  }
-}
-
-/* 暗色模式支持 */
-@media (prefers-color-scheme: dark) {
-  .analysis-page {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  }
-  
-  .analysis-page::before {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  }
-  
-  .card {
-    background: #2d3748;
-    color: #e2e8f0;
-  }
-  
-  .page-header {
-    background: rgba(45, 55, 72, 0.95);
-    border-bottom-color: #4a5568;
-  }
-  
-  .page-title {
-    color: #e2e8f0;
-  }
-  
-  .match-basic-info {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  }
-  
-  .analysis-tabs .tabs-header {
-    background: #1a202c;
-    border-bottom-color: #4a5568;
-  }
-
-  /* 暗色模式：移动端胶囊分段容器要更深一点的底色 */
-  @media (max-width: 768px) {
-    .analysis-tabs .tabs-header {
-      background: #1a202c;
-      border-bottom: none;
-    }
-  }
-
-  .analysis-tabs .tabs-header .tab-item {
-    color: #a0aec0;
-  }
-
-  .analysis-tabs .tabs-header .tab-item.active {
-    color: #667eea;
-  }
-
-  /* 暗色模式移动端 active 文字应为白色 */
-  @media (max-width: 768px) {
-    .analysis-tabs .tabs-header .tab-item.active {
-      color: #ffffff;
-    }
-  }
-  
-  .tab-pane .pane-header h3 {
-    color: #e2e8f0;
-  }
-  
-  .recent-match-item,
-  .similar-match-item,
-  .detail-item,
-  .odds-type {
-    background: #1a202c;
-  }
-  
-  .odds-history .odds-table th {
-    background: #1a202c;
-    color: #e2e8f0;
-  }
-  
-  .odds-history .odds-table td {
-    color: #a0aec0;
-  }
-  
-  .odds-history .odds-table td.changed {
-    background: #2d3748;
-    color: #fa8c16;
-  }
-  
-  .odds-history .odds-table tr:hover {
-    background: #1a202c;
-  }
-}
-
-/* ===================== 战绩 tab 样式 ===================== */
-.history-tab {
-  padding: 20px;
-}
-.team-history-block {
-  margin-bottom: 24px;
-}
-.team-history-block:last-child {
-  margin-bottom: 0;
-}
 .team-title {
   display: flex;
   align-items: center;
@@ -2736,100 +2350,140 @@ const handleResize = () => {
   font-size: 15px;
   font-weight: 600;
   color: #1a202c;
-  margin: 0 0 12px;
+  margin: 0 0 10px;
 }
+
 .team-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   color: white;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
+  flex-shrink: 0;
 }
-.team-badge.home {
-  background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
-}
-.team-badge.away {
-  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
-}
+
+.team-badge.home { background: linear-gradient(135deg, #ef4444 0%, #f97316 100%); }
+.team-badge.away { background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); }
+
+/* 战绩统计：横向7个数据点 */
 .stats-summary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
   padding: 12px;
-  background: #f8f9fa;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border-radius: 12px;
   margin-bottom: 14px;
 }
+
 .stat-item {
   text-align: center;
-  padding: 6px 4px;
+  padding: 6px 2px;
   background: white;
   border-radius: 8px;
   border: 1px solid #e9ecef;
+  min-width: 0;
 }
+
 .stat-item .stat-num {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   color: #1a202c;
   line-height: 1.2;
 }
+
 .stat-item .stat-label {
   font-size: 11px;
   color: #6c757d;
   margin-top: 2px;
+  white-space: nowrap;
 }
+
 .stat-item.win .stat-num { color: #ef4444; }
 .stat-item.draw .stat-num { color: #10b981; }
 .stat-item.loss .stat-num { color: #3b82f6; }
+.stat-item.highlight-stat .stat-num { color: #667eea; }
 
+/* 战绩列表 - 紧凑卡片 */
 .history-list {
   list-style: none;
   margin: 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
+
 .history-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 12px;
-  margin-bottom: 8px;
+  gap: 8px;
+  padding: 10px 12px;
   background: #f8f9fa;
   border-radius: 10px;
   border: 1px solid #e9ecef;
   position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
+.history-item:active { transform: scale(0.99); }
+
+.history-item.win {
+  border-left: 3px solid #ef4444;
+  background: linear-gradient(90deg, rgba(239,68,68,0.05) 0%, #f8f9fa 60%);
+}
+
+.history-item.draw {
+  border-left: 3px solid #10b981;
+  background: linear-gradient(90deg, rgba(16,185,129,0.05) 0%, #f8f9fa 60%);
+}
+
+.history-item.loss {
+  border-left: 3px solid #3b82f6;
+  background: linear-gradient(90deg, rgba(59,130,246,0.05) 0%, #f8f9fa 60%);
+}
+
 .history-meta {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 12px;
   color: #6c757d;
+  gap: 8px;
 }
+
 .history-league {
   font-weight: 500;
   color: #4a5568;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 65%;
+  flex: 1;
+  min-width: 0;
 }
+
 .history-date {
   font-size: 11px;
   white-space: nowrap;
+  color: #94a3b8;
+  flex-shrink: 0;
 }
+
 .history-body {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
 }
+
 .history-team {
   flex: 1;
   min-width: 0;
 }
+
 .history-team .team-name {
   font-size: 13px;
   color: #1a202c;
@@ -2839,38 +2493,55 @@ const handleResize = () => {
   white-space: nowrap;
   display: block;
 }
+
+.history-team.home { text-align: left; }
+.history-team.away { text-align: right; }
+
 .history-score {
   font-size: 14px;
   font-weight: 700;
   color: #667eea;
-  padding: 2px 10px;
+  padding: 6px 10px;
   background: white;
-  border-radius: 6px;
+  border-radius: 8px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  border: 1px solid #e9ecef;
+  line-height: 1.2;
 }
+
+.history-score .score-full { font-size: 14px; font-weight: 700; }
+.history-score .score-half { font-size: 10px; color: #94a3b8; font-weight: 500; }
+
 .history-result {
-  align-self: flex-start;
+  position: absolute;
+  top: 8px;
+  right: 8px;
   font-size: 11px;
   padding: 2px 8px;
   border-radius: 4px;
-  font-weight: 500;
+  font-weight: 600;
 }
+
 .history-result.result-win { background: #fee2e2; color: #ef4444; }
 .history-result.result-draw { background: #d1fae5; color: #10b981; }
 .history-result.result-loss { background: #dbeafe; color: #3b82f6; }
 
 /* ===================== 排名 tab 样式 ===================== */
-.table-tab {
-  padding: 20px;
-}
+.table-tab { padding: 16px; }
+
 .ranking-tabs {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 14px;
   padding: 4px;
   background: #f1f5f9;
-  border-radius: 10px;
+  border-radius: 12px;
 }
+
 .ranking-tab-btn {
   flex: 1;
   padding: 8px 12px;
@@ -2883,116 +2554,180 @@ const handleResize = () => {
   transition: all 0.2s;
   font-weight: 500;
 }
+
 .ranking-tab-btn:hover { color: #667eea; }
 .ranking-tab-btn.active {
   background: white;
   color: #667eea;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
+
 .ranking-table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  border-radius: 10px;
+  border: 1px solid #e9ecef;
 }
+
 .ranking-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
-  min-width: 540px;
 }
+
 .ranking-table thead th {
   background: #f8f9fa;
   color: #6c757d;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 12px;
   padding: 10px 6px;
   text-align: center;
   border-bottom: 1px solid #e9ecef;
   white-space: nowrap;
 }
+
 .ranking-table tbody td {
-  padding: 10px 6px;
+  padding: 9px 6px;
   text-align: center;
   border-bottom: 1px solid #f1f5f9;
   color: #1a202c;
 }
-.ranking-table tbody tr:hover {
-  background: #f8f9fa;
-}
+
+.ranking-table tbody tr:last-child td { border-bottom: 0; }
+
+.ranking-table tbody tr:hover { background: #f8f9fa; }
+
 .ranking-table tbody tr.highlight {
-  background: linear-gradient(90deg, rgba(102,126,234,0.08) 0%, rgba(118,75,162,0.05) 100%);
+  background: linear-gradient(90deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.05) 100%);
 }
+
 .ranking-table tbody tr.highlight td {
   font-weight: 600;
+}
+
+.ranking-table tbody tr.highlight .team-name-cell {
   color: #667eea;
 }
-.col-rank {
-  width: 50px;
-  font-weight: 600;
+
+.col-rank { width: 54px; }
+
+.rank-num {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 12px;
+  background: #f1f5f9;
+  color: #6c757d;
 }
+
+.rank-num.rank-1 { background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%); color: white; }
+.rank-num.rank-2 { background: linear-gradient(135deg, #c0c0c0 0%, #808080 100%); color: white; }
+.rank-num.rank-3 { background: linear-gradient(135deg, #cd7f32 0%, #8b4513 100%); color: white; }
+
 .col-team {
   text-align: left !important;
-  min-width: 100px;
+  min-width: 90px;
 }
-.team-cell {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+
+.team-name-cell {
+  display: inline-block;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.team-logo-sm {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
+
+.col-num { min-width: 32px; }
+.col-win { color: #ef4444; font-weight: 600; }
+
 .col-points {
   font-weight: 700;
   color: #667eea;
+  min-width: 38px;
 }
-.ranking-table .points {
-  color: #667eea;
-}
+
+.ranking-table .points { color: #667eea; }
+
 .diff-positive { color: #ef4444; font-weight: 600; }
 .diff-negative { color: #3b82f6; font-weight: 600; }
 
-/* ===================== 必发 tab 样式 ===================== */
-.bifa-tab {
-  padding: 20px;
-}
-.bifa-summary {
+.ranking-meta {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: #94a3b8;
+  justify-content: center;
+}
+
+.meta-divider { color: #cbd5e1; }
+
+/* ===================== 必发 tab 样式 ===================== */
+.bifa-tab { padding: 16px; }
+
+.bifa-summary {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 8px;
   margin-bottom: 16px;
 }
+
 .bifa-total-card {
-  flex: 1;
-  padding: 16px;
+  padding: 12px 14px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 12px;
   color: white;
   text-align: center;
   box-shadow: 0 4px 12px rgba(102,126,234,0.25);
 }
+
 .bifa-total-label {
-  font-size: 12px;
+  font-size: 11px;
   opacity: 0.85;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
+
 .bifa-total-value {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
 }
-.bifa-bar-wrap {
-  margin-bottom: 16px;
+
+.bifa-stat-card {
+  padding: 12px 8px;
+  background: #f8fafc;
+  border-radius: 12px;
+  text-align: center;
+  border: 1px solid #e9ecef;
 }
+
+.bifa-stat-label {
+  font-size: 11px;
+  color: #6c757d;
+  margin-bottom: 4px;
+}
+
+.bifa-stat-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.bifa-bar-wrap { margin-bottom: 16px; }
+
 .bifa-bar {
   display: flex;
   width: 100%;
-  height: 36px;
+  height: 32px;
   border-radius: 8px;
   overflow: hidden;
   background: #f1f5f9;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
 }
+
 .bifa-seg {
   display: flex;
   align-items: center;
@@ -3003,20 +2738,53 @@ const handleResize = () => {
   transition: flex 0.4s ease;
   min-width: 0;
 }
+
 .bifa-seg-label {
   text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  white-space: nowrap;
 }
+
+.bifa-bar-legend {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.bifa-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.bifa-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.bifa-legend-label { font-weight: 500; }
+.bifa-legend-value {
+  margin-left: auto;
+  font-weight: 700;
+  color: #1a202c;
+}
+
 .bifa-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
+
 .bifa-item {
   display: grid;
-  grid-template-columns: 50px 1fr 1fr 80px;
+  grid-template-columns: 44px 1fr 1.2fr 92px;
   gap: 10px;
   align-items: center;
   padding: 10px 12px;
@@ -3025,6 +2793,7 @@ const handleResize = () => {
   border: 1px solid #e9ecef;
   font-size: 13px;
 }
+
 .side-tag {
   display: inline-flex;
   align-items: center;
@@ -3033,38 +2802,47 @@ const handleResize = () => {
   height: 32px;
   border-radius: 50%;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: white;
 }
+
 .side-tag.tag-home { background: linear-gradient(135deg, #ef4444 0%, #f97316 100%); }
 .side-tag.tag-draw { background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%); }
 .side-tag.tag-away { background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); }
+
 .bifa-side { display: flex; }
+
 .bifa-amount {
   font-weight: 700;
   color: #1a202c;
   font-size: 14px;
 }
+
 .bifa-proportion {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
+
 .bifa-proportion span {
   font-size: 11px;
   color: #6c757d;
   font-weight: 500;
 }
+
 .bifa-progress {
   height: 6px;
   background: #e9ecef;
   border-radius: 3px;
   overflow: hidden;
 }
+
 .bifa-progress-bar {
   height: 100%;
   transition: width 0.4s ease;
 }
+
 .bifa-time {
   font-size: 11px;
   color: #94a3b8;
@@ -3073,15 +2851,15 @@ const handleResize = () => {
 }
 
 /* ===================== 情报 tab 样式 ===================== */
-.intelligence-tab {
-  padding: 20px;
-}
+.intelligence-tab { padding: 16px; }
+
 .intelligence-content {
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border-radius: 12px;
   padding: 16px;
   border-left: 3px solid #667eea;
 }
+
 .intelligence-pre {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -3092,7 +2870,7 @@ const handleResize = () => {
   word-break: break-word;
 }
 
-/* 8 个 tab 时调整 tab 字体大小和间距 */
+/* ===================== 响应式 ===================== */
 @media (min-width: 769px) {
   .analysis-tabs .tabs-header .tab-item {
     padding: 14px 4px;
@@ -3100,10 +2878,176 @@ const handleResize = () => {
   }
 }
 
-/* 移动端进一步压缩 */
+@media (max-width: 768px) {
+  .analysis-page::before { height: 200px; }
+
+  .page-header { padding: 12px 16px; }
+
+  .back-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .back-btn svg { width: 14px; height: 14px; }
+  .page-title { font-size: 16px; }
+
+  .match-basic-info {
+    margin: 0 12px 12px;
+    padding: 14px;
+  }
+
+  .match-basic-info .team-name {
+    font-size: 15px;
+    max-width: 100px;
+  }
+
+  .match-basic-info .vs { font-size: 12px; }
+  .match-basic-info .match-meta { font-size: 12px; }
+
+  .analysis-tabs { margin: 0 12px 12px; }
+
+  .analysis-tabs .tabs-header {
+    background: #f1f5f9;
+    border-bottom: none;
+    padding: 4px;
+    border-radius: 14px;
+    gap: 4px;
+    margin: 0 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .analysis-tabs .tabs-header::-webkit-scrollbar { display: none; }
+
+  .analysis-tabs .tabs-header .tab-item {
+    flex: 0 0 auto;
+    min-width: 72px;
+    padding: 9px 14px;
+    font-size: 13px;
+    border-radius: 10px;
+    color: #6c757d;
+    transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .analysis-tabs .tabs-header .tab-item.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(102, 126, 234, 0.28);
+  }
+  .analysis-tabs .tabs-header .tab-item.active::after { display: none; }
+  .analysis-tabs .tabs-header .tab-item:active { transform: scale(0.96); }
+  .analysis-tabs .tabs-header .tab-item .tab-label {
+    display: inline-block;
+    max-width: none;
+    margin: 0;
+  }
+
+  .tab-content {
+    padding: 14px;
+    max-height: calc(100vh - 220px);
+  }
+
+  .tab-pane .pane-header { margin-bottom: 14px; }
+  .tab-pane .pane-header h3 { font-size: 15px; }
+
+  .recent-match-item,
+  .similar-match-item { padding: 10px; }
+
+  .current-odds .odds-display {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .current-odds .odds-display .odds-type {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+  }
+
+  .current-odds .odds-display .odds-type .odds-label { margin-bottom: 0; }
+
+  .odds-history .odds-table { min-width: 400px; }
+  .odds-history .odds-table th,
+  .odds-history .odds-table td {
+    padding: 10px 6px;
+    font-size: 12px;
+  }
+}
+
 @media (max-width: 480px) {
+  .match-basic-info .team-name {
+    font-size: 14px;
+    max-width: 80px;
+  }
+
+  .match-basic-info .team-rank { font-size: 10px; }
+
+  .analysis-tabs .tabs-header .tab-item {
+    font-size: 12px;
+    padding: 8px 12px;
+    min-width: 64px;
+  }
+
+  .recent-match-item .match-result .score {
+    font-size: 14px;
+    min-width: 50px;
+  }
+
+  .similar-match-item .match-content .teams .score {
+    font-size: 16px;
+    min-width: 50px;
+  }
+
+  .xg-content .detail-grid { grid-template-columns: 1fr; }
+
+  /* 战绩：移动端统计 4 列 + 保留净胜球单独一行 */
+  .stats-summary {
+    grid-template-columns: repeat(4, 1fr);
+    padding: 10px 8px;
+    gap: 5px;
+  }
+
+  .stat-item { padding: 5px 1px; }
+  .stat-item .stat-num { font-size: 14px; }
+  .stat-item .stat-label { font-size: 10px; }
+
+  .stat-item.highlight-stat {
+    grid-column: span 2;
+  }
+
+  /* 战绩：移动端列表项压缩 */
+  .history-item { padding: 8px 10px; }
+
+  .history-team .team-name { font-size: 12px; }
+
+  .history-score {
+    padding: 4px 8px;
+  }
+  .history-score .score-full { font-size: 13px; }
+  .history-score .score-half { font-size: 9px; }
+
+  /* 排名：移动端隐藏次要列 */
+  .hide-on-mobile { display: none !important; }
+  .ranking-table { min-width: 380px; font-size: 12px; }
+  .ranking-table thead th { padding: 8px 4px; font-size: 11px; }
+  .ranking-table tbody td { padding: 8px 4px; }
+  .rank-num { width: 22px; height: 22px; line-height: 22px; font-size: 11px; }
+  .col-rank { width: 40px; }
+  .team-name-cell { max-width: 88px; }
+
+  /* 必发：移动端卡片 */
+  .bifa-summary { grid-template-columns: 1fr 1fr; }
+  .bifa-summary .bifa-total-card { grid-column: 1 / -1; }
+  .bifa-total-value { font-size: 18px; }
+
   .bifa-item {
-    grid-template-columns: 40px 1fr 1fr;
+    grid-template-columns: 38px 1fr 1.4fr;
+    gap: 8px;
+    padding: 8px 10px;
   }
   .bifa-item .bifa-time {
     grid-column: 1 / -1;
@@ -3111,13 +3055,162 @@ const handleResize = () => {
     border-top: 1px dashed #e9ecef;
     padding-top: 6px;
     margin-top: 4px;
+    font-size: 10px;
   }
+  .bifa-amount { font-size: 13px; }
+
+  /* 情报 */
+  .intelligence-content { padding: 14px; }
+  .intelligence-pre { font-size: 13px; }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .back-btn,
+  .tab-item,
+  .refresh-btn,
+  .recent-match-item,
+  .similar-match-item {
+    min-height: 44px;
+  }
+
+  .back-btn,
+  .tab-item {
+    touch-action: manipulation;
+  }
+}
+
+/* 暗色模式 */
+@media (prefers-color-scheme: dark) {
+  .analysis-page { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
+  .analysis-page::before { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
+
+  .card {
+    background: #2d3748;
+    color: #e2e8f0;
+  }
+
+  .page-header {
+    background: rgba(45, 55, 72, 0.95);
+    border-bottom-color: #4a5568;
+  }
+
+  .page-title { color: #e2e8f0; }
+  .match-basic-info { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+
+  .analysis-tabs .tabs-header {
+    background: #1a202c;
+    border-bottom-color: #4a5568;
+  }
+
+  @media (max-width: 768px) {
+    .analysis-tabs .tabs-header {
+      background: #1a202c;
+      border-bottom: none;
+    }
+  }
+
+  .analysis-tabs .tabs-header .tab-item { color: #a0aec0; }
+  .analysis-tabs .tabs-header .tab-item.active { color: #667eea; }
+
+  @media (max-width: 768px) {
+    .analysis-tabs .tabs-header .tab-item.active { color: #ffffff; }
+  }
+
+  .tab-pane .pane-header h3 { color: #e2e8f0; }
+
+  .recent-match-item,
+  .similar-match-item,
+  .detail-item,
+  .odds-type { background: #1a202c; }
+
+  /* 战绩暗色 */
   .stats-summary {
-    grid-template-columns: repeat(3, 1fr);
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
   }
-  .ranking-table {
-    min-width: 460px;
-    font-size: 12px;
+
+  .stat-item {
+    background: #2d3748;
+    border-color: #4a5568;
   }
+
+  .stat-item .stat-num { color: #e2e8f0; }
+  .stat-item .stat-label { color: #a0aec0; }
+
+  .history-item {
+    background: #1a202c;
+    border-color: #4a5568;
+  }
+
+  .history-item.win {
+    background: linear-gradient(90deg, rgba(239,68,68,0.15) 0%, #1a202c 60%);
+  }
+
+  .history-item.draw {
+    background: linear-gradient(90deg, rgba(16,185,129,0.15) 0%, #1a202c 60%);
+  }
+
+  .history-item.loss {
+    background: linear-gradient(90deg, rgba(59,130,246,0.15) 0%, #1a202c 60%);
+  }
+
+  .history-team .team-name { color: #e2e8f0; }
+  .history-league { color: #cbd5e0; }
+
+  .history-score {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: #90cdf4;
+  }
+
+  .history-score .score-half { color: #a0aec0; }
+
+  /* 排名暗色 */
+  .ranking-tabs { background: #1a202c; }
+  .ranking-tab-btn { color: #a0aec0; }
+  .ranking-tab-btn.active {
+    background: #2d3748;
+    color: #90cdf4;
+  }
+
+  .ranking-table-wrap { border-color: #4a5568; }
+  .ranking-table thead th {
+    background: #1a202c;
+    color: #a0aec0;
+    border-bottom-color: #4a5568;
+  }
+  .ranking-table tbody td {
+    color: #e2e8f0;
+    border-bottom-color: #2d3748;
+  }
+  .ranking-table tbody tr:hover { background: #1a202c; }
+  .ranking-table tbody tr.highlight {
+    background: linear-gradient(90deg, rgba(102,126,234,0.2) 0%, rgba(118,75,162,0.1) 100%);
+  }
+  .ranking-table tbody tr.highlight .team-name-cell { color: #90cdf4; }
+  .rank-num { background: #2d3748; color: #a0aec0; }
+  .bifa-stat-card { background: #1a202c; border-color: #4a5568; }
+  .bifa-stat-value { color: #e2e8f0; }
+
+  .bifa-item {
+    background: #1a202c;
+    border-color: #4a5568;
+  }
+  .bifa-amount { color: #e2e8f0; }
+
+  .odds-history .odds-table th {
+    background: #1a202c;
+    color: #e2e8f0;
+  }
+  .odds-history .odds-table td { color: #a0aec0; }
+  .odds-history .odds-table td.changed {
+    background: #2d3748;
+    color: #fa8c16;
+  }
+  .odds-history .odds-table tr:hover { background: #1a202c; }
+
+  .intelligence-content {
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+  }
+  .intelligence-pre { color: #e2e8f0; }
 }
 </style>
