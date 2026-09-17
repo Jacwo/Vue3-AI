@@ -102,8 +102,7 @@ const router = createRouter({
       component: () => import('@/views/MatchDataView.vue'),
       meta: {
         requiresAuth: true,
-        title: '比赛数据',
-        requiresAdmin: true
+        title: '比赛数据'
       }
     },
     {

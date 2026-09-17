@@ -2,7 +2,6 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import defaultAvatar from '@/assets/logo.png'
 
 const router = useRouter()
@@ -10,13 +9,6 @@ const userStore = useUserStore()
 
 // 用户信息
 const userInfo = ref<any>(null)
-
-// 编辑模式
-const isEditing = ref(false)
-const editForm = ref({
-  nickname: '',
-  avatar: ''
-})
 
 // 加载用户信息
 const loadUserInfo = async () => {
@@ -32,474 +24,574 @@ const loadUserInfo = async () => {
   }
 
   userInfo.value = info
-  if (info) {
-    editForm.value = {
-      nickname: info.userName || '',
-      avatar: info.avatar || ''
-    }
-  }
-}
-
-// 进入编辑模式
-const enterEditMode = () => {
-  isEditing.value = true
-}
-
-// 取消编辑
-const cancelEdit = () => {
-  isEditing.value = false
-  editForm.value = {
-    nickname: userInfo.value?.nickname || '',
-    avatar: userInfo.value?.avatar || ''
-  }
-}
-
-// 保存修改
-const saveEdit = async () => {
-  try {
-    const success = await userStore.updateUser(editForm.value)
-    if (success) {
-      isEditing.value = false
-      await loadUserInfo()
-    }
-  } catch (error) {
-    console.error('保存失败:', error)
-  }
 }
 
 // 退出登录
 const handleLogout = async () => {
-  try {
-    // await ElMessageBox.confirm(
-    //   '确定要退出登录吗？',
-    //   '提示',
-    //   {
-    //     confirmButtonText: '确定',
-    //     cancelButtonText: '取消',
-    //     type: 'warning'
-    //   }
-    // )
-    
-    await userStore.logout()
-    router.push('/login')
-  } catch {
-    // 用户取消
-  }
+  await userStore.logout()
+  router.push('/login')
 }
 
-// 加载数据
+// 跳转到历史记录
+const goHistory = () => {
+  router.push('/history')
+}
+
+// 跳转到比赛数据
+const goMatches = () => {
+  router.push('/matches')
+}
+
+// 跳转到积分充值
+const goCredits = () => {
+  router.push('/credits')
+}
+
+// 格式化手机号中间四位为 *
+const formatPhone = (phone: string) => {
+  if (!phone || phone.length !== 11) return phone || '未设置'
+  return phone.slice(0, 3) + '****' + phone.slice(7)
+}
+
 onMounted(() => {
   loadUserInfo()
 })
 </script>
 
 <template>
-  <div class="profile-container">
-    <div class="profile-card">
-      <!-- 头部 -->
-      <div class="profile-header">
-        <h2>个人中心</h2>
-        <!-- <button v-if="!isEditing" @click="enterEditMode" class="edit-btn">
-          编辑资料
-        </button> -->
-      </div>
-
-      <!-- 用户信息 -->
-      <div class="profile-content">
-        <!-- 头像区域 -->
-        <div class="avatar-section">
-          <div class="avatar-wrapper">
-            <img :src="isEditing ? editForm.avatar : (userInfo?.avatar || defaultAvatar)" 
-              alt="头像"
-              class="avatar"
-            />
-            <div v-if="isEditing" class="avatar-upload">
-              <input type="text" v-model="editForm.avatar" placeholder="输入头像URL" class="avatar-input" />
-            </div>
+  <div class="profile-page">
+    <!-- 顶部 Hero 区域 -->
+    <div class="hero-card">
+      <div class="hero-bg"></div>
+      <div class="hero-content">
+        <div class="avatar-wrap">
+          <div class="avatar-ring">
+            <img :src="userInfo?.avatar || defaultAvatar" alt="头像" class="avatar-img" />
           </div>
+          <div class="avatar-badge" v-if="userInfo?.isAdmin">管理员</div>
         </div>
 
-        <!-- 基本信息 -->
-        <div class="info-section">
-          <div class="info-item">
-            <span class="info-label">手机号</span>
-            <span class="info-value">{{ userInfo?.phone || '未设置' }}</span>
-          </div>
-
-          <div class="info-item">
-            <span class="info-label">昵称</span>
-            <div v-if="!isEditing" class="info-value">{{ userInfo?.userName || '未设置' }}</div>
-            <input v-else v-model="editForm.nickname" type="text" class="edit-input" placeholder="请输入昵称" />
-          </div>
-
-          <div class="info-item">
-            <span class="info-label">注册时间</span>
-            <span class="info-value">{{ userInfo?.createTime ? new Date(userInfo.createTime).toLocaleDateString() : '未知' }}</span>
-          </div>
-
-          <div class="info-item">
-            <span class="info-label">用户ID</span>
-            <span class="info-value">{{ userInfo?.id || '未知' }}</span>
-          </div>
+        <div class="user-meta">
+          <h2 class="user-name">{{ userInfo?.userName || '未设置' }}</h2>
+          <p class="user-id">ID: {{ userInfo?.id || '未知' }}</p>
         </div>
 
-        <!-- 编辑按钮 -->
-        <div v-if="isEditing" class="edit-buttons">
-          <button @click="saveEdit" class="save-btn">保存修改</button>
-          <button @click="cancelEdit" class="cancel-btn">取消</button>
-        </div>
-
-        <!-- 操作按钮 -->
-        <div v-else class="action-buttons">
-          <button @click="handleLogout" class="logout-btn">
-            退出登录
-          </button>
+        <!-- 积分卡片直接放在 hero 头部，让关键信息更醒目 -->
+        <div class="points-card">
+          <div class="points-card-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M6 3h12l3 6-9 12L3 9l3-6z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
+              <path d="M3 9h18M9.5 3L6 9l3 12M14.5 3L18 9l-3 12" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="points-card-info">
+            <span class="points-card-label">我的积分</span>
+            <span class="points-card-value">
+              <span class="points-num">{{ userInfo?.point ?? 0 }}</span>
+              <span class="points-suffix">分</span>
+            </span>
+          </div>
+          <button class="points-charge-btn" @click="goCredits">充值</button>
         </div>
       </div>
     </div>
 
-    <!-- 功能卡片 -->
-    <div class="feature-cards">
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <h3>我的分析记录</h3>
-        <p>查看历史比赛分析记录</p>
+    <!-- 基本信息 -->
+    <div class="section-card">
+      <div class="section-title">
+        <span class="section-dot"></span>
+        <span>基本信息</span>
       </div>
 
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="#667eea" stroke-width="2"/>
-            <path d="M19.4 15C17.8662 17.7503 15.043 19.5 12 19.5C8.95705 19.5 6.13375 17.7503 4.6 15C4.6 15 7.5 15 12 15C16.5 15 19.4 15 19.4 15Z" stroke="#667eea" stroke-width="2"/>
-            <path d="M19.4 9C17.8662 6.24969 15.043 4.5 12 4.5C8.95705 4.5 6.13375 6.24969 4.6 9C4.6 9 7.5 9 12 9C16.5 9 19.4 9 19.4 9Z" stroke="#667eea" stroke-width="2"/>
-          </svg>
+      <div class="info-list">
+        <div class="info-row">
+          <div class="info-left">
+            <span class="info-icon icon-phone">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.37 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.33 1.85.57 2.81.7A2 2 0 0122 16.92z" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="info-label">手机号</span>
+          </div>
+          <span class="info-value">{{ formatPhone(userInfo?.phone) }}</span>
         </div>
-        <h3>AI对话历史</h3>
-        <p>查看与AI助手的对话记录</p>
+
+        <div class="info-row">
+          <div class="info-left">
+            <span class="info-icon icon-user">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="12" cy="7" r="4" stroke="#667eea" stroke-width="2"/>
+              </svg>
+            </span>
+            <span class="info-label">昵称</span>
+          </div>
+          <span class="info-value">{{ userInfo?.userName || '未设置' }}</span>
+        </div>
+
+        <div class="info-row">
+          <div class="info-left">
+            <span class="info-icon icon-time">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="#667eea" stroke-width="2"/>
+                <path d="M12 6v6l4 2" stroke="#667eea" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <span class="info-label">注册时间</span>
+          </div>
+          <span class="info-value">{{ userInfo?.createTime ? new Date(userInfo.createTime).toLocaleDateString() : '未知' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 快捷功能 -->
+    <div class="section-card">
+      <div class="section-title">
+        <span class="section-dot"></span>
+        <span>快捷功能</span>
       </div>
 
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#667eea" stroke-width="2"/>
-            <path d="M12 6V12L16 14" stroke="#667eea" stroke-width="2"/>
-          </svg>
+      <div class="quick-grid">
+        <div class="quick-item" @click="goHistory">
+          <div class="quick-icon icon-grad-purple">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="quick-label">我的分析记录</span>
+          <span class="quick-desc">历史比赛分析</span>
         </div>
-        <h3>使用统计</h3>
-        <p>查看您的使用情况统计</p>
+
+        <div class="quick-item" @click="goMatches">
+          <div class="quick-icon icon-grad-blue">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="4" width="18" height="16" rx="2" stroke="#fff" stroke-width="2"/>
+              <path d="M3 10h18M8 4v16" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="quick-label">比赛数据</span>
+          <span class="quick-desc">查看实时比赛</span>
+        </div>
+
+        <div class="quick-item" @click="goCredits">
+          <div class="quick-icon icon-grad-amber">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="quick-label">积分充值</span>
+          <span class="quick-desc">获取更多积分</span>
+        </div>
       </div>
+    </div>
+
+    <!-- 退出按钮 -->
+    <div class="logout-wrap">
+      <button @click="handleLogout" class="logout-btn">退出登录</button>
     </div>
   </div>
 </template>
 
 <style scoped>
-.profile-container {
-  max-width: 1200px;
+.profile-page {
+  max-width: 960px;
   margin: 0 auto;
-  padding: 20px;
-}
-
-.profile-card {
-  background: white;
-  border-radius: 16px;
-  padding: 30px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  margin-bottom: 30px;
-}
-
-.profile-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.profile-header h2 {
-  color: #333;
-  font-size: 24px;
-  font-weight: 600;
-  margin: 0;
-}
-
-.edit-btn {
-  padding: 8px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.edit-btn:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-}
-
-.profile-content {
+  padding: 24px 20px 40px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-}
-
-.avatar-section {
-  margin-bottom: 30px;
-}
-
-.avatar-wrapper {
-  position: relative;
-  display: inline-block;
-}
-
-.avatar {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid white;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-}
-
-.avatar-upload {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  background: white;
-  border-radius: 8px;
-  padding: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.avatar-input {
-  width: 200px;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.info-section {
-  width: 100%;
-  max-width: 500px;
-  margin-bottom: 30px;
-}
-
-.info-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
-  padding: 15px 20px;
-  background: #fafafa;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-}
-
-.info-item:hover {
-  background: #f5f5f5;
-}
-
-.info-label {
-  min-width: 80px;
-  color: #666;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.info-value {
-  flex: 1;
-  color: #333;
-  font-size: 16px;
-  font-weight: 500;
-}
-
-.edit-input {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 16px;
-  transition: all 0.3s ease;
-}
-
-.edit-input:focus {
-  border-color: #667eea;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.edit-buttons {
-  display: flex;
-  gap: 15px;
-  margin-top: 20px;
-}
-
-.save-btn, .cancel-btn {
-  padding: 12px 30px;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.save-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.save-btn:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-}
-
-.cancel-btn {
-  background: #f0f0f0;
-  color: #666;
-}
-
-.cancel-btn:hover {
-  background: #e0e0e0;
-  transform: translateY(-2px);
-}
-
-.action-buttons {
-  margin-top: 30px;
-}
-
-.logout-btn {
-  padding: 12px 40px;
-  background: #ff6b6b;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.logout-btn:hover {
-  background: #ff5252;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-}
-
-/* 功能卡片 */
-.feature-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 20px;
 }
 
-.feature-card {
-  background: white;
-  border-radius: 16px;
-  padding: 25px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  text-align: center;
-  transition: all 0.3s ease;
-  cursor: pointer;
+/* ========== Hero 区域 ========== */
+.hero-card {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 28px 24px;
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.25);
+  color: #fff;
 }
 
-.feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.18) 0, transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.14) 0, transparent 45%);
+  pointer-events: none;
 }
 
-.feature-icon {
-  width: 60px;
-  height: 60px;
-  margin: 0 auto 20px;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+.hero-content {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 20px;
+  align-items: center;
+}
+
+/* 头像 */
+.avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar-ring {
+  width: 84px;
+  height: 84px;
   border-radius: 50%;
+  padding: 3px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.4));
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  border: 2px solid #fff;
+}
+
+.avatar-badge {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #f59e0b;
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* 用户信息 */
+.user-meta {
+  min-width: 0;
+}
+
+.user-name {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.user-id {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+/* 积分卡片（在 hero 内） */
+.points-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 10px 14px;
+  border-radius: 14px;
+  backdrop-filter: blur(8px);
+}
+
+.points-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #fbbf24, #f97316);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(249, 115, 22, 0.4);
+}
+
+.points-card-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.points-card-label {
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.points-card-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  color: #fff;
+}
+
+.points-num {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.points-suffix {
+  font-size: 12px;
+  opacity: 0.9;
+  margin-left: 2px;
+}
+
+.points-charge-btn {
+  background: #fff;
+  color: #764ba2;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.points-charge-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* ========== 通用区段卡片 ========== */
+.section-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 22px 24px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 18px;
+}
+
+.section-dot {
+  width: 4px;
+  height: 18px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #667eea, #764ba2);
+}
+
+/* ========== 信息行 ========== */
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  transition: background 0.2s;
+}
+
+.info-row:hover {
+  background: #f1f5f9;
+}
+
+.info-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.info-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(102, 126, 234, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.feature-card h3 {
-  color: #333;
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-
-.feature-card p {
-  color: #666;
+.info-label {
+  color: #64748b;
   font-size: 14px;
-  margin: 0;
+  font-weight: 500;
 }
 
-/* 响应式设计 */
+.info-value {
+  color: #1f2937;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* ========== 快捷功能 ========== */
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.quick-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 14px;
+  background: #f8fafc;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: transform 0.25s, box-shadow 0.25s, background 0.25s;
+  text-align: center;
+}
+
+.quick-item:hover {
+  transform: translateY(-3px);
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(102, 126, 234, 0.15);
+}
+
+.quick-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.icon-grad-purple {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.icon-grad-blue {
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+}
+
+.icon-grad-amber {
+  background: linear-gradient(135deg, #fbbf24, #f97316);
+}
+
+.quick-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 2px;
+}
+
+.quick-desc {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* ========== 退出按钮 ========== */
+.logout-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.logout-btn {
+  padding: 12px 60px;
+  background: #fff;
+  color: #ef4444;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.08);
+}
+
+.logout-btn:hover {
+  background: #fef2f2;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.18);
+}
+
+/* ========== 响应式 ========== */
 @media (max-width: 767px) {
-  .profile-container {
-    padding: 15px;
+  .profile-page {
+    padding: 16px 14px 32px;
   }
 
-  .profile-card {
-    padding: 20px;
+  .hero-card {
+    padding: 22px 18px;
   }
 
-  .profile-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
+  .hero-content {
+    grid-template-columns: auto 1fr;
+    gap: 16px;
   }
 
-  .profile-header h2 {
+  .points-card {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
+
+  .avatar-ring {
+    width: 72px;
+    height: 72px;
+  }
+
+  .user-name {
+    font-size: 18px;
+  }
+
+  .points-num {
     font-size: 20px;
   }
 
-  .edit-btn {
-    width: 100%;
+  .section-card {
+    padding: 18px 16px;
   }
 
-  .avatar {
-    width: 100px;
-    height: 100px;
+  .quick-grid {
+    grid-template-columns: 1fr 1fr;
   }
 
-  .info-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+  .quick-item:last-child {
+    grid-column: 1 / -1;
   }
 
-  .info-label {
-    min-width: auto;
-  }
-
-  .edit-buttons {
-    width: 100%;
-  }
-
-  .save-btn, .cancel-btn {
-    flex: 1;
-  }
-
-  .feature-cards {
-    grid-template-columns: 1fr;
+  .info-row {
+    padding: 12px 14px;
   }
 }
 
-@media (max-width: 375px) {
-  .profile-card {
-    padding: 15px;
+@media (max-width: 480px) {
+  .hero-content {
+    grid-template-columns: 1fr;
+    text-align: center;
   }
 
-  .edit-buttons {
-    flex-direction: column;
+  .avatar-wrap {
+    margin: 0 auto;
+  }
+
+  .user-meta {
+    text-align: center;
+  }
+
+  .quick-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-item:last-child {
+    grid-column: auto;
   }
 }
 </style>

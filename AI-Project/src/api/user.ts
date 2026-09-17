@@ -20,6 +20,7 @@ export interface UserInfo {
   gender: number
   status: string
   createTime: string
+  point?: number
   isAdmin?: boolean
 }
 

@@ -90,13 +90,6 @@ const closeMobileMenu = () => {
           >
             历史记录
           </RouterLink>
-          <RouterLink
-            to="/worldcup"
-            @click="closeMobileMenu"
-            :class="{ 'mobile-link': isMobile }"
-          >
-            世界杯
-          </RouterLink>
           <!-- 已屏蔽：AI对话导航 -->
           <!-- <RouterLink
             to="/ai"
@@ -114,7 +107,6 @@ const closeMobileMenu = () => {
             小工具
           </RouterLink> -->
           <RouterLink
-            v-if="userStore.userInfo?.isAdmin"
             to="/matches"
             @click="closeMobileMenu"
             :class="{ 'mobile-link': isMobile }"
