@@ -761,7 +761,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { formatDisplayTime } from '@/utils/dateUtils'
 import { matchApi } from '@/api/analisis'
-import type { RecentMatch, XgData, SimilarMatch, OddsRecord } from '@/api/analisis'
+import type { RecentMatch, XgData, SimilarMatch, OddsRecord, TeamXgStats } from '@/api/analisis'
 
 const route = useRoute()
 const router = useRouter()
@@ -1135,13 +1135,15 @@ const fetchRecentMatches = async () => {
   try {
     loading.value.recent = true
     const response = await matchApi.getRecentMatches(matchId.value, { signal: signal.signal })
-    if (Array.isArray(response)) {
-      recentMatches.value = response
-    } else if (Array.isArray(response?.data)) {
+    // apiClient 拦截器已 unwrap,response 直接是 RecentMatch[];用 unknown 转换以保留兜底分支
+    const r = response as unknown
+    if (Array.isArray(r)) {
+      recentMatches.value = r as RecentMatch[]
+    } else if (Array.isArray((r as { data?: unknown })?.data)) {
       // 兜底：兼容部分接口返回 { data: [...] }
-      recentMatches.value = response.data
-    } else if (Array.isArray(response?.list)) {
-      recentMatches.value = response.list
+      recentMatches.value = (r as { data: RecentMatch[] }).data
+    } else if (Array.isArray((r as { list?: unknown })?.list)) {
+      recentMatches.value = (r as { list: RecentMatch[] }).list
     } else {
       recentMatches.value = []
     }
@@ -1166,17 +1168,22 @@ const fetchXgData = async () => {
     const response = await matchApi.getXgData(matchId.value, { signal: signal.signal })
 
     // 兜底：兼容不同后端返回结构（XgData / { data: XgData } / [] 等）
-    let payload: unknown = response
-    if (response && typeof response === 'object' && !Array.isArray(response) && 'data' in response && response.data && typeof response.data === 'object') {
-      payload = response.data
+    let payload: any = response
+    if (payload && typeof payload === 'object' && !Array.isArray(payload) && payload.data && typeof payload.data === 'object') {
+      payload = payload.data
     }
 
-    const safeTeam = (team: unknown) => (team && typeof team === 'object' ? team : null)
+    const safeTeam = (team: unknown): TeamXgStats | null => {
+      if (team && typeof team === 'object') {
+        return team as TeamXgStats
+      }
+      return null
+    }
 
     xgData.value = {
-      home: safeTeam((payload as { home?: unknown } | null | undefined)?.home),
-      away: safeTeam((payload as { away?: unknown } | null | undefined)?.away),
-      all: safeTeam((payload as { all?: unknown } | null | undefined)?.all)
+      home: safeTeam(payload?.home),
+      away: safeTeam(payload?.away),
+      all: safeTeam(payload?.all)
     }
   } catch (error) {
     if (!isAborted(error)) {
@@ -1195,12 +1202,13 @@ const fetchSimilarMatches = async () => {
   try {
     loading.value.similar = true
     const response = await matchApi.getSimilarMatches(matchId.value, { signal: signal.signal })
-    if (Array.isArray(response)) {
-      similarMatches.value = response
-    } else if (Array.isArray(response?.data)) {
-      similarMatches.value = response.data
-    } else if (Array.isArray(response?.list)) {
-      similarMatches.value = response.list
+    const r = response as unknown
+    if (Array.isArray(r)) {
+      similarMatches.value = r as SimilarMatch[]
+    } else if (Array.isArray((r as { data?: unknown })?.data)) {
+      similarMatches.value = (r as { data: SimilarMatch[] }).data
+    } else if (Array.isArray((r as { list?: unknown })?.list)) {
+      similarMatches.value = (r as { list: SimilarMatch[] }).list
     } else {
       similarMatches.value = []
     }
