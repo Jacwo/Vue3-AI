@@ -22,6 +22,8 @@ export interface UserInfo {
   createTime: string
   point?: number
   isAdmin?: boolean
+  isVip?: boolean
+  vipExpireTime?: string
 }
 
 export interface UserListItem {

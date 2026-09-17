@@ -32,25 +32,43 @@ const handleLogout = async () => {
   router.push('/login')
 }
 
-// 跳转到历史记录
-const goHistory = () => {
-  router.push('/history')
-}
-
-// 跳转到比赛数据
-const goMatches = () => {
-  router.push('/matches')
-}
-
-// 跳转到积分充值
-const goCredits = () => {
-  router.push('/credits')
+// 跳转开通会员
+const goVip = () => {
+  router.push('/subscription')
 }
 
 // 格式化手机号中间四位为 *
 const formatPhone = (phone: string) => {
   if (!phone || phone.length !== 11) return phone || '未设置'
   return phone.slice(0, 3) + '****' + phone.slice(7)
+}
+
+// 格式化 VIP 到期时间
+const formatVipExpire = (time: string) => {
+  if (!time) return ''
+  const d = new Date(time)
+  if (isNaN(d.getTime())) return ''
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+// VIP 剩余天数
+const vipDaysLeft = (time: string) => {
+  if (!time) return 0
+  const target = new Date(time).getTime()
+  const now = Date.now()
+  const diff = target - now
+  if (diff <= 0) return 0
+  return Math.ceil(diff / (1000 * 60 * 60 * 24))
+}
+
+// 是否为有效 VIP（开启状态 + 未过期）
+const isVipActive = (info: any) => {
+  if (!info?.isVip) return false
+  if (!info?.vipExpireTime) return false
+  return new Date(info.vipExpireTime).getTime() > Date.now()
 }
 
 onMounted(() => {
@@ -68,7 +86,16 @@ onMounted(() => {
           <div class="avatar-ring">
             <img :src="userInfo?.avatar || defaultAvatar" alt="头像" class="avatar-img" />
           </div>
-          <div class="avatar-badge" v-if="userInfo?.isAdmin">管理员</div>
+          <div
+            class="avatar-badge"
+            :class="{ 'badge-admin': userInfo?.isAdmin, 'badge-vip': !userInfo?.isAdmin && isVipActive(userInfo) }"
+            v-if="userInfo?.isAdmin || (!userInfo?.isAdmin && isVipActive(userInfo))"
+          >
+            <svg v-if="!userInfo?.isAdmin" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: -1px; margin-right: 2px;">
+              <path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4L12 17l-6.3 4.4L8 14 2 9.4h7.6z"/>
+            </svg>
+            {{ userInfo?.isAdmin ? '管理员' : 'VIP会员' }}
+          </div>
         </div>
 
         <div class="user-meta">
@@ -91,8 +118,48 @@ onMounted(() => {
               <span class="points-suffix">分</span>
             </span>
           </div>
-          <button class="points-charge-btn" @click="goCredits">充值</button>
         </div>
+      </div>
+    </div>
+
+    <!-- VIP / 会员状态卡片 -->
+    <div
+      class="vip-card"
+      :class="{ 'vip-card-active': isVipActive(userInfo), 'vip-card-inactive': !isVipActive(userInfo) }"
+    >
+      <div class="vip-card-bg"></div>
+      <div class="vip-card-content">
+        <div class="vip-card-left">
+          <div class="vip-card-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4L12 17l-6.3 4.4L8 14 2 9.4h7.6z"/>
+            </svg>
+          </div>
+          <div class="vip-card-text">
+            <div class="vip-card-title">
+              <template v-if="isVipActive(userInfo)">
+                <span class="vip-card-name">尊享 VIP 会员</span>
+                <span class="vip-card-tag">已开通</span>
+              </template>
+              <template v-else>
+                <span class="vip-card-name">暂未开通 VIP</span>
+                <span class="vip-card-tag vip-card-tag-muted">未开通</span>
+              </template>
+            </div>
+            <div class="vip-card-desc">
+              <template v-if="isVipActive(userInfo)">
+                到期时间 <span class="vip-card-highlight">{{ formatVipExpire(userInfo.vipExpireTime) }}</span>
+                <span class="vip-card-days">剩余 {{ vipDaysLeft(userInfo.vipExpireTime) }} 天</span>
+              </template>
+              <template v-else>
+                解锁更多专享功能 / 数据分析 / 比赛订阅
+              </template>
+            </div>
+          </div>
+        </div>
+        <button class="vip-card-btn" @click="goVip">
+          {{ isVipActive(userInfo) ? '续费会员' : '开通会员' }}
+        </button>
       </div>
     </div>
 
@@ -140,47 +207,6 @@ onMounted(() => {
             <span class="info-label">注册时间</span>
           </div>
           <span class="info-value">{{ userInfo?.createTime ? new Date(userInfo.createTime).toLocaleDateString() : '未知' }}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 快捷功能 -->
-    <div class="section-card">
-      <div class="section-title">
-        <span class="section-dot"></span>
-        <span>快捷功能</span>
-      </div>
-
-      <div class="quick-grid">
-        <div class="quick-item" @click="goHistory">
-          <div class="quick-icon icon-grad-purple">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <span class="quick-label">我的分析记录</span>
-          <span class="quick-desc">历史比赛分析</span>
-        </div>
-
-        <div class="quick-item" @click="goMatches">
-          <div class="quick-icon icon-grad-blue">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="4" width="18" height="16" rx="2" stroke="#fff" stroke-width="2"/>
-              <path d="M3 10h18M8 4v16" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <span class="quick-label">比赛数据</span>
-          <span class="quick-desc">查看实时比赛</span>
-        </div>
-
-        <div class="quick-item" @click="goCredits">
-          <div class="quick-icon icon-grad-amber">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <span class="quick-label">积分充值</span>
-          <span class="quick-desc">获取更多积分</span>
         </div>
       </div>
     </div>
@@ -267,6 +293,13 @@ onMounted(() => {
   font-weight: 600;
   white-space: nowrap;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  display: inline-flex;
+  align-items: center;
+}
+
+.avatar-badge.badge-vip {
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
 }
 
 /* 用户信息 */
@@ -344,21 +377,155 @@ onMounted(() => {
   margin-left: 2px;
 }
 
-.points-charge-btn {
-  background: #fff;
-  color: #764ba2;
-  border: none;
-  padding: 7px 14px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+/* ========== VIP 卡片 ========== */
+.vip-card {
+  position: relative;
+  border-radius: 16px;
+  padding: 20px 22px;
+  overflow: hidden;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.18);
 }
 
-.points-charge-btn:hover {
+.vip-card-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.vip-card-active {
+  background: linear-gradient(120deg, #f59e0b 0%, #ef4444 50%, #db2777 100%);
+}
+
+.vip-card-active .vip-card-bg {
+  background:
+    radial-gradient(circle at 15% 20%, rgba(255, 255, 255, 0.25) 0, transparent 45%),
+    radial-gradient(circle at 90% 80%, rgba(255, 255, 255, 0.18) 0, transparent 50%);
+}
+
+.vip-card-inactive {
+  background: linear-gradient(120deg, #475569 0%, #334155 60%, #1e293b 100%);
+  box-shadow: 0 8px 20px rgba(30, 41, 59, 0.18);
+}
+
+.vip-card-inactive .vip-card-bg {
+  background:
+    radial-gradient(circle at 90% 10%, rgba(255, 255, 255, 0.1) 0, transparent 40%);
+}
+
+.vip-card-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.vip-card-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.vip-card-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fde68a;
+}
+
+.vip-card-inactive .vip-card-icon {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+.vip-card-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vip-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.vip-card-name {
+  font-size: 17px;
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.vip-card-tag {
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.vip-card-tag-muted {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #e2e8f0;
+}
+
+.vip-card-desc {
+  font-size: 13px;
+  opacity: 0.92;
+  line-height: 1.5;
+}
+
+.vip-card-highlight {
+  font-weight: 700;
+  color: #fff8e1;
+  margin-left: 4px;
+}
+
+.vip-card-days {
+  display: inline-block;
+  margin-left: 10px;
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.18);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.vip-card-btn {
+  flex-shrink: 0;
+  background: #fff;
+  color: #b91c1c;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.vip-card-inactive .vip-card-btn {
+  color: #1e293b;
+  background: linear-gradient(135deg, #fde68a, #f59e0b);
+  color: #7c2d12;
+}
+
+.vip-card-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
 }
 
 /* ========== 通用区段卡片 ========== */
@@ -435,67 +602,6 @@ onMounted(() => {
   font-weight: 600;
 }
 
-/* ========== 快捷功能 ========== */
-.quick-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-}
-
-.quick-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px 14px;
-  background: #f8fafc;
-  border-radius: 14px;
-  cursor: pointer;
-  transition: transform 0.25s, box-shadow 0.25s, background 0.25s;
-  text-align: center;
-}
-
-.quick-item:hover {
-  transform: translateY(-3px);
-  background: #fff;
-  box-shadow: 0 10px 24px rgba(102, 126, 234, 0.15);
-}
-
-.quick-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-}
-
-.icon-grad-purple {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-}
-
-.icon-grad-blue {
-  background: linear-gradient(135deg, #4facfe, #00f2fe);
-}
-
-.icon-grad-amber {
-  background: linear-gradient(135deg, #fbbf24, #f97316);
-}
-
-.quick-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 2px;
-}
-
-.quick-desc {
-  font-size: 12px;
-  color: #94a3b8;
-}
-
 /* ========== 退出按钮 ========== */
 .logout-wrap {
   display: flex;
@@ -559,16 +665,21 @@ onMounted(() => {
     padding: 18px 16px;
   }
 
-  .quick-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .quick-item:last-child {
-    grid-column: 1 / -1;
-  }
-
   .info-row {
     padding: 12px 14px;
+  }
+
+  .vip-card {
+    padding: 16px;
+  }
+
+  .vip-card-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .vip-card-name {
+    font-size: 15px;
   }
 }
 
@@ -586,12 +697,14 @@ onMounted(() => {
     text-align: center;
   }
 
-  .quick-grid {
-    grid-template-columns: 1fr;
+  .vip-card-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
   }
 
-  .quick-item:last-child {
-    grid-column: auto;
+  .vip-card-btn {
+    width: 100%;
   }
 }
 </style>

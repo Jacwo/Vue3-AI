@@ -114,6 +114,14 @@ const closeMobileMenu = () => {
             比赛数据
           </RouterLink>
           <RouterLink
+            to="/subscription"
+            @click="closeMobileMenu"
+            :class="{ 'mobile-link': isMobile }"
+            class="nav-vip"
+          >
+            开通会员
+          </RouterLink>
+          <RouterLink
             v-if="userStore.userInfo?.isAdmin"
             to="/users"
             @click="closeMobileMenu"
@@ -305,6 +313,26 @@ nav a.router-link-exact-active {
   background-color: rgba(255, 255, 255, 0.25);
   font-weight: bold;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 开通会员 Tab 高亮（区别于普通导航的金色/粉色渐变） */
+nav a.nav-vip {
+  background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+nav a.nav-vip:hover {
+  background: linear-gradient(135deg, #f97316 0%, #db2777 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.45);
+}
+
+nav a.nav-vip.router-link-exact-active {
+  background: linear-gradient(135deg, #ea580c 0%, #be185d 100%);
+  color: #fff;
+  font-weight: 700;
 }
 
 /* 主要内容区域 */
